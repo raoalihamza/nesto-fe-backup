@@ -1,0 +1,184 @@
+{
+  "nav": {
+    "buy": "Buy",
+    "rent": "Rent",
+    "sell": "Sell",
+    "getMortgage": "Get a mortgage",
+    "findAgent": "Find an agent",
+    "manageRentals": "Manage rentals",
+    "advertise": "Advertise"
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "createAccount": "Create your account",
+    "emailAddress": "Email Address",
+    "enterEmail": "Enter Email here",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "continue": "Continue",
+    "forgotPassword": "forgot password?",
+    "newToNesto": "New to Nesto?",
+    "createAccountLink": "Create account",
+    "alreadyHaveAccount": "Already have an account?",
+    "signInLink": "Sign In",
+    "signInWithGoogle": "Sign In with Google",
+    "signInWithFacebook": "Sign in with Facebook",
+    "signInWithApple": "Sign in with Apple",
+    "or": "OR",
+    "resetPassword": "Reset Password",
+    "sendResetLink": "Send reset link",
+    "backToLogin": "Back to login"
+  },
+  "home": {
+    "seeCoolPlaces": "See Cool Places around you",
+    "chooseOption": "Choose the option that best describes you",
+    "wantToSale": "I want to sale my place",
+    "wantToRent": "I want to rent a place",
+    "buyHome": "Buy a home",
+    "buyHomeDescription": "Find your peace with no reservation costs, explore to your hearts all you like, including things you won't find anywhere else.",
+    "sellHome": "Sell a home",
+    "sellHomeDescription": "No matter what path you take to sell your home, we can help you navigate a successful sale.",
+    "rentHome": "Rent a home",
+    "rentHomeDescription": "We're creating a seamless online experience – from search listing and applying, to paying rent.",
+    "browseHomes": "Browse homes",
+    "seeYourOptions": "See your options",
+    "findRentals": "Find rentals",
+    "searchPlaceholder": "Where",
+    "checkIn": "Check-in",
+    "checkOut": "Check-out",
+    "selectDate": "Select Date",
+    "guests": "Select Number Of Family Members",
+    "selectNumber": "Select Number",
+    "search": "Search",
+    "featuredIn": "Featured In",
+    "hotlistForSale": "Hotlist for Sale",
+    "continue": "Continue"
+  },
+  "dashboard": {
+    "welcome": "Welcome back, {name}!",
+    "newInquiries": "You have {count} new message inquiries and {homes} homes saved.",
+    "postListing": "Post Listing",
+    "overview": "Overview",
+    "savedHomes": "Saved Homes",
+    "myListings": "My Listings",
+    "messages": "Messages",
+    "settings": "Settings",
+    "propertyManagement": "Property Management",
+    "all": "All",
+    "forRent": "For Rent",
+    "archived": "Archived",
+    "sold": "Sold"
+  },
+  "listing": {
+    "saveAndExit": "Save & exit",
+    "back": "Back",
+    "next": "Next",
+    "steps": {
+      "propertyInfo": "Property Info",
+      "rentDetails": "Rent details",
+      "media": "Media",
+      "amenities": "Amenities",
+      "screeningCriteria": "Screening criteria",
+      "costsAndFees": "Costs & fees",
+      "finalDetails": "Final details",
+      "review": "Review",
+      "payAndPublish": "Pay & publish"
+    },
+    "propertyInfo": {
+      "title": "Property information",
+      "squareFootage": "Square footage",
+      "bedrooms": "Bedrooms",
+      "bathrooms": "Bathrooms"
+    },
+    "rentDetails": {
+      "title": "Rent details",
+      "monthlyRent": "Monthly rent",
+      "securityDeposit": "Security deposit",
+      "addSpecialOffer": "Add special offer"
+    },
+    "media": {
+      "title": "Photos & media",
+      "dragDrop": "Drag and drop photos here",
+      "browse": "Browse files",
+      "tourUrl": "3D tour URL"
+    },
+    "amenities": {
+      "title": "Amenities",
+      "laundry": "Laundry",
+      "cooling": "Cooling",
+      "heating": "Heating",
+      "appliances": "Appliances",
+      "flooring": "Flooring",
+      "parking": "Parking",
+      "outdoor": "Outdoor",
+      "accessibility": "Accessibility",
+      "other": "Other"
+    },
+    "screening": {
+      "title": "Screening criteria",
+      "petPolicy": "Pet policy",
+      "petsAllowed": "Pets allowed",
+      "negotiable": "Negotiable",
+      "financial": "Financial expectations",
+      "minIncome": "Minimum income ratio",
+      "minCredit": "Minimum credit score"
+    },
+    "costs": {
+      "title": "Costs & fees",
+      "showTotal": "Show total price",
+      "application": "Application fees",
+      "administrative": "Administrative fees",
+      "moveIn": "Move-in fees",
+      "recurring": "Recurring fees",
+      "addFee": "Add fee"
+    },
+    "finalDetails": {
+      "title": "Final details",
+      "leaseTerms": "Lease terms",
+      "listedBy": "Listed by",
+      "phoneVerification": "Phone verification",
+      "bookTours": "Book tours",
+      "description": "Description",
+      "confirmDetails": "Confirm details"
+    },
+    "review": {
+      "title": "Review your listing",
+      "incomplete": "Incomplete",
+      "complete": "Complete",
+      "preview": "Preview"
+    },
+    "publish": {
+      "title": "Pay & publish",
+      "publishListing": "Publish listing"
+    }
+  },
+  "property": {
+    "forSale": "For sale",
+    "forRent": "For Rent",
+    "condoForSale": "Condo for sale",
+    "beds": "Bed",
+    "baths": "Bath",
+    "sqft": "sqft",
+    "perMonth": "/mo",
+    "leaseDuration": "Lease Duration",
+    "save": "Save",
+    "share": "Share",
+    "contact": "Contact",
+    "listingBy": "Listing by {name}"
+  },
+  "common": {
+    "edit": "Edit",
+    "add": "Add",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "learnMore": "Learn more",
+    "required": "required",
+    "optional": "optional",
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "retry": "Try again",
+    "noResults": "No results found",
+    "viewAll": "View all"
+  }
+}

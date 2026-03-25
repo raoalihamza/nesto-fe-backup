@@ -1,0 +1,184 @@
+{
+  "nav": {
+    "buy": "Sotib olish",
+    "rent": "Ijaraga olish",
+    "sell": "Sotish",
+    "getMortgage": "Ipoteka olish",
+    "findAgent": "Agent topish",
+    "manageRentals": "Ijarani boshqarish",
+    "advertise": "Reklama"
+  },
+  "auth": {
+    "signIn": "Kirish",
+    "createAccount": "Hisob yarating",
+    "emailAddress": "Elektron pochta",
+    "enterEmail": "Elektron pochtangizni kiriting",
+    "password": "Parol",
+    "confirmPassword": "Parolni tasdiqlang",
+    "continue": "Davom etish",
+    "forgotPassword": "parolni unutdingizmi?",
+    "newToNesto": "Nesto'da yangimisiz?",
+    "createAccountLink": "Hisob yarating",
+    "alreadyHaveAccount": "Hisobingiz bormi?",
+    "signInLink": "Kirish",
+    "signInWithGoogle": "Google orqali kirish",
+    "signInWithFacebook": "Facebook orqali kirish",
+    "signInWithApple": "Apple orqali kirish",
+    "or": "YOKI",
+    "resetPassword": "Parolni tiklash",
+    "sendResetLink": "Tiklash havolasini yuborish",
+    "backToLogin": "Kirishga qaytish"
+  },
+  "home": {
+    "seeCoolPlaces": "Atrofingizdagi ajoyib joylarni ko'ring",
+    "chooseOption": "Sizni eng yaxshi tavsiflovchi variantni tanlang",
+    "wantToSale": "Men joyimni sotmoqchiman",
+    "wantToRent": "Men joy ijaraga olmoqchiman",
+    "buyHome": "Uy sotib oling",
+    "buyHomeDescription": "Tinchligingizni toping, bron qilish xarajatlarisiz, yuragingiz xohlagan narsani o'rganing.",
+    "sellHome": "Uy soting",
+    "sellHomeDescription": "Uyingizni sotish uchun qaysi yo'lni tanlasangiz ham, biz muvaffaqiyatli sotishga yordam beramiz.",
+    "rentHome": "Uy ijaraga oling",
+    "rentHomeDescription": "Biz onlayn tajribani yaratmoqdamiz – qidiruv va ariza topshirishdan ijara to'lashgacha.",
+    "browseHomes": "Uylarni ko'rish",
+    "seeYourOptions": "Variantlarni ko'rish",
+    "findRentals": "Ijara topish",
+    "searchPlaceholder": "Qayerda",
+    "checkIn": "Kirish sanasi",
+    "checkOut": "Chiqish sanasi",
+    "selectDate": "Sanani tanlang",
+    "guests": "Oila a'zolari soni",
+    "selectNumber": "Sonni tanlang",
+    "search": "Qidirish",
+    "featuredIn": "Tavsiya etilgan",
+    "hotlistForSale": "Sotuvdagi eng yaxshilar",
+    "continue": "Davom etish"
+  },
+  "dashboard": {
+    "welcome": "Xush kelibsiz, {name}!",
+    "newInquiries": "Sizda {count} ta yangi xabar so'rovi va {homes} ta saqlangan uy bor.",
+    "postListing": "E'lon joylashtirish",
+    "overview": "Umumiy ko'rinish",
+    "savedHomes": "Saqlangan uylar",
+    "myListings": "Mening e'lonlarim",
+    "messages": "Xabarlar",
+    "settings": "Sozlamalar",
+    "propertyManagement": "Mulk boshqaruvi",
+    "all": "Hammasi",
+    "forRent": "Ijaraga",
+    "archived": "Arxivlangan",
+    "sold": "Sotilgan"
+  },
+  "listing": {
+    "saveAndExit": "Saqlash va chiqish",
+    "back": "Orqaga",
+    "next": "Keyingi",
+    "steps": {
+      "propertyInfo": "Mulk ma'lumotlari",
+      "rentDetails": "Ijara tafsilotlari",
+      "media": "Media",
+      "amenities": "Qulayliklar",
+      "screeningCriteria": "Tekshirish mezonlari",
+      "costsAndFees": "Xarajatlar va to'lovlar",
+      "finalDetails": "Yakuniy tafsilotlar",
+      "review": "Ko'rib chiqish",
+      "payAndPublish": "To'lash va nashr etish"
+    },
+    "propertyInfo": {
+      "title": "Mulk ma'lumotlari",
+      "squareFootage": "Kvadrat fut",
+      "bedrooms": "Yotoq xonalar",
+      "bathrooms": "Hammomlar"
+    },
+    "rentDetails": {
+      "title": "Ijara tafsilotlari",
+      "monthlyRent": "Oylik ijara",
+      "securityDeposit": "Kafolat depoziti",
+      "addSpecialOffer": "Maxsus taklif qo'shish"
+    },
+    "media": {
+      "title": "Rasmlar va media",
+      "dragDrop": "Rasmlarni shu yerga tashlang",
+      "browse": "Fayllarni ko'rish",
+      "tourUrl": "3D tur havolasi"
+    },
+    "amenities": {
+      "title": "Qulayliklar",
+      "laundry": "Kir yuvish",
+      "cooling": "Sovutish",
+      "heating": "Isitish",
+      "appliances": "Jihozlar",
+      "flooring": "Pol qoplamasi",
+      "parking": "Avtomobil to'xtash joyi",
+      "outdoor": "Tashqi",
+      "accessibility": "Qulaylik",
+      "other": "Boshqa"
+    },
+    "screening": {
+      "title": "Tekshirish mezonlari",
+      "petPolicy": "Uy hayvonlari siyosati",
+      "petsAllowed": "Uy hayvonlari ruxsat etiladi",
+      "negotiable": "Muzokaraga ochiq",
+      "financial": "Moliyaviy kutishlar",
+      "minIncome": "Minimal daromad nisbati",
+      "minCredit": "Minimal kredit reytingi"
+    },
+    "costs": {
+      "title": "Xarajatlar va to'lovlar",
+      "showTotal": "Umumiy narxni ko'rsatish",
+      "application": "Ariza to'lovlari",
+      "administrative": "Ma'muriy to'lovlar",
+      "moveIn": "Ko'chish to'lovlari",
+      "recurring": "Takrorlanuvchi to'lovlar",
+      "addFee": "To'lov qo'shish"
+    },
+    "finalDetails": {
+      "title": "Yakuniy tafsilotlar",
+      "leaseTerms": "Ijara shartlari",
+      "listedBy": "Kim tomonidan joylashtirilgan",
+      "phoneVerification": "Telefon tasdiqlash",
+      "bookTours": "Turlarni bron qilish",
+      "description": "Tavsif",
+      "confirmDetails": "Tafsilotlarni tasdiqlash"
+    },
+    "review": {
+      "title": "E'loningizni ko'rib chiqing",
+      "incomplete": "To'liq emas",
+      "complete": "Tugallangan",
+      "preview": "Ko'rish"
+    },
+    "publish": {
+      "title": "To'lash va nashr etish",
+      "publishListing": "E'lonni nashr etish"
+    }
+  },
+  "property": {
+    "forSale": "Sotuvda",
+    "forRent": "Ijaraga",
+    "condoForSale": "Sotuvdagi kvartira",
+    "beds": "Xona",
+    "baths": "Hammom",
+    "sqft": "kv.ft",
+    "perMonth": "/oy",
+    "leaseDuration": "Ijara muddati",
+    "save": "Saqlash",
+    "share": "Ulashish",
+    "contact": "Bog'lanish",
+    "listingBy": "{name} tomonidan"
+  },
+  "common": {
+    "edit": "Tahrirlash",
+    "add": "Qo'shish",
+    "cancel": "Bekor qilish",
+    "save": "Saqlash",
+    "delete": "O'chirish",
+    "learnMore": "Batafsil",
+    "required": "majburiy",
+    "optional": "ixtiyoriy",
+    "loading": "Yuklanmoqda...",
+    "error": "Xatolik yuz berdi",
+    "retry": "Qayta urinish",
+    "noResults": "Natijalar topilmadi",
+    "viewAll": "Hammasini ko'rish"
+  }
+}

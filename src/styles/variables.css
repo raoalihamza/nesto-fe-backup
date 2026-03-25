@@ -1,0 +1,14 @@
+:root {
+  --brand: #C02121;
+  --brand-light: rgba(192, 33, 33, 0.2);
+  --brand-dark: #8B1717;
+
+  --status-active: #22C55E;
+  --status-pending: #F59E0B;
+  --status-rented: #3B82F6;
+  --status-archived: #6B7280;
+  --status-sold: #8B5CF6;
+
+  --btn-shadow: 0px 4px 6px -4px rgba(192, 33, 33, 0.20),
+    0px 10px 15px -3px rgba(192, 33, 33, 0.20);
+}

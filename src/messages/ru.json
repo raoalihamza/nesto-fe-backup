@@ -1,0 +1,184 @@
+{
+  "nav": {
+    "buy": "Купить",
+    "rent": "Аренда",
+    "sell": "Продать",
+    "getMortgage": "Ипотека",
+    "findAgent": "Найти агента",
+    "manageRentals": "Управление арендой",
+    "advertise": "Реклама"
+  },
+  "auth": {
+    "signIn": "Войти",
+    "createAccount": "Создать аккаунт",
+    "emailAddress": "Электронная почта",
+    "enterEmail": "Введите электронную почту",
+    "password": "Пароль",
+    "confirmPassword": "Подтвердите пароль",
+    "continue": "Продолжить",
+    "forgotPassword": "забыли пароль?",
+    "newToNesto": "Новичок в Nesto?",
+    "createAccountLink": "Создать аккаунт",
+    "alreadyHaveAccount": "Уже есть аккаунт?",
+    "signInLink": "Войти",
+    "signInWithGoogle": "Войти через Google",
+    "signInWithFacebook": "Войти через Facebook",
+    "signInWithApple": "Войти через Apple",
+    "or": "ИЛИ",
+    "resetPassword": "Сбросить пароль",
+    "sendResetLink": "Отправить ссылку",
+    "backToLogin": "Вернуться к входу"
+  },
+  "home": {
+    "seeCoolPlaces": "Посмотрите классные места вокруг вас",
+    "chooseOption": "Выберите вариант, который лучше всего вас описывает",
+    "wantToSale": "Я хочу продать своё жильё",
+    "wantToRent": "Я хочу арендовать жильё",
+    "buyHome": "Купить дом",
+    "buyHomeDescription": "Найдите свой покой без бронирования, исследуйте всё, что пожелает ваше сердце.",
+    "sellHome": "Продать дом",
+    "sellHomeDescription": "Какой бы путь продажи вы ни выбрали, мы поможем вам провести успешную сделку.",
+    "rentHome": "Арендовать дом",
+    "rentHomeDescription": "Мы создаём удобный онлайн-опыт — от поиска и подачи заявки до оплаты аренды.",
+    "browseHomes": "Смотреть дома",
+    "seeYourOptions": "Варианты продажи",
+    "findRentals": "Найти аренду",
+    "searchPlaceholder": "Где",
+    "checkIn": "Заезд",
+    "checkOut": "Выезд",
+    "selectDate": "Выберите дату",
+    "guests": "Выберите количество членов семьи",
+    "selectNumber": "Выберите количество",
+    "search": "Поиск",
+    "featuredIn": "Рекомендуемые",
+    "hotlistForSale": "Лучшие предложения",
+    "continue": "Продолжить"
+  },
+  "dashboard": {
+    "welcome": "С возвращением, {name}!",
+    "newInquiries": "У вас {count} новых сообщений и {homes} сохранённых домов.",
+    "postListing": "Разместить объявление",
+    "overview": "Обзор",
+    "savedHomes": "Сохранённые дома",
+    "myListings": "Мои объявления",
+    "messages": "Сообщения",
+    "settings": "Настройки",
+    "propertyManagement": "Управление недвижимостью",
+    "all": "Все",
+    "forRent": "В аренду",
+    "archived": "Архив",
+    "sold": "Проданные"
+  },
+  "listing": {
+    "saveAndExit": "Сохранить и выйти",
+    "back": "Назад",
+    "next": "Далее",
+    "steps": {
+      "propertyInfo": "Информация",
+      "rentDetails": "Детали аренды",
+      "media": "Медиа",
+      "amenities": "Удобства",
+      "screeningCriteria": "Критерии отбора",
+      "costsAndFees": "Расходы и сборы",
+      "finalDetails": "Финальные детали",
+      "review": "Просмотр",
+      "payAndPublish": "Оплата и публикация"
+    },
+    "propertyInfo": {
+      "title": "Информация о недвижимости",
+      "squareFootage": "Площадь",
+      "bedrooms": "Спальни",
+      "bathrooms": "Ванные"
+    },
+    "rentDetails": {
+      "title": "Детали аренды",
+      "monthlyRent": "Ежемесячная аренда",
+      "securityDeposit": "Залог",
+      "addSpecialOffer": "Добавить акцию"
+    },
+    "media": {
+      "title": "Фото и медиа",
+      "dragDrop": "Перетащите фотографии сюда",
+      "browse": "Выбрать файлы",
+      "tourUrl": "Ссылка на 3D тур"
+    },
+    "amenities": {
+      "title": "Удобства",
+      "laundry": "Стирка",
+      "cooling": "Охлаждение",
+      "heating": "Отопление",
+      "appliances": "Бытовая техника",
+      "flooring": "Напольное покрытие",
+      "parking": "Парковка",
+      "outdoor": "На открытом воздухе",
+      "accessibility": "Доступность",
+      "other": "Другое"
+    },
+    "screening": {
+      "title": "Критерии отбора",
+      "petPolicy": "Политика по домашним животным",
+      "petsAllowed": "Животные разрешены",
+      "negotiable": "Обсуждаемо",
+      "financial": "Финансовые ожидания",
+      "minIncome": "Минимальный доход",
+      "minCredit": "Минимальный кредитный рейтинг"
+    },
+    "costs": {
+      "title": "Расходы и сборы",
+      "showTotal": "Показать общую стоимость",
+      "application": "Сборы за подачу",
+      "administrative": "Административные сборы",
+      "moveIn": "Сборы при заселении",
+      "recurring": "Регулярные сборы",
+      "addFee": "Добавить сбор"
+    },
+    "finalDetails": {
+      "title": "Финальные детали",
+      "leaseTerms": "Условия аренды",
+      "listedBy": "Размещено",
+      "phoneVerification": "Подтверждение телефона",
+      "bookTours": "Бронирование туров",
+      "description": "Описание",
+      "confirmDetails": "Подтвердить детали"
+    },
+    "review": {
+      "title": "Просмотрите объявление",
+      "incomplete": "Не завершено",
+      "complete": "Завершено",
+      "preview": "Предпросмотр"
+    },
+    "publish": {
+      "title": "Оплата и публикация",
+      "publishListing": "Опубликовать"
+    }
+  },
+  "property": {
+    "forSale": "Продажа",
+    "forRent": "Аренда",
+    "condoForSale": "Квартира на продажу",
+    "beds": "Спален",
+    "baths": "Ванных",
+    "sqft": "кв.фт",
+    "perMonth": "/мес",
+    "leaseDuration": "Срок аренды",
+    "save": "Сохранить",
+    "share": "Поделиться",
+    "contact": "Связаться",
+    "listingBy": "Размещено {name}"
+  },
+  "common": {
+    "edit": "Редактировать",
+    "add": "Добавить",
+    "cancel": "Отмена",
+    "save": "Сохранить",
+    "delete": "Удалить",
+    "learnMore": "Подробнее",
+    "required": "обязательно",
+    "optional": "необязательно",
+    "loading": "Загрузка...",
+    "error": "Что-то пошло не так",
+    "retry": "Повторить",
+    "noResults": "Ничего не найдено",
+    "viewAll": "Показать все"
+  }
+}

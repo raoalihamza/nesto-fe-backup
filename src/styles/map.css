@@ -1,0 +1,29 @@
+.mapboxgl-popup-content {
+  padding: 0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.mapboxgl-popup-close-button {
+  font-size: 18px;
+  padding: 4px 8px;
+  color: #666;
+}
+
+.mapboxgl-popup-close-button:hover {
+  color: #333;
+  background-color: transparent;
+}
+
+.mapboxgl-ctrl-group {
+  border-radius: 8px !important;
+}
+
+.map-pin {
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.map-pin:hover {
+  transform: scale(1.1);
+}
