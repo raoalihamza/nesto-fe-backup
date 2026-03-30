@@ -9,7 +9,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LOCALE_LABELS, LOCALE_FLAGS, type Locale } from "@/lib/constants/locales";
+import { LOCALE_LABELS, type Locale } from "@/lib/constants/locales";
+import { FLAG_COMPONENTS } from "@/components/icons/Flags";
 
 export function LanguageSwitcher() {
   const locale = useLocale() as Locale;
@@ -34,8 +35,9 @@ export function LanguageSwitcher() {
             onClick={() => switchLocale(loc)}
             className="flex items-center justify-between"
           >
-            <span>
-              {LOCALE_FLAGS[loc]} {LOCALE_LABELS[loc]}
+            <span className="flex items-center gap-2">
+              {(() => { const Flag = FLAG_COMPONENTS[loc]; return <Flag className="size-5 rounded-sm" />; })()}
+              {LOCALE_LABELS[loc]}
             </span>
             {loc === locale && <Check className="h-4 w-4 text-brand" />}
           </DropdownMenuItem>
