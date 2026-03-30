@@ -86,15 +86,35 @@
     },
     "propertyInfo": {
       "title": "Mulk ma'lumotlari",
+      "heading": "E'loningizni yaratishni boshlaylik",
+      "subtitle": "Mulkingiz hajmi haqida ma'lumotlarni qo'shing yoki ko'rib chiqing.",
       "squareFootage": "Kvadrat fut",
-      "bedrooms": "Yotoq xonalar",
-      "bathrooms": "Hammomlar"
+      "sqFt": "kv. ft.",
+      "bedrooms": "Jami yotoq xonalar",
+      "bathrooms": "Jami hammomlar"
     },
     "rentDetails": {
       "title": "Ijara tafsilotlari",
+      "heading": "Oylik ijara va kafolat depoziti qancha?",
+      "subtitle": "Mulkingiz hajmi haqida ma'lumotlarni qo'shing yoki ko'rib chiqing.",
+      "rentNestimate": "Bu mulk uchun hozirgi Rent estimate: {amount}",
       "monthlyRent": "Oylik ijara",
+      "perMonth": "/oy",
       "securityDeposit": "Kafolat depoziti",
-      "addSpecialOffer": "Maxsus taklif qo'shish"
+      "setDepositAsRent": "Depozitni {amount} qilib belgilang (bir oylik ijara)",
+      "promoteOffer": "Maxsus taklifni targ'ib qilmoqchimisiz?",
+      "addOffer": "Taklif qo'shish",
+      "addSpecialOffer": "Maxsus taklif qo'shish",
+      "specialOfferTitle": "Maxsus taklif qo'shish",
+      "specialOfferDescription": "Ijarachilarga ko'rsatmoqchi bo'lgan chegirma yoki taklif tafsilotlarini baham ko'ring. Bu tanlangan tugash sanangizgacha e'loningizda ko'rinadi.",
+      "offerStartDate": "Taklif boshlanish sanasi",
+      "offerEndDate": "Taklif tugash sanasi",
+      "datePlaceholder": "KK/OO/YYYY",
+      "offerDescriptionLabel": "Tavsif",
+      "offerDescriptionPlaceholder": "Masalan: 15-oktyabrga qadar shartnoma imzolasangiz, birinchi oy ijarasidan $500 chegirma.",
+      "offerWarning": "Taklifingiz aloqa ma'lumotlarini o'z ichiga olsa – telefon raqamlar, havolalar yoki elektron pochta – e'lon qilinmaydi",
+      "addOfferButton": "Taklif qo'shish",
+      "publish": "Nashr etish"
     },
     "media": {
       "title": "Rasmlar va media",

@@ -1,0 +1,112 @@
+"use client";
+
+import { useEffect, useCallback } from "react";
+import { useTranslations } from "next-intl";
+import { useAppSelector, useAppDispatch } from "@/store";
+import { restoreFromSession } from "@/store/slices/listingFormSlice";
+import { StepSubHeader } from "@/components/rent-listing-form/StepSubHeader";
+import { StepProgressBar } from "@/components/rent-listing-form/StepProgressBar";
+import { StepNavButtons } from "@/components/rent-listing-form/StepNavButtons";
+import { Step1PropertyInfo } from "@/components/rent-listing-form/steps/Step1PropertyInfo";
+import { Step2RentDetails } from "@/components/rent-listing-form/steps/Step2RentDetails";
+
+const SESSION_KEY = "nesto_stepper_draft";
+
+const STEP_KEYS = [
+  "propertyInfo",
+  "rentDetails",
+  "media",
+  "amenities",
+  "screeningCriteria",
+  "costsAndFees",
+  "finalDetails",
+  "review",
+  "payAndPublish",
+] as const;
+
+// Sub-step counts per step (for display purposes)
+const SUB_STEP_COUNTS: Record<number, number> = {
+  3: 2, // Amenities
+  4: 2, // Screening
+  6: 6, // Final details
+};
+
+function getStepComponent(step: number) {
+  switch (step) {
+    case 0:
+      return <Step1PropertyInfo />;
+    case 1:
+      return <Step2RentDetails />;
+    // Steps 2–8 will be added later
+    default:
+      return (
+        <div className="flex flex-1 items-center justify-center text-muted-foreground">
+          Step {step + 1} — Coming soon
+        </div>
+      );
+  }
+}
+
+export function StepperLayout() {
+  const t = useTranslations("listing.steps");
+  const dispatch = useAppDispatch();
+  const currentStep = useAppSelector((s) => s.listingForm.currentStep);
+  const currentSubStep = useAppSelector((s) => s.listingForm.currentSubStep);
+  const isDirty = useAppSelector((s) => s.listingForm.isDirty);
+  const draftId = useAppSelector((s) => s.listingForm.draftId);
+
+  // Restore session on mount
+  useEffect(() => {
+    if (draftId) return; // API draft already loaded, skip session restore
+    try {
+      const raw = sessionStorage.getItem(SESSION_KEY);
+      if (raw) {
+        const snapshot = JSON.parse(raw);
+        dispatch(restoreFromSession(snapshot));
+      }
+    } catch {
+      // sessionStorage unavailable or corrupt data
+    }
+  }, [draftId, dispatch]);
+
+  // beforeunload guard
+  const handleBeforeUnload = useCallback(
+    (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+      }
+    },
+    [isDirty]
+  );
+
+  useEffect(() => {
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [handleBeforeUnload]);
+
+  // Build step name + sub-step label
+  const stepKey = STEP_KEYS[currentStep];
+  const stepName = t(stepKey);
+  const totalSubSteps = SUB_STEP_COUNTS[currentStep];
+  const subStepLabel = totalSubSteps
+    ? `${currentSubStep + 1} of ${totalSubSteps}`
+    : undefined;
+
+  return (
+    <div className="flex h-screen flex-col bg-white">
+      {/* Fixed top section */}
+      <div className="shrink-0">
+        <StepSubHeader stepName={stepName} subStepLabel={subStepLabel} />
+        <StepProgressBar />
+      </div>
+
+      {/* Scrollable bottom section */}
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+        <div className="flex flex-1 flex-col px-4 py-4 sm:px-6 lg:px-8">
+          {getStepComponent(currentStep)}
+        </div>
+        <StepNavButtons />
+      </div>
+    </div>
+  );
+}

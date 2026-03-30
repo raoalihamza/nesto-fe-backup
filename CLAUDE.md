@@ -8,7 +8,7 @@ Client: Timur Rakhmatov. Built by: Ali (Cherry Byte Technologies).
 - Next.js 16.1.7, React 19, TypeScript (strict)
 - Tailwind v4 + shadcn/ui (base-nova style)
 - next-intl v4 (en default, uz, ru)
-- Redux Toolkit — authSlice, uiSlice (listingFormSlice coming)
+- Redux Toolkit — authSlice, uiSlice, listingFormSlice
 - TanStack Query (server state)
 - react-hook-form + zod
 - nuqs (URL filters)
@@ -19,7 +19,7 @@ Client: Timur Rakhmatov. Built by: Ali (Cherry Byte Technologies).
 ## Brand
 Primary color: #C02121 — available as `bg-brand`, `text-brand`, `border-brand`
 Button shadow class: `btn-brand-shadow` (defined in globals.css)
-Logo: Text "Nesto" in brand red until SVG provided
+Logo: SVG at /icons/nesto-logo-navbar.svg (already in public)
 
 ## Key Rules
 - Every string → `useTranslations()` from next-intl, no hardcoded text
@@ -46,23 +46,56 @@ Logo: Text "Nesto" in brand red until SVG provided
 - Home: HeroSection, PropertyGridSection, FeatureCardsSection
 - Common: Providers, ListingTypeModal
 - Owner: Dashboard, ListingTable, ListingCard, ListingStatusBadge
-- Redux: authSlice, uiSlice only
-- Types: types/property.ts (complete), types/user.ts, types/api.ts
-- Data: src/lib/constants/dummyProperties.ts
+- Redux: authSlice, uiSlice, listingFormSlice (all 9 steps typed)
+- Draft: draftMiddleware (sessionStorage), clearAllDraftData utility, useLocalDraft hook
 
 ## What's NOT built yet
-- listingFormSlice
-- draftMiddleware (sessionStorage)
-- clearDraft utility
-- Listing stepper form (9 steps, single URL /listings/create)
+- Stepper shell (StepperLayout, StepProgressBar, SaveExitButton, StepNavButtons)
+- src/app/[locale]/(owner)/listings/create/page.tsx
+- Step 1: Property Info
+- Step 2: Rent Details + SpecialOfferModal
+- Step 3: Media
+- Step 4: Amenities (2 sub-steps)
+- Step 5: Screening Criteria (2 sub-steps)
+- Step 6: Costs & Fees + AdminFeeModal
+- Step 7: Final Details (6 sub-steps)
+- Step 8: Review
+- Step 9: Pay & Publish
 
-## Stepper Architecture (IMPORTANT)
-- All 9 steps on single URL — URL never changes
-- Navigation driven by Redux currentStep + currentSubStep
-- Draft persistence: sessionStorage (tab refresh) NOT localStorage
-- localStorage stores ONLY draftId string
-- clearAllDraftData() called on: Save&Exit success, Publish success, tab close confirm
-- Free navigation between steps — no validation blocking until Review step
+## Stepper Architecture (CRITICAL)
+- All 9 steps live on ONE page: /listings/create — URL NEVER changes between steps
+- StepperLayout renders the correct step component based on Redux currentStep + currentSubStep
+- No routing, no query params — pure Redux-driven navigation
+- User can navigate freely forward/backward — NO validation blocking between steps
+- Validation only triggers on Review step (step 7) when attempting to publish
+
+## Draft Persistence (CRITICAL)
+- Redux = source of truth while form is active (in-memory)
+- sessionStorage key "nesto_stepper_draft" = tab refresh safety (written by draftMiddleware on every listingForm/ action)
+- localStorage key "nesto_draft_id" = ONLY stores draftId string after Save & Exit
+- Full formData NEVER goes in localStorage
+- clearAllDraftData() → clears sessionStorage + localStorage draftId + resets Redux
+- Called in exactly 3 places: Save & Exit API success, Publish API success, beforeunload confirm
+- beforeunload alert fires when isDirty=true and user tries to close tab/browser
+
+## listingFormSlice — Key Info
+- Location: src/store/slices/listingFormSlice.ts
+- Reducers: goToStep, goToSubStep, markStepComplete, setPropertyInfo, setRentDetails,
+  setMedia, setAmenities, setScreening, setCostsAndFees, setFinalDetails,
+  setDraftId, setIsDirty, setIsSaving, setLastSavedAt, restoreFromSession, resetListingForm
+- Step data interfaces exported: PropertyInfoData, RentDetailsData, MediaData,
+  AmenitiesData, ScreeningData, CostsAndFeesData, FinalDetailsData
+
+## 9 Steps (0-indexed)
+- 0: Property Info (1 sub-step)
+- 1: Rent Details (1 sub-step)
+- 2: Media (1 sub-step)
+- 3: Amenities (2 sub-steps)
+- 4: Screening Criteria (2 sub-steps)
+- 5: Costs & Fees (1 sub-step)
+- 6: Final Details (6 sub-steps)
+- 7: Review (1 sub-step)
+- 8: Pay & Publish (1 sub-step)
 
 ## Dummy Data
 - src/lib/constants/dummyProperties.ts
@@ -75,18 +108,3 @@ dropdown-menu, select, checkbox, radio-group, switch, slider,
 tabs, avatar, skeleton, toast, sonner, tooltip, popover,
 calendar, progress, separator, label, form, table, command,
 scroll-area, alert, breadcrumb
-```
-
----
-
-## Faida Kya Hoga
-```
-Bina CLAUDE.md:
-  → Har session mein tech stack, rules, current state batao
-  → Claude Code bhool jaata hai previous context
-
-Saath CLAUDE.md:
-  → Automatic read on every session start
-  → Tech stack, rules, what's built — sab pehle se pata
-  → Tumhara prompt chota rehta hai
-  → Mistakes kam hoti hain (jaise localStorage use karna)

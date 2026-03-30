@@ -86,15 +86,35 @@
     },
     "propertyInfo": {
       "title": "Property information",
+      "heading": "Let's start creating your listing",
+      "subtitle": "Add or review details about your property's size.",
       "squareFootage": "Square footage",
-      "bedrooms": "Bedrooms",
-      "bathrooms": "Bathrooms"
+      "sqFt": "sq. ft.",
+      "bedrooms": "Total bedrooms",
+      "bathrooms": "Total bathrooms"
     },
     "rentDetails": {
       "title": "Rent details",
+      "heading": "How much are the monthly rent and the security deposit?",
+      "subtitle": "Add or review details about your property's size.",
+      "rentNestimate": "The current Rent estimate for this property is: {amount}",
       "monthlyRent": "Monthly rent",
+      "perMonth": "/month",
       "securityDeposit": "Security deposit",
-      "addSpecialOffer": "Add special offer"
+      "setDepositAsRent": "Set deposit as {amount} (one month's rent)",
+      "promoteOffer": "Do you want to promote a special offer?",
+      "addOffer": "Add an offer",
+      "addSpecialOffer": "Add special offer",
+      "specialOfferTitle": "Add special offer",
+      "specialOfferDescription": "Share details of the deal or discount you'd like to display to renters. This will appear on your listing until your chosen end date.",
+      "offerStartDate": "Offer start date",
+      "offerEndDate": "Offer end date",
+      "datePlaceholder": "MM/DD/YYYY",
+      "offerDescriptionLabel": "Description",
+      "offerDescriptionPlaceholder": "Example: Get $500 off your first month's rent when you sign by October 15.",
+      "offerWarning": "Your offer won't post if it includes contact info – phone numbers, urls, or email addresses",
+      "addOfferButton": "Add Offer",
+      "publish": "Publish"
     },
     "media": {
       "title": "Photos & media",
