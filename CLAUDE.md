@@ -45,12 +45,12 @@ Logo: Text "Nesto" in brand red until SVG provided
 - Layout: Navbar, LanguageSwitcher, Footer
 - Home: HeroSection, PropertyGridSection, FeatureCardsSection
 - Common: Providers, ListingTypeModal
+- Owner: Dashboard, ListingTable, ListingCard, ListingStatusBadge
 - Redux: authSlice, uiSlice only
 - Types: types/property.ts (complete), types/user.ts, types/api.ts
 - Data: src/lib/constants/dummyProperties.ts
 
 ## What's NOT built yet
-- Owner Dashboard
 - listingFormSlice
 - draftMiddleware (sessionStorage)
 - clearDraft utility

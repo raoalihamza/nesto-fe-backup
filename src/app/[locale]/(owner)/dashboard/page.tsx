@@ -101,7 +101,7 @@ export default function DashboardPage() {
               </h2>
 
               {/* Filter Tabs */}
-              <div className="flex gap-1 rounded-[12px] border border-border p-1 bg-[#E8F0F7]">
+              <div className="flex justify-center items-center gap-4 sm:gap-2 rounded-[12px] border border-border p-1 bg-[#E8F0F7]">
                 {filters.map((f) => (
                   <button
                     key={f.key}

@@ -73,10 +73,10 @@ export function ListingTable({ listings }: ListingTableProps) {
               </td>
               <td className="py-4">
                 <div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                  <button className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground">
+                  <button className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer">
                     <Pencil className="size-4" />
                   </button>
-                  <button className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground">
+                  <button className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer">
                     <Eye className="size-4" />
                   </button>
                 </div>

@@ -1,10 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
 import { Menu, User } from "lucide-react";
-import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { useAppSelector } from "@/store";
 
@@ -38,10 +44,12 @@ export function Navbar() {
             <SheetContent side="left" className="w-72 p-6">
               <SheetTitle className="sr-only">Navigation</SheetTitle>
               <div className="mb-6 flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-brand">
-                  <span className="text-sm font-bold text-white">N</span>
-                </div>
-                <span className="text-xl font-bold text-brand">Nesto</span>
+                <Image
+                  src={"/icons/nesto-logo-navbar.svg"}
+                  alt="Nesto Logo"
+                  width={100}
+                  height={30}
+                />
               </div>
               <nav className="flex flex-col gap-1">
                 {NAV_LINKS.map((link) => (
@@ -85,10 +93,12 @@ export function Navbar() {
 
         {/* Center: logo */}
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-brand">
-            <span className="text-sm font-bold text-white">N</span>
-          </div>
-          <span className="text-xl font-bold text-brand">Nesto</span>
+          <Image
+            src={"/icons/nesto-logo-navbar.svg"}
+            alt="Nesto Logo"
+            width={110}
+            height={30}
+          />
         </Link>
 
         {/* Desktop: right nav */}
