@@ -48,7 +48,7 @@ export interface AmenitiesData {
 }
 
 export interface ScreeningData {
-  petsAllowed: boolean;
+  petsAllowed: boolean | null;
   petPolicyNegotiable: boolean;
   minIncomeToRentRatio: string;
   incomeNegotiable: boolean;
@@ -135,7 +135,7 @@ const initialAmenities: AmenitiesData = {
 };
 
 const initialScreening: ScreeningData = {
-  petsAllowed: false,
+  petsAllowed: null,
   petPolicyNegotiable: false,
   minIncomeToRentRatio: "",
   incomeNegotiable: false,

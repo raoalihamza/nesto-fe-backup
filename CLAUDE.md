@@ -51,12 +51,12 @@ Logo: SVG at /icons/nesto-logo-navbar.svg (already in public)
 - Stepper shell: StepperLayout, StepProgressBar, StepSubHeader, SaveExitButton, StepNavButtons
 - Step 1 (Property Info): DONE
 - Step 2 (Rent Details + SpecialOfferModal): DONE
+- Step 3 (Media): DONE
+- Step 4 (Amenities — 2 sub-steps): DONE
+- Step 5 (Screening Criteria — 2 sub-steps): DONE
+- Step 6 (Costs & Fees + AdminFeeModal): DONE
 
 ## What's NOT built yet
-- Step 3: Media
-- Step 4: Amenities (2 sub-steps)
-- Step 5: Screening Criteria (2 sub-steps)
-- Step 6: Costs & Fees + AdminFeeModal
 - Step 7: Final Details (6 sub-steps)
 - Step 8: Review
 - Step 9: Pay & Publish

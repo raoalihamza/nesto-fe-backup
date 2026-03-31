@@ -32,7 +32,12 @@ export function StepNavButtons() {
     if (currentSubStep > 0) {
       dispatch(goToSubStep(currentSubStep - 1));
     } else if (!isFirstStep) {
-      dispatch(goToStep(currentStep - 1));
+      const prevStep = currentStep - 1;
+      const prevSubSteps = SUB_STEP_COUNTS[prevStep] ?? 1;
+      dispatch(goToStep(prevStep));
+      if (prevSubSteps > 1) {
+        dispatch(goToSubStep(prevSubSteps - 1));
+      }
     }
   }
 
