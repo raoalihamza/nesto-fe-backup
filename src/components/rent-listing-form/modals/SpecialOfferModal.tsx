@@ -14,14 +14,17 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { CalendarIcon } from "lucide-react";
+import Image from "next/image";
 
 interface SpecialOfferModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function SpecialOfferModal({ open, onOpenChange }: SpecialOfferModalProps) {
+export function SpecialOfferModal({
+  open,
+  onOpenChange,
+}: SpecialOfferModalProps) {
   const t = useTranslations("listing.rentDetails");
   const tCommon = useTranslations("common");
   const dispatch = useAppDispatch();
@@ -36,7 +39,7 @@ export function SpecialOfferModal({ open, onOpenChange }: SpecialOfferModalProps
         specialOfferStart: startDate,
         specialOfferEnd: endDate,
         specialOfferDescription: description,
-      })
+      }),
     );
     onOpenChange(false);
     setStartDate("");
@@ -53,12 +56,12 @@ export function SpecialOfferModal({ open, onOpenChange }: SpecialOfferModalProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg" showCloseButton>
+      <DialogContent className="sm:max-w-2xl" showCloseButton>
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">
+          <DialogTitle className="text-xl font-bold border-b-3 pb-2">
             {t("specialOfferTitle")}
           </DialogTitle>
-          <DialogDescription className="text-sm text-muted-foreground">
+          <DialogDescription className="text-sm text-foreground">
             {t("specialOfferDescription")}
           </DialogDescription>
         </DialogHeader>
@@ -78,7 +81,15 @@ export function SpecialOfferModal({ open, onOpenChange }: SpecialOfferModalProps
                   onChange={(e) => setStartDate(e.target.value)}
                   className="h-12 pr-10 text-base"
                 />
-                <CalendarIcon className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                <div className="absolute top-1/2 right-3  -translate-y-1/2 text-foreground cursor-pointer">
+                  <Image
+                    src="/icons/calendar.svg"
+                    alt="Calendar"
+                    width={20}
+                    height={20}
+                    className="cursor-pointer"
+                  />
+                </div>
               </div>
             </div>
 
@@ -94,7 +105,15 @@ export function SpecialOfferModal({ open, onOpenChange }: SpecialOfferModalProps
                   onChange={(e) => setEndDate(e.target.value)}
                   className="h-12 pr-10 text-base"
                 />
-                <CalendarIcon className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                <div className="absolute top-1/2 right-3  -translate-y-1/2 text-foreground cursor-pointer">
+                  <Image
+                    src="/icons/calendar.svg"
+                    alt="Calendar"
+                    width={20}
+                    height={20}
+                    className="cursor-pointer"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -110,18 +129,18 @@ export function SpecialOfferModal({ open, onOpenChange }: SpecialOfferModalProps
               onChange={(e) => setDescription(e.target.value)}
               className="min-h-[120px] text-base"
             />
-            <p className="mt-2 text-xs text-muted-foreground">
+            <p className="mt-2 text-xs text-muted-foreground border-b pb-2 px-2">
               {t("offerWarning")}
             </p>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="mt-6 flex items-center justify-end gap-4 border-t pt-4">
+        <div className="mt-6 flex items-center justify-end gap-4">
           <button
             type="button"
             onClick={handleCancel}
-            className="text-sm font-semibold text-brand hover:underline"
+            className="text-sm font-semibold text-brand hover:underline cursor-pointer"
           >
             {tCommon("cancel")}
           </button>

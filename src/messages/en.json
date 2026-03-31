@@ -118,21 +118,78 @@
     },
     "media": {
       "title": "Photos & media",
-      "dragDrop": "Drag and drop photos here",
-      "browse": "Browse files",
-      "tourUrl": "3D tour URL"
+      "addPhotosHeading": "Add photos",
+      "addPhotosSubtitle": "Photos help renters imagine living in your place.",
+      "dragOrBrowse": "Drag your file(s) or",
+      "browse": "browse",
+      "browsePhotos": "browse Photos",
+      "tourHeading": "3D Tour",
+      "tourSubtitle": "Photos help renters imagine living in your place.",
+      "addTour": "Add tour",
+      "tourUrlDialogTitle": "Add 3D tour URL",
+      "tourUrlPlaceholder": "https://my.matterport.com/show/?m=...",
+      "cancel": "Cancel",
+      "saveTour": "Save"
     },
     "amenities": {
       "title": "Amenities",
+      "step1Heading": "Showcase what's included in your time",
+      "step1Subtitle": "Sharing more will help renters see themselves in your home.",
+      "step2Heading": "Now tell us more about your property",
+      "step2Subtitle": "Sharing more will help renters see themselves in your home.",
       "laundry": "Laundry",
+      "laundryOptions": {
+        "washer_dryer_included": "Washer-dryer included",
+        "washer_dryer_hookups": "Washer-dryer hookups",
+        "shared_or_in_building": "Shared or in building",
+        "no_laundry": "No laundry facilities"
+      },
       "cooling": "Cooling",
+      "coolingOptions": {
+        "central": "Central",
+        "wall": "Wall",
+        "window": "Window"
+      },
       "heating": "Heating",
-      "appliances": "Appliances",
+      "heatingOptions": {
+        "baseboard": "Baseboard",
+        "forced_air": "Forced air",
+        "heat_pump": "Heat pump",
+        "wall": "Wall"
+      },
+      "appliances": "Appliance",
+      "applianceOptions": {
+        "dishwasher": "Dishwasher",
+        "freezer": "Freezer",
+        "microwave": "Microwave",
+        "oven": "Oven",
+        "refrigerator": "Refrigerator"
+      },
       "flooring": "Flooring",
+      "flooringOptions": {
+        "carpet": "Carpet",
+        "hardwood": "Hardwood",
+        "tile": "Tile"
+      },
+      "otherAmenities": "Other amenities",
+      "otherOptions": {
+        "furnished": "Furnished"
+      },
       "parking": "Parking",
-      "outdoor": "Outdoor",
-      "accessibility": "Accessibility",
-      "other": "Other"
+      "parkingOptions": {
+        "attached_garage": "Attached garage",
+        "detached_garage": "Detached garage",
+        "off_street": "Off-street parking"
+      },
+      "outdoorAmenities": "Outdoor amenities",
+      "outdoorOptions": {
+        "balcony_or_deck": "Balcony or deck",
+        "pool": "Pool"
+      },
+      "accessibility": "Accesibility",
+      "accessibilityOptions": {
+        "disabled_access": "Disabled access"
+      }
     },
     "screening": {
       "title": "Screening criteria",

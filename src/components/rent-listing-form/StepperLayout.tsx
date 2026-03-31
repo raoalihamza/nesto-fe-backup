@@ -9,6 +9,8 @@ import { StepProgressBar } from "@/components/rent-listing-form/StepProgressBar"
 import { StepNavButtons } from "@/components/rent-listing-form/StepNavButtons";
 import { Step1PropertyInfo } from "@/components/rent-listing-form/steps/Step1PropertyInfo";
 import { Step2RentDetails } from "@/components/rent-listing-form/steps/Step2RentDetails";
+import { Step3Media } from "@/components/rent-listing-form/steps/Step3Media";
+import { Step4Amenities } from "@/components/rent-listing-form/steps/Step4Amenities";
 
 const SESSION_KEY = "nesto_stepper_draft";
 
@@ -37,7 +39,11 @@ function getStepComponent(step: number) {
       return <Step1PropertyInfo />;
     case 1:
       return <Step2RentDetails />;
-    // Steps 2–8 will be added later
+    case 2:
+      return <Step3Media />;
+    case 3:
+      return <Step4Amenities />;
+    // Steps 4–8 will be added later
     default:
       return (
         <div className="flex flex-1 items-center justify-center text-muted-foreground">

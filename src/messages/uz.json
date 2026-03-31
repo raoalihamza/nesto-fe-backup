@@ -118,21 +118,78 @@
     },
     "media": {
       "title": "Rasmlar va media",
-      "dragDrop": "Rasmlarni shu yerga tashlang",
-      "browse": "Fayllarni ko'rish",
-      "tourUrl": "3D tur havolasi"
+      "addPhotosHeading": "Rasmlar qo'shish",
+      "addPhotosSubtitle": "Rasmlar ijarachilarga uyingizda yashashni tasavvur qilishga yordam beradi.",
+      "dragOrBrowse": "Fayllaringizni tashlang yoki",
+      "browse": "ko'rish",
+      "browsePhotos": "Rasmlarni ko'rish",
+      "tourHeading": "3D Tur",
+      "tourSubtitle": "Rasmlar ijarachilarga uyingizda yashashni tasavvur qilishga yordam beradi.",
+      "addTour": "Tur qo'shish",
+      "tourUrlDialogTitle": "3D tur havolasini qo'shish",
+      "tourUrlPlaceholder": "https://my.matterport.com/show/?m=...",
+      "cancel": "Bekor qilish",
+      "saveTour": "Saqlash"
     },
     "amenities": {
       "title": "Qulayliklar",
+      "step1Heading": "Uyingizda nimalar borligini ko'rsating",
+      "step1Subtitle": "Ko'proq ma'lumot ijarachilarga uyingizda o'zlarini tasavvur qilishga yordam beradi.",
+      "step2Heading": "Endi mulkingiz haqida ko'proq ma'lumot bering",
+      "step2Subtitle": "Ko'proq ma'lumot ijarachilarga uyingizda o'zlarini tasavvur qilishga yordam beradi.",
       "laundry": "Kir yuvish",
+      "laundryOptions": {
+        "washer_dryer_included": "Kir yuvish-quritish mashinasi mavjud",
+        "washer_dryer_hookups": "Kir yuvish-quritish ulanishlari",
+        "shared_or_in_building": "Umumiy yoki binoda",
+        "no_laundry": "Kir yuvish imkoniyati yo'q"
+      },
       "cooling": "Sovutish",
+      "coolingOptions": {
+        "central": "Markaziy",
+        "wall": "Devorga o'rnatilgan",
+        "window": "Deraza"
+      },
       "heating": "Isitish",
+      "heatingOptions": {
+        "baseboard": "Plintus",
+        "forced_air": "Majburiy havo",
+        "heat_pump": "Issiqlik nasosi",
+        "wall": "Devorga o'rnatilgan"
+      },
       "appliances": "Jihozlar",
+      "applianceOptions": {
+        "dishwasher": "Idish yuvish mashinasi",
+        "freezer": "Muzlatgich",
+        "microwave": "Mikroto'lqinli pech",
+        "oven": "Pech",
+        "refrigerator": "Sovutgich"
+      },
       "flooring": "Pol qoplamasi",
+      "flooringOptions": {
+        "carpet": "Gilam",
+        "hardwood": "Qattiq yog'och",
+        "tile": "Plitka"
+      },
+      "otherAmenities": "Boshqa qulayliklar",
+      "otherOptions": {
+        "furnished": "Jihozlangan"
+      },
       "parking": "Avtomobil to'xtash joyi",
-      "outdoor": "Tashqi",
-      "accessibility": "Qulaylik",
-      "other": "Boshqa"
+      "parkingOptions": {
+        "attached_garage": "Biriktirilgan garaj",
+        "detached_garage": "Alohida garaj",
+        "off_street": "Ko'chadan tashqari to'xtash"
+      },
+      "outdoorAmenities": "Tashqi qulayliklar",
+      "outdoorOptions": {
+        "balcony_or_deck": "Balkon yoki ayvon",
+        "pool": "Hovuz"
+      },
+      "accessibility": "Maxsus imkoniyatlar",
+      "accessibilityOptions": {
+        "disabled_access": "Nogironlar uchun kirish"
+      }
     },
     "screening": {
       "title": "Tekshirish mezonlari",

@@ -5,4 +5,6 @@ export { SaveExitButton } from "./SaveExitButton";
 export { StepNavButtons } from "./StepNavButtons";
 export { Step1PropertyInfo } from "./steps/Step1PropertyInfo";
 export { Step2RentDetails } from "./steps/Step2RentDetails";
+export { Step3Media } from "./steps/Step3Media";
+export { Step4Amenities } from "./steps/Step4Amenities";
 export { SpecialOfferModal } from "./modals/SpecialOfferModal";

@@ -118,21 +118,78 @@
     },
     "media": {
       "title": "Фото и медиа",
-      "dragDrop": "Перетащите фотографии сюда",
-      "browse": "Выбрать файлы",
-      "tourUrl": "Ссылка на 3D тур"
+      "addPhotosHeading": "Добавить фотографии",
+      "addPhotosSubtitle": "Фотографии помогут арендаторам представить жизнь в вашем жилье.",
+      "dragOrBrowse": "Перетащите файлы или",
+      "browse": "выберите",
+      "browsePhotos": "выберите фотографии",
+      "tourHeading": "3D Тур",
+      "tourSubtitle": "Фотографии помогут арендаторам представить жизнь в вашем жилье.",
+      "addTour": "Добавить тур",
+      "tourUrlDialogTitle": "Добавить ссылку на 3D тур",
+      "tourUrlPlaceholder": "https://my.matterport.com/show/?m=...",
+      "cancel": "Отмена",
+      "saveTour": "Сохранить"
     },
     "amenities": {
       "title": "Удобства",
+      "step1Heading": "Покажите, что включено в ваше жильё",
+      "step1Subtitle": "Больше информации поможет арендаторам представить себя в вашем доме.",
+      "step2Heading": "Расскажите больше о вашей недвижимости",
+      "step2Subtitle": "Больше информации поможет арендаторам представить себя в вашем доме.",
       "laundry": "Стирка",
+      "laundryOptions": {
+        "washer_dryer_included": "Стиральная и сушильная машина включены",
+        "washer_dryer_hookups": "Подключение стиральной/сушильной машины",
+        "shared_or_in_building": "Общая или в здании",
+        "no_laundry": "Нет прачечной"
+      },
       "cooling": "Охлаждение",
+      "coolingOptions": {
+        "central": "Центральное",
+        "wall": "Настенное",
+        "window": "Оконное"
+      },
       "heating": "Отопление",
+      "heatingOptions": {
+        "baseboard": "Плинтусное",
+        "forced_air": "Принудительный воздух",
+        "heat_pump": "Тепловой насос",
+        "wall": "Настенное"
+      },
       "appliances": "Бытовая техника",
+      "applianceOptions": {
+        "dishwasher": "Посудомоечная машина",
+        "freezer": "Морозильник",
+        "microwave": "Микроволновка",
+        "oven": "Духовка",
+        "refrigerator": "Холодильник"
+      },
       "flooring": "Напольное покрытие",
+      "flooringOptions": {
+        "carpet": "Ковёр",
+        "hardwood": "Паркет",
+        "tile": "Плитка"
+      },
+      "otherAmenities": "Другие удобства",
+      "otherOptions": {
+        "furnished": "Меблированное"
+      },
       "parking": "Парковка",
-      "outdoor": "На открытом воздухе",
+      "parkingOptions": {
+        "attached_garage": "Пристроенный гараж",
+        "detached_garage": "Отдельный гараж",
+        "off_street": "Парковка вне улицы"
+      },
+      "outdoorAmenities": "Удобства на улице",
+      "outdoorOptions": {
+        "balcony_or_deck": "Балкон или терраса",
+        "pool": "Бассейн"
+      },
       "accessibility": "Доступность",
-      "other": "Другое"
+      "accessibilityOptions": {
+        "disabled_access": "Доступ для инвалидов"
+      }
     },
     "screening": {
       "title": "Критерии отбора",

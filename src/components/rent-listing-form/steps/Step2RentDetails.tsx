@@ -81,19 +81,17 @@ export function Step2RentDetails() {
               className="h-12 pl-8 text-base"
             />
           </div>
-          {data.monthlyRent && data.monthlyRent > 0 && (
-            <button
-              type="button"
-              onClick={() =>
-                dispatch(
-                  setRentDetails({ securityDeposit: data.monthlyRent })
-                )
-              }
-              className="mt-1.5 text-sm font-medium text-brand hover:underline"
-            >
-              {t("setDepositAsRent", { amount: rentDisplay })}
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() =>
+              dispatch(
+                setRentDetails({ securityDeposit: data.monthlyRent ?? 500 })
+              )
+            }
+            className="mt-1.5 text-sm font-medium text-brand underline"
+          >
+            {t("setDepositAsRent", { amount: rentDisplay })}
+          </button>
         </div>
 
         {/* Special offer section */}
@@ -104,7 +102,7 @@ export function Step2RentDetails() {
           <Button
             variant="outline"
             onClick={() => setModalOpen(true)}
-            className="mt-3 h-10 rounded-lg px-4 text-sm font-medium"
+            className="mt-3 h-10 rounded-lg px-4 text-sm font-medium cursor-pointer"
           >
             {t("addOffer")}
           </Button>

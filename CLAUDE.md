@@ -48,12 +48,11 @@ Logo: SVG at /icons/nesto-logo-navbar.svg (already in public)
 - Owner: Dashboard, ListingTable, ListingCard, ListingStatusBadge
 - Redux: authSlice, uiSlice, listingFormSlice (all 9 steps typed)
 - Draft: draftMiddleware (sessionStorage), clearAllDraftData utility, useLocalDraft hook
+- Stepper shell: StepperLayout, StepProgressBar, StepSubHeader, SaveExitButton, StepNavButtons
+- Step 1 (Property Info): DONE
+- Step 2 (Rent Details + SpecialOfferModal): DONE
 
 ## What's NOT built yet
-- Stepper shell (StepperLayout, StepProgressBar, SaveExitButton, StepNavButtons)
-- src/app/[locale]/(owner)/listings/create/page.tsx
-- Step 1: Property Info
-- Step 2: Rent Details + SpecialOfferModal
 - Step 3: Media
 - Step 4: Amenities (2 sub-steps)
 - Step 5: Screening Criteria (2 sub-steps)
@@ -71,20 +70,18 @@ Logo: SVG at /icons/nesto-logo-navbar.svg (already in public)
 
 ## Draft Persistence (CRITICAL)
 - Redux = source of truth while form is active (in-memory)
-- sessionStorage key "nesto_stepper_draft" = tab refresh safety (written by draftMiddleware on every listingForm/ action)
+- sessionStorage key "nesto_stepper_draft" = tab refresh safety (written by draftMiddleware)
 - localStorage key "nesto_draft_id" = ONLY stores draftId string after Save & Exit
 - Full formData NEVER goes in localStorage
-- clearAllDraftData() → clears sessionStorage + localStorage draftId + resets Redux
-- Called in exactly 3 places: Save & Exit API success, Publish API success, beforeunload confirm
-- beforeunload alert fires when isDirty=true and user tries to close tab/browser
+- clearAllDraftData() called on: Save & Exit success, Publish success, beforeunload confirm
 
 ## listingFormSlice — Key Info
 - Location: src/store/slices/listingFormSlice.ts
+- Step data interfaces: PropertyInfoData, RentDetailsData, MediaData,
+  AmenitiesData, ScreeningData, CostsAndFeesData, FinalDetailsData
 - Reducers: goToStep, goToSubStep, markStepComplete, setPropertyInfo, setRentDetails,
   setMedia, setAmenities, setScreening, setCostsAndFees, setFinalDetails,
   setDraftId, setIsDirty, setIsSaving, setLastSavedAt, restoreFromSession, resetListingForm
-- Step data interfaces exported: PropertyInfoData, RentDetailsData, MediaData,
-  AmenitiesData, ScreeningData, CostsAndFeesData, FinalDetailsData
 
 ## 9 Steps (0-indexed)
 - 0: Property Info (1 sub-step)
