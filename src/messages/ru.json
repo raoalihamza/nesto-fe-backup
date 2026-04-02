@@ -317,11 +317,38 @@
       "title": "Просмотрите объявление",
       "incomplete": "Не завершено",
       "complete": "Завершено",
-      "preview": "Предпросмотр"
+      "preview": "Предпросмотр",
+      "listingIncomplete": "Ваше объявление не завершено",
+      "listingComplete": "Ваше объявление готово",
+      "completeToPublish": "Заполните {count} ключевых разделов для публикации.",
+      "readyToPublish": "Ваше объявление готово к публикации.",
+      "previewListing": "Предпросмотр",
+      "propertyInformation": "Информация о недвижимости",
+      "address": "Адрес",
+      "hidePropertyAddress": "Скрыть адрес",
+      "propertyType": "Тип недвижимости",
+      "house": "Дом",
+      "propertyDescription": "Описание недвижимости",
+      "specialOffer": "Специальное предложение",
+      "photos": "Фотографии",
+      "interiorAmenities": "Внутренние удобства",
+      "propertyAmenities": "Удобства недвижимости",
+      "additionalAmenities": "Дополнительные удобства",
+      "financialExpectations": "Финансовые ожидания",
+      "pet": "Животные",
+      "noPets": "Без животных",
+      "petsAllowed": "Животные разрешены",
+      "costAndFees": "Расходы и сборы",
+      "renterInsurance": "Страховка арендатора",
+      "tourBookingMethod": "Способ бронирования тура"
     },
     "publish": {
       "title": "Оплата и публикация",
-      "publishListing": "Опубликовать"
+      "publishListing": "Опубликовать",
+      "publishing": "Публикация…",
+      "earlyAccessTitle": "Ранний доступ",
+      "earlyAccessDescription": "В настоящее время мы предлагаем все услуги размещения бесплатно для наших ранних партнёров. Сегодня оплата не требуется.",
+      "errorGeneric": "Что-то пошло не так. Пожалуйста, попробуйте ещё раз."
     }
   },
   "property": {

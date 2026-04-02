@@ -317,11 +317,38 @@
       "title": "Review your listing",
       "incomplete": "Incomplete",
       "complete": "Complete",
-      "preview": "Preview"
+      "preview": "Preview",
+      "listingIncomplete": "Your listing is incomplete",
+      "listingComplete": "Your listing is complete",
+      "completeToPublish": "Complete {count} key section to publish your listing.",
+      "readyToPublish": "Your listing is ready to publish.",
+      "previewListing": "Preview listing",
+      "propertyInformation": "Property Information",
+      "address": "Address",
+      "hidePropertyAddress": "Hide property address",
+      "propertyType": "Property type",
+      "house": "House",
+      "propertyDescription": "Property description",
+      "specialOffer": "Special offer",
+      "photos": "Photos",
+      "interiorAmenities": "Interior amenities",
+      "propertyAmenities": "Property amenities",
+      "additionalAmenities": "Additional amenities",
+      "financialExpectations": "Financial expectations",
+      "pet": "Pet",
+      "noPets": "No pets",
+      "petsAllowed": "Pets allowed",
+      "costAndFees": "Cost and fees",
+      "renterInsurance": "Renter insurance",
+      "tourBookingMethod": "Tour booking method"
     },
     "publish": {
       "title": "Pay & publish",
-      "publishListing": "Publish listing"
+      "publishListing": "Publish",
+      "publishing": "Publishing…",
+      "earlyAccessTitle": "Early Access",
+      "earlyAccessDescription": "We are currently offering all listing services for free to our early partners. No payment is required today.",
+      "errorGeneric": "Something went wrong. Please try again."
     }
   },
   "property": {

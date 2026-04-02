@@ -55,10 +55,10 @@ Logo: SVG at /icons/nesto-logo-navbar.svg (already in public)
 - Step 4 (Amenities — 2 sub-steps): DONE
 - Step 5 (Screening Criteria — 2 sub-steps): DONE
 - Step 6 (Costs & Fees + AdminFeeModal): DONE
+- Step 7 (Final Details — 6 sub-steps): DONE
+- Step 8 (Review): DONE
 
 ## What's NOT built yet
-- Step 7: Final Details (6 sub-steps)
-- Step 8: Review
 - Step 9: Pay & Publish
 
 ## Stepper Architecture (CRITICAL)

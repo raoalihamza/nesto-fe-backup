@@ -317,11 +317,38 @@
       "title": "E'loningizni ko'rib chiqing",
       "incomplete": "To'liq emas",
       "complete": "Tugallangan",
-      "preview": "Ko'rish"
+      "preview": "Ko'rish",
+      "listingIncomplete": "E'loningiz to'liq emas",
+      "listingComplete": "E'loningiz tayyor",
+      "completeToPublish": "Nashr etish uchun {count} ta asosiy bo'limni to'ldiring.",
+      "readyToPublish": "E'loningiz nashr etishga tayyor.",
+      "previewListing": "E'lonni ko'rish",
+      "propertyInformation": "Mulk ma'lumotlari",
+      "address": "Manzil",
+      "hidePropertyAddress": "Mulk manzilini yashirish",
+      "propertyType": "Mulk turi",
+      "house": "Uy",
+      "propertyDescription": "Mulk tavsifi",
+      "specialOffer": "Maxsus taklif",
+      "photos": "Rasmlar",
+      "interiorAmenities": "Ichki qulayliklar",
+      "propertyAmenities": "Mulk qulayliklari",
+      "additionalAmenities": "Qo'shimcha qulayliklar",
+      "financialExpectations": "Moliyaviy kutishlar",
+      "pet": "Uy hayvonlari",
+      "noPets": "Uy hayvonlari yo'q",
+      "petsAllowed": "Uy hayvonlariga ruxsat",
+      "costAndFees": "Xarajatlar va to'lovlar",
+      "renterInsurance": "Ijarachi sug'urtasi",
+      "tourBookingMethod": "Turni bron qilish usuli"
     },
     "publish": {
       "title": "To'lash va nashr etish",
-      "publishListing": "E'lonni nashr etish"
+      "publishListing": "Nashr etish",
+      "publishing": "Nashr etilmoqda…",
+      "earlyAccessTitle": "Erta kirish",
+      "earlyAccessDescription": "Biz hozirda barcha e'lon xizmatlarini erta hamkorlarimiz uchun bepul taqdim etmoqdamiz. Bugun hech qanday to'lov talab qilinmaydi.",
+      "errorGeneric": "Xatolik yuz berdi. Iltimos, qayta urinib ko'ring."
     }
   },
   "property": {
