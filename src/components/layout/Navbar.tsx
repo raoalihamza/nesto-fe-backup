@@ -17,7 +17,7 @@ import { useAppSelector } from "@/store";
 const NAV_LINKS = [
   { key: "buy", href: "/buy" },
   { key: "rent", href: "/rent" },
-  { key: "sell", href: "/sell" },
+  { key: "sell", href: "/listings/sale" },
   { key: "getMortgage", href: "#" },
   { key: "findAgent", href: "#" },
 ] as const;

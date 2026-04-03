@@ -3,6 +3,7 @@ import { useDispatch, useSelector, type TypedUseSelectorHook } from "react-redux
 import authReducer from "./slices/authSlice";
 import uiReducer from "./slices/uiSlice";
 import listingFormReducer from "./slices/listingFormSlice";
+import saleListingReducer from "./slices/saleListingSlice";
 import { draftMiddleware } from "./middleware/draftMiddleware";
 
 export const store = configureStore({
@@ -10,6 +11,7 @@ export const store = configureStore({
     auth: authReducer,
     ui: uiReducer,
     listingForm: listingFormReducer,
+    saleListing: saleListingReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(draftMiddleware),

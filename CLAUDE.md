@@ -8,7 +8,7 @@ Client: Timur Rakhmatov. Built by: Ali (Cherry Byte Technologies).
 - Next.js 16.1.7, React 19, TypeScript (strict)
 - Tailwind v4 + shadcn/ui (base-nova style)
 - next-intl v4 (en default, uz, ru)
-- Redux Toolkit — authSlice, uiSlice, listingFormSlice
+- Redux Toolkit — authSlice, uiSlice, listingFormSlice, saleListingSlice (new)
 - TanStack Query (server state)
 - react-hook-form + zod
 - nuqs (URL filters)
@@ -38,7 +38,8 @@ Logo: SVG at /icons/nesto-logo-navbar.svg (already in public)
 ## Route Groups
 - (auth) — login, register, forgot-password, reset-password — no navbar
 - (main) — buy, rent, sell, search, saved, messages, property/[slug]
-- (owner) — dashboard, listings/create, listings/[id]/edit
+- (owner) — dashboard, listings/create (rent), listings/[id]/edit
+- (rent-listing) — listings/create (rent stepper, no navbar)
 
 ## Current State (what's built)
 - Auth: LoginForm, RegisterForm, SocialLoginButtons, NestoLogo
@@ -48,51 +49,32 @@ Logo: SVG at /icons/nesto-logo-navbar.svg (already in public)
 - Owner: Dashboard, ListingTable, ListingCard, ListingStatusBadge
 - Redux: authSlice, uiSlice, listingFormSlice (all 9 steps typed)
 - Draft: draftMiddleware (sessionStorage), clearAllDraftData utility, useLocalDraft hook
-- Stepper shell: StepperLayout, StepProgressBar, StepSubHeader, SaveExitButton, StepNavButtons
-- Step 1 (Property Info): DONE
-- Step 2 (Rent Details + SpecialOfferModal): DONE
-- Step 3 (Media): DONE
-- Step 4 (Amenities — 2 sub-steps): DONE
-- Step 5 (Screening Criteria — 2 sub-steps): DONE
-- Step 6 (Costs & Fees + AdminFeeModal): DONE
-- Step 7 (Final Details — 6 sub-steps): DONE
-- Step 8 (Review): DONE
+- Rent listing stepper (ALL 9 STEPS DONE): components in src/components/rent-listing-form/
 
 ## What's NOT built yet
-- Step 9: Pay & Publish
+- saleListingSlice (new Redux slice for sale listing)
+- Sale listing Screen 1: Address search with Mapbox map
+- Sale listing Screen 2: Full sale listing form
 
-## Stepper Architecture (CRITICAL)
-- All 9 steps live on ONE page: /listings/create — URL NEVER changes between steps
-- StepperLayout renders the correct step component based on Redux currentStep + currentSubStep
-- No routing, no query params — pure Redux-driven navigation
-- User can navigate freely forward/backward — NO validation blocking between steps
-- Validation only triggers on Review step (step 7) when attempting to publish
+## Sale Listing Architecture (CRITICAL)
+- Screen 1 route: /listings/sale — map + address search, NO navbar from layout, show Navbar manually
+- Screen 2 route: /listings/sale/create — long single form, Navbar visible
+- NO draft, NO stepper, NO save & exit
+- Single "Get to list it now" button at bottom submits everything
+- beforeunload alert fires when isDirty=true (tab close, browser close, link navigation)
+- On submit success: reset Redux saleListingSlice → redirect to /dashboard
+- Address from Screen 1 passed to Screen 2 via Redux saleListingSlice
 
-## Draft Persistence (CRITICAL)
-- Redux = source of truth while form is active (in-memory)
-- sessionStorage key "nesto_stepper_draft" = tab refresh safety (written by draftMiddleware)
-- localStorage key "nesto_draft_id" = ONLY stores draftId string after Save & Exit
-- Full formData NEVER goes in localStorage
-- clearAllDraftData() called on: Save & Exit success, Publish success, beforeunload confirm
+## Rent Listing Architecture (reference)
+- All 9 steps on ONE page: (rent-listing)/listings/create — URL never changes
+- Components in: src/components/rent-listing-form/
+- Redux slice: listingFormSlice
+- Draft: sessionStorage + localStorage draftId
 
-## listingFormSlice — Key Info
+## listingFormSlice (rent listing) — Key Info
 - Location: src/store/slices/listingFormSlice.ts
 - Step data interfaces: PropertyInfoData, RentDetailsData, MediaData,
   AmenitiesData, ScreeningData, CostsAndFeesData, FinalDetailsData
-- Reducers: goToStep, goToSubStep, markStepComplete, setPropertyInfo, setRentDetails,
-  setMedia, setAmenities, setScreening, setCostsAndFees, setFinalDetails,
-  setDraftId, setIsDirty, setIsSaving, setLastSavedAt, restoreFromSession, resetListingForm
-
-## 9 Steps (0-indexed)
-- 0: Property Info (1 sub-step)
-- 1: Rent Details (1 sub-step)
-- 2: Media (1 sub-step)
-- 3: Amenities (2 sub-steps)
-- 4: Screening Criteria (2 sub-steps)
-- 5: Costs & Fees (1 sub-step)
-- 6: Final Details (6 sub-steps)
-- 7: Review (1 sub-step)
-- 8: Pay & Publish (1 sub-step)
 
 ## Dummy Data
 - src/lib/constants/dummyProperties.ts

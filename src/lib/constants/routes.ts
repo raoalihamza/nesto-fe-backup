@@ -18,6 +18,8 @@ export const ROUTES = {
     CREATE: "/listings/create",
     EDIT: (id: string) => `/listings/${id}/edit`,
     PREVIEW: (id: string) => `/listings/${id}/preview`,
+    SALE: "/listings/sale",
+    SALE_CREATE: "/listings/sale/create",
     APPLICANTS: "/applicants",
     ANALYTICS: "/analytics",
   },
