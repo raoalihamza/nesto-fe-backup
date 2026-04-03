@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 
 function GoogleIcon() {
   return (
@@ -47,7 +48,10 @@ interface SocialLoginButtonsProps {
   isLoading?: boolean;
 }
 
-export function SocialLoginButtons({ onSocialLogin, isLoading }: SocialLoginButtonsProps) {
+export function SocialLoginButtons({
+  onSocialLogin,
+  isLoading,
+}: SocialLoginButtonsProps) {
   const t = useTranslations("auth");
 
   return (
@@ -59,7 +63,7 @@ export function SocialLoginButtons({ onSocialLogin, isLoading }: SocialLoginButt
         onClick={() => onSocialLogin("google")}
         disabled={isLoading}
       >
-        <GoogleIcon />
+        <Image src="/icons/google.svg" alt="Google" width={24} height={24} />
         <span className="flex-1 text-center">{t("signInWithGoogle")}</span>
       </Button>
 
@@ -70,7 +74,12 @@ export function SocialLoginButtons({ onSocialLogin, isLoading }: SocialLoginButt
         onClick={() => onSocialLogin("facebook")}
         disabled={isLoading}
       >
-        <FacebookIcon />
+        <Image
+          src="/icons/facebook.svg"
+          alt="Facebook"
+          width={24}
+          height={24}
+        />
         <span className="flex-1 text-center">{t("signInWithFacebook")}</span>
       </Button>
 
@@ -81,7 +90,7 @@ export function SocialLoginButtons({ onSocialLogin, isLoading }: SocialLoginButt
         onClick={() => onSocialLogin("apple")}
         disabled={isLoading}
       >
-        <AppleIcon />
+        <Image src="/icons/apple.svg" alt="Apple" width={24} height={24} />
         <span className="flex-1 text-center">{t("signInWithApple")}</span>
       </Button>
     </div>

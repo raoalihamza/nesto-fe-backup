@@ -9,6 +9,7 @@ import { registerApi, socialLoginApi } from "@/lib/api/auth";
 import { setCredentials } from "@/store/slices/authSlice";
 import { registerSchema, type RegisterFormValues } from "@/lib/validations/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Eye, EyeOff } from "lucide-react";
 import { Link, useRouter } from "@/i18n/routing";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,8 @@ export function RegisterForm() {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const {
     register,
@@ -58,8 +61,8 @@ export function RegisterForm() {
   };
 
   return (
-    <div className="w-full max-w-[400px] space-y-6 md:max-w-[500px]">
-      <div className="flex justify-center">
+    <div className="w-full max-w-[400px] space-y-6">
+      <div className="flex justify-center pb-2">
         <NestoLogo size="lg" />
       </div>
 
@@ -88,12 +91,21 @@ export function RegisterForm() {
           <Label htmlFor="password" className="text-sm font-medium">
             {t("password")}
           </Label>
-          <Input
-            id="password"
-            type="password"
-            className="h-12 rounded-lg"
-            {...register("password")}
-          />
+          <div className="relative">
+            <Input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              className="h-12 rounded-lg pr-10"
+              {...register("password")}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+            </button>
+          </div>
           {errors.password && (
             <p className="text-sm text-destructive">{errors.password.message}</p>
           )}
@@ -103,12 +115,21 @@ export function RegisterForm() {
           <Label htmlFor="confirmPassword" className="text-sm font-medium">
             {t("confirmPassword")}
           </Label>
-          <Input
-            id="confirmPassword"
-            type="password"
-            className="h-12 rounded-lg"
-            {...register("confirmPassword")}
-          />
+          <div className="relative">
+            <Input
+              id="confirmPassword"
+              type={showConfirmPassword ? "text" : "password"}
+              className="h-12 rounded-lg pr-10"
+              {...register("confirmPassword")}
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+            </button>
+          </div>
           {errors.confirmPassword && (
             <p className="text-sm text-destructive">
               {errors.confirmPassword.message}
@@ -125,20 +146,20 @@ export function RegisterForm() {
         </Button>
       </form>
 
-      <p className="text-center text-sm text-muted-foreground">
+      <p className="text-left text-sm text-accent-foreground">
         {t("alreadyHaveAccount")}{" "}
         <Link
           href="/login"
-          className="font-medium text-brand hover:text-brand-dark"
+          className="font-medium text-brand hover:text-brand-dark underline"
         >
           {t("signInLink")}
         </Link>
       </p>
 
       <div className="flex items-center gap-4">
-        <div className="h-px flex-1 bg-gray-200" />
-        <span className="text-sm text-muted-foreground">{t("or")}</span>
-        <div className="h-px flex-1 bg-gray-200" />
+        <div className="h-px flex-1 bg-gray-400" />
+        <span className="text-sm text-accent-foreground">{t("or")}</span>
+        <div className="h-px flex-1 bg-gray-400" />
       </div>
 
       <SocialLoginButtons onSocialLogin={handleSocialLogin} isLoading={isSubmitting} />

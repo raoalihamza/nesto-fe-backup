@@ -25,10 +25,10 @@ export function HeroSection() {
   const featured = DUMMY_PROPERTIES.find((p) => p.featured);
 
   return (
-    <section className="relative mx-auto max-w-7xl px-4 pt-4 md:pt-6">
+    <section className="relative mx-auto max-w-7xl px-0 pt-4 md:pt-6">
       <div className="relative">
         {/* ── Hero background image ── */}
-        <div className="relative h-[320px] w-full overflow-hidden rounded-2xl bg-gray-300 md:h-[440px]">
+        <div className="relative h-[360px] w-full overflow-hidden rounded-2xl bg-gray-300 md:h-[470px]">
           <Image
             src={HERO_IMAGES[activeSlide]}
             alt="Hero"
@@ -42,9 +42,9 @@ export function HeroSection() {
 
           {/* ── Featured property promo card ── */}
           {featured && (
-            <div className="absolute bottom-5 left-5 md:bottom-8 md:left-8">
+            <div className="absolute bottom-12 left-5 md:bottom-22 md:left-8">
               {/* Card wrapper — fixed aspect ratio matching Figma (445 × 348) */}
-              <div className="relative w-[240px] h-[183px] md:w-[390px] md:h-[310px]">
+              <div className="relative w-[210px] h-[160px] md:w-[340px] md:h-[270px]">
                 {/*
                   Layer 1: Glassmorphism background
                   Uses mask-image (NOT clip-path) because clip-path breaks
@@ -103,11 +103,11 @@ export function HeroSection() {
                 </div>
 
                 {/* Layer 5: Price badge — inside card, bottom-right */}
-                <div className="absolute bottom-[10%] right-[8%] z-10 rounded-lg bg-brand px-3 py-1.5 shadow-[0px_10px_15px_-3px_rgba(192,33,33,0.2),0px_4px_6px_-4px_rgba(192,33,33,0.2)] md:px-4 md:py-2">
-                  <p className="text-[10px] font-semibold text-white md:text-sm">
+                <div className="absolute bottom-[5%] right-[6%] z-10 rounded-lg bg-brand px-2 py-1 shadow-[0px_10px_15px_-3px_rgba(192,33,33,0.2),0px_4px_6px_-4px_rgba(192,33,33,0.2)]">
+                  <p className="text-[12px]! font-medium text-white">
                     {featured.leaseDuration?.toLowerCase()} rent
                   </p>
-                  <p className="text-sm font-bold text-white md:text-base">
+                  <p className="text-sm font-semibold text-white">
                     £{featured.monthlyRent?.toLocaleString()}
                   </p>
                 </div>
@@ -117,8 +117,8 @@ export function HeroSection() {
         </div>
 
         {/* ── Thumbnail gallery (top-right) ── */}
-        <div className="absolute right-3 top-3 w-[180px] rounded-xl bg-white/92 p-2 shadow-lg backdrop-blur-sm md:right-6 md:top-6 md:w-[320px]">
-          <div className="grid grid-cols-3 gap-3">
+        <div className="absolute right-3 top-3 w-[150px] rounded-xl bg-white/92 p-1.5 shadow-lg backdrop-blur-sm md:right-0 md:top-0 md:w-[260px]">
+          <div className="grid grid-cols-3 gap-2">
             {HERO_IMAGES.map((img, i) => (
               <button
                 key={i}
@@ -131,7 +131,7 @@ export function HeroSection() {
                   alt=""
                   width={150}
                   height={90}
-                  className="h-[44px] w-full object-cover md:h-[74px]"
+                  className="h-[36px] w-full object-cover md:h-[60px]"
                   onError={(e) => {
                     (e.target as HTMLImageElement).style.display = "none";
                   }}
@@ -153,7 +153,7 @@ export function HeroSection() {
       </div>
 
       {/* ── Search bar ── */}
-      <div className="mx-auto -mt-6 max-w-6xl px-2 md:-mt-7">
+      <div className="relative z-10 mx-auto -mt-9 max-w-6xl px-2 md:-mt-11">
         <div className="rounded-xl bg-white p-2.5 shadow-xl ring-1 ring-black/5 md:p-3">
           <div className="grid grid-cols-1 gap-2 md:grid-cols-[1.6fr_1fr_1fr_1.4fr_auto]">
             <div className="rounded-md border border-gray-100 px-3 py-2">

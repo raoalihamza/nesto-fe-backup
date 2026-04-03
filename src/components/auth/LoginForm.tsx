@@ -8,6 +8,7 @@ import { setCredentials, setLoading, setError } from "@/store/slices/authSlice";
 import { loginApi, socialLoginApi } from "@/lib/api/auth";
 import { loginSchema, type LoginFormValues } from "@/lib/validations/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Eye, EyeOff } from "lucide-react";
 import { Link, useRouter } from "@/i18n/routing";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,7 @@ export function LoginForm() {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -59,7 +61,7 @@ export function LoginForm() {
 
   return (
     <div className="w-full max-w-[400px] space-y-6">
-      <div className="flex justify-center">
+      <div className="flex justify-center pb-2">
         <NestoLogo size="lg" />
       </div>
 
@@ -88,14 +90,25 @@ export function LoginForm() {
           <Label htmlFor="password" className="text-sm font-medium">
             {t("password")}
           </Label>
-          <Input
-            id="password"
-            type="password"
-            className="h-12 rounded-lg"
-            {...register("password")}
-          />
+          <div className="relative">
+            <Input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              className="h-12 rounded-lg pr-10"
+              {...register("password")}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+            </button>
+          </div>
           {errors.password && (
-            <p className="text-sm text-destructive">{errors.password.message}</p>
+            <p className="text-sm text-destructive">
+              {errors.password.message}
+            </p>
           )}
           <div className="flex justify-end">
             <Link
@@ -116,23 +129,26 @@ export function LoginForm() {
         </Button>
       </form>
 
-      <p className="text-center text-sm text-muted-foreground">
+      <p className="text-left text-sm text-accent-foreground">
         {t("newToNesto")}{" "}
         <Link
           href="/register"
-          className="font-medium text-brand hover:text-brand-dark"
+          className="font-medium text-brand hover:text-brand-dark underline"
         >
           {t("createAccountLink")}
         </Link>
       </p>
 
       <div className="flex items-center gap-4">
-        <div className="h-px flex-1 bg-gray-200" />
-        <span className="text-sm text-muted-foreground">{t("or")}</span>
-        <div className="h-px flex-1 bg-gray-200" />
+        <div className="h-px flex-1 bg-gray-400" />
+        <span className="text-sm text-accent-foreground">{t("or")}</span>
+        <div className="h-px flex-1 bg-gray-400" />
       </div>
 
-      <SocialLoginButtons onSocialLogin={handleSocialLogin} isLoading={isSubmitting} />
+      <SocialLoginButtons
+        onSocialLogin={handleSocialLogin}
+        isLoading={isSubmitting}
+      />
     </div>
   );
 }

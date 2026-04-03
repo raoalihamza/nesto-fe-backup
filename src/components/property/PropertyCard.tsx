@@ -6,6 +6,11 @@ import { Heart } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import type { PropertyPreview } from "@/types/property";
 import { cn } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface PropertyCardProps {
   property: PropertyPreview;
@@ -68,9 +73,9 @@ export function PropertyCard({ property, className }: PropertyCardProps) {
               e.preventDefault();
               e.stopPropagation();
             }}
-            className="absolute right-2.5 top-2.5 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 shadow-sm transition-colors hover:bg-white"
+            className="absolute right-2.5 top-2.5 flex h-8 w-8 items-center justify-center"
           >
-            <Heart className="h-5 w-5 text-white stroke-[2.5] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]" />
+            <Heart className="h-6 w-5 fill-transparent text-white stroke-2 drop-shadow-[0_1px_3px_rgba(0,0,0,0.4)]" />
           </button>
 
           {/* Image pager dots */}
@@ -94,14 +99,29 @@ export function PropertyCard({ property, className }: PropertyCardProps) {
           </p>
 
           {/* Beds · Baths · Sqft */}
-          <p className="text-xs text-[#2d2d3a]/90">
-            {property.bedrooms} {t("beds").toLowerCase()} | {property.bathrooms}{" "}
-            {t("baths").toLowerCase()} |{" "}
-            {property.squareFootage
-              ? `${property.squareFootage.toLocaleString()} ${t("sqft")}`
-              : `-- ${t("sqft")}`}{" "}
-            | {typeLabel} {statusLabel.toLowerCase()}
-          </p>
+          <Tooltip>
+            <TooltipTrigger>
+              <p className="truncate text-xs text-[#2d2d3a]/90 cursor-pointer">
+                {property.bedrooms} {t("beds").toLowerCase()} |{" "}
+                {property.bathrooms} {t("baths").toLowerCase()} |{" "}
+                {property.squareFootage
+                  ? `${property.squareFootage.toLocaleString()} ${t("sqft")}`
+                  : `-- ${t("sqft")}`}{" "}
+                | {typeLabel} {statusLabel.toLowerCase()}
+              </p>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="text-xs">
+              <p>
+                {property.bedrooms} {t("beds").toLowerCase()} |{" "}
+                {property.bathrooms} {t("baths").toLowerCase()} |{" "}
+                {property.squareFootage
+                  ? `${property.squareFootage.toLocaleString()} ${t("sqft")}`
+                  : `-- ${t("sqft")}`}{" "}
+                | {typeLabel} {statusLabel.toLowerCase()}
+              </p>
+              <p>{addressLine}</p>
+            </TooltipContent>
+          </Tooltip>
 
           {/* Address */}
           <p className="truncate text-xs text-[#2d2d3a]/90">{addressLine}</p>

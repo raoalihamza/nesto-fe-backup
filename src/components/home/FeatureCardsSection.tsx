@@ -39,7 +39,7 @@ export function FeatureCardsSection() {
 
   return (
     <section className="py-12 md:py-16">
-      <div className="mx-auto max-w-7xl px-4">
+      <div className="mx-auto max-w-7xl px-0">
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
           {FEATURES.map((feature) => {
             const Icon = feature.icon;
