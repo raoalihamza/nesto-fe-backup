@@ -3,7 +3,8 @@
 import { useTranslations } from "next-intl";
 import { GoogleLogin } from "@react-oauth/google";
 import LoginSocialFacebook from "@greatsumini/react-facebook-login";
-import { useGoogleSocialLogin, useFacebookSocialLogin } from "@/hooks/auth/useSocialLogin";
+import AppleSignin from "react-apple-signin-auth";
+import { useGoogleSocialLogin, useFacebookSocialLogin, useAppleSocialLogin } from "@/hooks/auth/useSocialLogin";
 import { toast } from "sonner";
 
 const btnClass =
@@ -56,6 +57,7 @@ export function SocialLoginButtons({ isLoading }: SocialLoginButtonsProps) {
   const t = useTranslations("auth");
   const googleMutation = useGoogleSocialLogin();
   const facebookMutation = useFacebookSocialLogin();
+  const appleMutation = useAppleSocialLogin();
 
   return (
     <div className="flex flex-col gap-3">
@@ -110,15 +112,42 @@ export function SocialLoginButtons({ isLoading }: SocialLoginButtonsProps) {
         </button>
       </LoginSocialFacebook>
 
-      <button
-        type="button"
-        className={btnClass}
-        onClick={() => toast.info(t("comingSoon"))}
-        disabled={isLoading}
-      >
-        <AppleIcon />
-        <span className="flex-1 text-center">{t("signInWithApple")}</span>
-      </button>
+      <AppleSignin
+        uiType="light"
+        authOptions={{
+          clientId: process.env.NEXT_PUBLIC_APPLE_CLIENT_ID ?? "",
+          scope: "name email",
+          redirectURI: process.env.NEXT_PUBLIC_APPLE_REDIRECT_URI ?? "",
+          state: "",
+          nonce: "nonce",
+          usePopup: true,
+        }}
+        onSuccess={(response: {
+          authorization: { id_token: string; code: string };
+          user?: { name?: { firstName?: string; lastName?: string } };
+        }) => {
+          const identityToken = response.authorization.id_token;
+          const firstName = response.user?.name?.firstName;
+          const lastName = response.user?.name?.lastName;
+          appleMutation.mutate({ identityToken, firstName, lastName });
+        }}
+        onError={() => {
+          toast.error(t("socialLoginError"));
+        }}
+        render={(props: Record<string, unknown>) => (
+          <button
+            type="button"
+            className={btnClass}
+            disabled={appleMutation.isPending || isLoading}
+            {...props}
+          >
+            <AppleIcon />
+            <span className="flex-1 text-center">
+              {appleMutation.isPending ? "..." : t("signInWithApple")}
+            </span>
+          </button>
+        )}
+      />
     </div>
   );
 }

@@ -131,4 +131,21 @@ export const authService = {
       skipAuth: true,
     });
   },
+
+  appleLogin(
+    identityToken: string,
+    firstName?: string,
+    lastName?: string
+  ): Promise<AuthSuccessResponse> {
+    return apiClient<AuthSuccessResponse>("/auth/apple", {
+      method: "POST",
+      body: JSON.stringify({
+        identityToken,
+        ...(firstName ? { firstName } : {}),
+        ...(lastName ? { lastName } : {}),
+        device: DEVICE,
+      }),
+      skipAuth: true,
+    });
+  },
 };

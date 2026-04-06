@@ -54,3 +54,34 @@ export function useFacebookSocialLogin() {
     },
   });
 }
+
+export function useAppleSocialLogin() {
+  const dispatch = useAppDispatch();
+  const router = useRouter();
+  const t = useTranslations("auth");
+
+  return useMutation({
+    mutationFn: ({
+      identityToken,
+      firstName,
+      lastName,
+    }: {
+      identityToken: string;
+      firstName?: string;
+      lastName?: string;
+    }) => authService.appleLogin(identityToken, firstName, lastName),
+    onSuccess: (data) => {
+      dispatch(
+        setCredentials({
+          user: data.user,
+          accessToken: data.tokens.accessToken,
+          refreshToken: data.tokens.refreshToken,
+        })
+      );
+      router.push("/dashboard");
+    },
+    onError: (err: { message?: string }) => {
+      toast.error(err.message ?? t("socialLoginError"));
+    },
+  });
+}
