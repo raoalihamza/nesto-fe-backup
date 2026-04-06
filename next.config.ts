@@ -12,6 +12,18 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async rewrites() {
+    return [
+      {
+        source: "/:locale/auth/verify-email",
+        destination: "/:locale/verify-email",
+      },
+      {
+        source: "/:locale/auth/reset-password",
+        destination: "/:locale/reset-password",
+      },
+    ];
+  },
 };
 
 export default withNextIntl(nextConfig);
