@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { NestoLogo } from "@/components/auth/NestoLogo";
 import { SocialLoginButtons } from "@/components/auth/SocialLoginButtons";
 import { useRegister } from "@/hooks/auth/useRegister";
+import { toast } from "sonner";
 
 export function RegisterForm() {
   const t = useTranslations("auth");
@@ -30,12 +31,17 @@ export function RegisterForm() {
   });
 
   const onSubmit = (data: RegisterFormValues) => {
-    registerMutation.mutate({
-      email: data.email,
-      password: data.password,
-      firstName: data.firstName,
-      lastName: data.lastName,
-    });
+    registerMutation.mutate(
+      {
+        email: data.email,
+        password: data.password,
+        firstName: data.firstName,
+        lastName: data.lastName,
+      },
+      {
+        onError: (err) => toast.error(err.message),
+      }
+    );
   };
 
   if (registerMutation.isSuccess) {
@@ -186,12 +192,6 @@ export function RegisterForm() {
             </p>
           )}
         </div>
-
-        {registerMutation.isError && (
-          <p className="text-sm text-destructive">
-            {registerMutation.error?.message}
-          </p>
-        )}
 
         <Button
           type="submit"

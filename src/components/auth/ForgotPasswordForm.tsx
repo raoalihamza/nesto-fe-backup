@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { NestoLogo } from "@/components/auth/NestoLogo";
 import { CheckCircle2, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export function ForgotPasswordForm() {
   const t = useTranslations("auth");
@@ -29,7 +30,13 @@ export function ForgotPasswordForm() {
   });
 
   const onSubmit = (data: ForgotPasswordFormValues) => {
-    mutation.mutate({ email: data.email });
+    mutation.mutate(
+      { email: data.email },
+      {
+        onSuccess: () => toast.success(t("resetLinkSent")),
+        onError: (err) => toast.error(err.message),
+      }
+    );
   };
 
   if (mutation.isSuccess) {
@@ -86,12 +93,6 @@ export function ForgotPasswordForm() {
             <p className="text-sm text-destructive">{errors.email.message}</p>
           )}
         </div>
-
-        {mutation.isError && (
-          <p className="text-sm text-destructive">
-            {mutation.error?.message}
-          </p>
-        )}
 
         <Button
           type="submit"

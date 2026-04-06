@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { NestoLogo } from "@/components/auth/NestoLogo";
 import { Eye, EyeOff, CheckCircle2, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export function ResetPasswordForm() {
   const t = useTranslations("auth");
@@ -35,7 +36,13 @@ export function ResetPasswordForm() {
 
   const onSubmit = (data: ResetPasswordFormValues) => {
     if (!token) return;
-    mutation.mutate({ token, newPassword: data.password });
+    mutation.mutate(
+      { token, newPassword: data.password },
+      {
+        onSuccess: () => toast.success(t("passwordResetSuccess")),
+        onError: (err) => toast.error(err.message),
+      }
+    );
   };
 
   if (!token) {
@@ -149,12 +156,6 @@ export function ResetPasswordForm() {
             </p>
           )}
         </div>
-
-        {mutation.isError && (
-          <p className="text-sm text-destructive">
-            {mutation.error?.message}
-          </p>
-        )}
 
         <Button
           type="submit"

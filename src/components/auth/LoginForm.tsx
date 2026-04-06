@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { NestoLogo } from "@/components/auth/NestoLogo";
 import { SocialLoginButtons } from "@/components/auth/SocialLoginButtons";
 import { useLogin } from "@/hooks/auth/useLogin";
+import { toast } from "sonner";
 
 export function LoginForm() {
   const t = useTranslations("auth");
@@ -28,7 +29,13 @@ export function LoginForm() {
   });
 
   const onSubmit = (data: LoginFormValues) => {
-    loginMutation.mutate({ email: data.email, password: data.password });
+    loginMutation.mutate(
+      { email: data.email, password: data.password },
+      {
+        onSuccess: () => toast.success(t("loginSuccess")),
+        onError: (err) => toast.error(err.message),
+      }
+    );
   };
 
   return (
@@ -95,12 +102,6 @@ export function LoginForm() {
             </Link>
           </div>
         </div>
-
-        {loginMutation.isError && (
-          <p className="text-sm text-destructive">
-            {loginMutation.error?.message}
-          </p>
-        )}
 
         <Button
           type="submit"

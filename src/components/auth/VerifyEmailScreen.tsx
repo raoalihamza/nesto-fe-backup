@@ -9,6 +9,7 @@ import { Link } from "@/i18n/routing";
 import { Button } from "@/components/ui/button";
 import { NestoLogo } from "@/components/auth/NestoLogo";
 import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export function VerifyEmailScreen() {
   const t = useTranslations("auth");
@@ -22,7 +23,13 @@ export function VerifyEmailScreen() {
   useEffect(() => {
     if (token && !calledRef.current) {
       calledRef.current = true;
-      verifyMutation.mutate({ token });
+      verifyMutation.mutate(
+        { token },
+        {
+          onSuccess: () => toast.success(t("emailVerified")),
+          onError: (err) => toast.error(err.message),
+        }
+      );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
@@ -93,7 +100,15 @@ export function VerifyEmailScreen() {
               ) : (
                 <Button
                   variant="outline"
-                  onClick={() => resendMutation.mutate({ email })}
+                  onClick={() =>
+                    resendMutation.mutate(
+                      { email },
+                      {
+                        onSuccess: () => toast.success(t("verificationResent")),
+                        onError: (err) => toast.error(err.message),
+                      }
+                    )
+                  }
                   disabled={resendMutation.isPending}
                   className="border-brand text-brand hover:bg-brand/5"
                 >
@@ -104,11 +119,7 @@ export function VerifyEmailScreen() {
                   )}
                 </Button>
               )}
-              {resendMutation.isError && (
-                <p className="text-sm text-destructive">
-                  {resendMutation.error?.message}
-                </p>
-              )}
+              
             </div>
           )}
 
