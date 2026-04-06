@@ -1,89 +1,69 @@
-# Nesto — Claude Code Context
+# CLAUDE.md — Auth Section Update
+# Replace the relevant sections in your existing CLAUDE.md with the content below.
 
-## Project
-Real estate marketplace for Uzbekistan. Zillow-like platform.
-Client: Timur Rakhmatov. Built by: Ali (Cherry Byte Technologies).
+---
 
-## Tech Stack
-- Next.js 16.1.7, React 19, TypeScript (strict)
-- Tailwind v4 + shadcn/ui (base-nova style)
-- next-intl v4 (en default, uz, ru)
-- Redux Toolkit — authSlice, uiSlice, listingFormSlice, saleListingSlice (new)
-- TanStack Query (server state)
-- react-hook-form + zod
-- nuqs (URL filters)
-- Mapbox (react-map-gl + mapbox-gl-draw)
-- react-dropzone
-- Port: 3001
+## API Layer Architecture (CRITICAL — applies to ALL future API work)
 
-## Brand
-Primary color: #C02121 — available as `bg-brand`, `text-brand`, `border-brand`
-Button shadow class: `btn-brand-shadow` (defined in globals.css)
-Logo: SVG at /icons/nesto-logo-navbar.svg (already in public)
+### 3-Layer Pattern
+```
+src/lib/api/client.ts         ← centralized fetch wrapper (single source of truth)
+src/lib/api/auth.service.ts   ← pure async functions for auth endpoints
+src/hooks/auth/               ← TanStack Query hooks consumed by components
+```
 
-## Key Rules
-- Every string → `useTranslations()` from next-intl, no hardcoded text
-- Paths → `@/` alias only
-- "use client" → only on interactive components
-- No bottom mobile nav bar
-- No NextAuth — backend provides auth APIs directly
-- API base: `process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001"`
+### client.ts responsibilities
+- Prepends `NEXT_PUBLIC_API_URL` (staging: https://api.nesto-staging.thecbt.live/v1)
+- Auto-injects `Authorization: Bearer <accessToken>` from localStorage
+- On 401: reads refreshToken from localStorage → POST /auth/refresh → retries original request
+- If refresh fails: clears localStorage tokens + dispatches `logout()` to Redux store + redirects to /login
+- Throws typed `ApiError` with `{ message, code, status }` on all non-2xx responses
 
-## i18n
-- Locales: en (default), uz, ru
-- Messages: src/messages/en.json, uz.json, ru.json
-- Routing: src/i18n/routing.ts
-- All routes are under src/app/[locale]/
+### Token Storage (CRITICAL)
+- `accessToken` → Redux `authSlice.accessToken` (in-memory for components) + `localStorage` key `nesto_access_token`
+- `refreshToken` → `localStorage` key `nesto_refresh_token` only
+- On app boot: `AuthProvider` (in Providers.tsx or layout) reads localStorage and dispatches `restoreCredentials` to Redux
+- `client.ts` reads tokens from localStorage directly (not from Redux store) to avoid circular deps
 
-## Route Groups
-- (auth) — login, register, forgot-password, reset-password — no navbar
-- (main) — buy, rent, sell, search, saved, messages, property/[slug]
-- (owner) — dashboard, listings/create (rent), listings/[id]/edit
-- (rent-listing) — listings/create (rent stepper, no navbar)
+### Backend Auth API Base
+- Staging: `https://api.nesto-staging.thecbt.live/v1`
+- Env var: `NEXT_PUBLIC_API_URL`
+- All auth routes: `POST /auth/register`, `POST /auth/login`, etc. (no `/api/` prefix)
 
-## Current State (what's built)
-- Auth: LoginForm, RegisterForm, SocialLoginButtons, NestoLogo
-- Layout: Navbar, LanguageSwitcher, Footer
-- Home: HeroSection, PropertyGridSection, FeatureCardsSection
-- Common: Providers, ListingTypeModal
-- Owner: Dashboard, ListingTable, ListingCard, ListingStatusBadge
-- Redux: authSlice, uiSlice, listingFormSlice (all 9 steps typed)
-- Draft: draftMiddleware (sessionStorage), clearAllDraftData utility, useLocalDraft hook
-- Rent listing stepper (ALL 9 STEPS DONE): components in src/components/rent-listing-form/
+---
 
-## What's NOT built yet
-- saleListingSlice (new Redux slice for sale listing)
-- Sale listing Screen 1: Address search with Mapbox map
-- Sale listing Screen 2: Full sale listing form
+## authSlice — Updated Shape
+```ts
+interface AuthState {
+  user: BackendUser | null;      // matches backend /auth/me response
+  accessToken: string | null;    // in-memory copy (localStorage is source of truth for client.ts)
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  error: string | null;
+}
+```
+Reducers: `setCredentials(user, accessToken)`, `logout()`, `restoreCredentials(user, accessToken)`, `setLoading`, `setError`, `clearError`
 
-## Sale Listing Architecture (CRITICAL)
-- Screen 1 route: /listings/sale — map + address search, NO navbar from layout, show Navbar manually
-- Screen 2 route: /listings/sale/create — long single form, Navbar visible
-- NO draft, NO stepper, NO save & exit
-- Single "Get to list it now" button at bottom submits everything
-- beforeunload alert fires when isDirty=true (tab close, browser close, link navigation)
-- On submit success: reset Redux saleListingSlice → redirect to /dashboard
-- Address from Screen 1 passed to Screen 2 via Redux saleListingSlice
+---
 
-## Rent Listing Architecture (reference)
-- All 9 steps on ONE page: (rent-listing)/listings/create — URL never changes
-- Components in: src/components/rent-listing-form/
-- Redux slice: listingFormSlice
-- Draft: sessionStorage + localStorage draftId
+## Auth Routes Built
+- `/login` — LoginForm wired to useLogin hook ✅
+- `/register` — RegisterForm wired to useRegister hook ✅ (has firstName, lastName, email, password, confirmPassword)
+- `/forgot-password` — ForgotPasswordForm, sends reset email ✅
+- `/reset-password` — ResetPasswordForm, reads ?token= from URL ✅
+- `/verify-email` — VerifyEmailScreen, auto-calls API on load, reads ?token= from URL, has resend option ✅
 
-## listingFormSlice (rent listing) — Key Info
-- Location: src/store/slices/listingFormSlice.ts
-- Step data interfaces: PropertyInfoData, RentDetailsData, MediaData,
-  AmenitiesData, ScreeningData, CostsAndFeesData, FinalDetailsData
+## Auth Functions Written (no page yet)
+- `authService.me()` — GET /auth/me (profile page TBD)
+- `authService.updateMe()` — PATCH /auth/me (profile page TBD)
+- `authService.changePassword()` — POST /auth/change-password (profile page TBD)
+- `authService.logoutAll()` — POST /auth/logout-all (settings page TBD)
 
-## Dummy Data
-- src/lib/constants/dummyProperties.ts
-- DUMMY_PROPERTIES (8 full objects), DUMMY_PROPERTY_PREVIEWS, DUMMY_MY_LISTINGS
-- All images: /images/property.jpg, hero: /images/hero.png
+## Social Login
+- Buttons exist in UI (SocialLoginButtons component) but show "Coming soon" toast — NOT implemented
 
-## shadcn Components Available
-button, input, textarea, card, badge, dialog, drawer, sheet,
-dropdown-menu, select, checkbox, radio-group, switch, slider,
-tabs, avatar, skeleton, toast, sonner, tooltip, popover,
-calendar, progress, separator, label, form, table, command,
-scroll-area, alert, breadcrumb
+---
+
+## Hooks Location
+- Auth hooks: `src/hooks/auth/` (NOT `src/lib/hooks/`)
+- `src/lib/hooks/useAuth.ts` — DELETED (replaced by individual hooks)

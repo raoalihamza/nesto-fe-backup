@@ -3,27 +3,23 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslations } from "next-intl";
-import { useAppDispatch } from "@/store";
-import { setLoading, setError } from "@/store/slices/authSlice";
-import { registerApi, socialLoginApi } from "@/lib/api/auth";
-import { setCredentials } from "@/store/slices/authSlice";
 import { registerSchema, type RegisterFormValues } from "@/lib/validations/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff } from "lucide-react";
-import { Link, useRouter } from "@/i18n/routing";
+import { Link } from "@/i18n/routing";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { NestoLogo } from "./NestoLogo";
-import { SocialLoginButtons } from "./SocialLoginButtons";
+import { NestoLogo } from "@/components/auth/NestoLogo";
+import { SocialLoginButtons } from "@/components/auth/SocialLoginButtons";
+import { useRegister } from "@/hooks/auth/useRegister";
+import { toast } from "sonner";
 
 export function RegisterForm() {
   const t = useTranslations("auth");
-  const dispatch = useAppDispatch();
-  const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const registerMutation = useRegister();
 
   const {
     register,
@@ -33,31 +29,17 @@ export function RegisterForm() {
     resolver: zodResolver(registerSchema),
   });
 
-  const onSubmit = async (data: RegisterFormValues) => {
-    setIsSubmitting(true);
-    dispatch(setLoading(true));
-    try {
-      await registerApi(data.email, data.password);
-      router.push("/login");
-    } catch {
-      dispatch(setError("Registration failed. Please try again."));
-    } finally {
-      setIsSubmitting(false);
-    }
+  const onSubmit = (data: RegisterFormValues) => {
+    registerMutation.mutate({
+      email: data.email,
+      password: data.password,
+      firstName: data.firstName,
+      lastName: data.lastName,
+    });
   };
 
-  const handleSocialLogin = async (provider: "google" | "facebook" | "apple") => {
-    setIsSubmitting(true);
-    dispatch(setLoading(true));
-    try {
-      const response = await socialLoginApi(provider);
-      dispatch(setCredentials({ user: response.user, token: response.token }));
-      router.push("/dashboard");
-    } catch {
-      dispatch(setError("Social login failed."));
-    } finally {
-      setIsSubmitting(false);
-    }
+  const handleSocialLogin = () => {
+    toast.info(t("comingSoon"));
   };
 
   return (
@@ -71,6 +53,44 @@ export function RegisterForm() {
       </h1>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="firstName" className="text-sm font-medium">
+              {t("firstName")} <span className="text-brand">*</span>
+            </Label>
+            <Input
+              id="firstName"
+              type="text"
+              placeholder={t("enterFirstName")}
+              className="h-12 rounded-lg"
+              {...register("firstName")}
+            />
+            {errors.firstName && (
+              <p className="text-sm text-destructive">
+                {errors.firstName.message}
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="lastName" className="text-sm font-medium">
+              {t("lastName")} <span className="text-brand">*</span>
+            </Label>
+            <Input
+              id="lastName"
+              type="text"
+              placeholder={t("enterLastName")}
+              className="h-12 rounded-lg"
+              {...register("lastName")}
+            />
+            {errors.lastName && (
+              <p className="text-sm text-destructive">
+                {errors.lastName.message}
+              </p>
+            )}
+          </div>
+        </div>
+
         <div className="space-y-2">
           <Label htmlFor="email" className="text-sm font-medium">
             {t("emailAddress")} <span className="text-brand">*</span>
@@ -103,11 +123,17 @@ export function RegisterForm() {
               onClick={() => setShowPassword(!showPassword)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
             >
-              {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              {showPassword ? (
+                <EyeOff className="h-5 w-5" />
+              ) : (
+                <Eye className="h-5 w-5" />
+              )}
             </button>
           </div>
           {errors.password && (
-            <p className="text-sm text-destructive">{errors.password.message}</p>
+            <p className="text-sm text-destructive">
+              {errors.password.message}
+            </p>
           )}
         </div>
 
@@ -127,7 +153,11 @@ export function RegisterForm() {
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
             >
-              {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              {showConfirmPassword ? (
+                <EyeOff className="h-5 w-5" />
+              ) : (
+                <Eye className="h-5 w-5" />
+              )}
             </button>
           </div>
           {errors.confirmPassword && (
@@ -137,12 +167,18 @@ export function RegisterForm() {
           )}
         </div>
 
+        {registerMutation.isError && (
+          <p className="text-sm text-destructive">
+            {registerMutation.error?.message}
+          </p>
+        )}
+
         <Button
           type="submit"
-          disabled={isSubmitting}
-          className="btn-brand-shadow h-12 w-full rounded-lg bg-brand text-white hover:bg-brand-dark"
+          disabled={registerMutation.isPending}
+          className="btn-brand-shadow h-12 w-full rounded-lg bg-brand text-white hover:opacity-90"
         >
-          {isSubmitting ? "..." : t("continue")}
+          {registerMutation.isPending ? "..." : t("continue")}
         </Button>
       </form>
 
@@ -162,7 +198,10 @@ export function RegisterForm() {
         <div className="h-px flex-1 bg-gray-400" />
       </div>
 
-      <SocialLoginButtons onSocialLogin={handleSocialLogin} isLoading={isSubmitting} />
+      <SocialLoginButtons
+        onSocialLogin={handleSocialLogin}
+        isLoading={registerMutation.isPending}
+      />
     </div>
   );
 }

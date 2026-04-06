@@ -3,25 +3,22 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslations } from "next-intl";
-import { useAppDispatch } from "@/store";
-import { setCredentials, setLoading, setError } from "@/store/slices/authSlice";
-import { loginApi, socialLoginApi } from "@/lib/api/auth";
 import { loginSchema, type LoginFormValues } from "@/lib/validations/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff } from "lucide-react";
-import { Link, useRouter } from "@/i18n/routing";
+import { Link } from "@/i18n/routing";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { NestoLogo } from "./NestoLogo";
-import { SocialLoginButtons } from "./SocialLoginButtons";
+import { NestoLogo } from "@/components/auth/NestoLogo";
+import { SocialLoginButtons } from "@/components/auth/SocialLoginButtons";
+import { useLogin } from "@/hooks/auth/useLogin";
+import { toast } from "sonner";
 
 export function LoginForm() {
   const t = useTranslations("auth");
-  const dispatch = useAppDispatch();
-  const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const loginMutation = useLogin();
 
   const {
     register,
@@ -31,32 +28,12 @@ export function LoginForm() {
     resolver: zodResolver(loginSchema),
   });
 
-  const onSubmit = async (data: LoginFormValues) => {
-    setIsSubmitting(true);
-    dispatch(setLoading(true));
-    try {
-      const response = await loginApi(data.email, data.password);
-      dispatch(setCredentials({ user: response.user, token: response.token }));
-      router.push("/dashboard");
-    } catch {
-      dispatch(setError("Login failed. Please check your credentials."));
-    } finally {
-      setIsSubmitting(false);
-    }
+  const onSubmit = (data: LoginFormValues) => {
+    loginMutation.mutate({ email: data.email, password: data.password });
   };
 
-  const handleSocialLogin = async (provider: "google" | "facebook" | "apple") => {
-    setIsSubmitting(true);
-    dispatch(setLoading(true));
-    try {
-      const response = await socialLoginApi(provider);
-      dispatch(setCredentials({ user: response.user, token: response.token }));
-      router.push("/dashboard");
-    } catch {
-      dispatch(setError("Social login failed."));
-    } finally {
-      setIsSubmitting(false);
-    }
+  const handleSocialLogin = () => {
+    toast.info(t("comingSoon"));
   };
 
   return (
@@ -102,7 +79,11 @@ export function LoginForm() {
               onClick={() => setShowPassword(!showPassword)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
             >
-              {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              {showPassword ? (
+                <EyeOff className="h-5 w-5" />
+              ) : (
+                <Eye className="h-5 w-5" />
+              )}
             </button>
           </div>
           {errors.password && (
@@ -120,12 +101,18 @@ export function LoginForm() {
           </div>
         </div>
 
+        {loginMutation.isError && (
+          <p className="text-sm text-destructive">
+            {loginMutation.error?.message}
+          </p>
+        )}
+
         <Button
           type="submit"
-          disabled={isSubmitting}
-          className="btn-brand-shadow h-12 w-full rounded-lg bg-brand text-white hover:bg-brand-dark"
+          disabled={loginMutation.isPending}
+          className="btn-brand-shadow h-12 w-full rounded-lg bg-brand text-white hover:opacity-90"
         >
-          {isSubmitting ? "..." : t("continue")}
+          {loginMutation.isPending ? "..." : t("continue")}
         </Button>
       </form>
 
@@ -147,7 +134,7 @@ export function LoginForm() {
 
       <SocialLoginButtons
         onSocialLogin={handleSocialLogin}
-        isLoading={isSubmitting}
+        isLoading={loginMutation.isPending}
       />
     </div>
   );

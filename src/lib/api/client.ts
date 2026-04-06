@@ -1,82 +1,153 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
+import { store } from "@/store";
+import { setCredentials, logout } from "@/store/slices/authSlice";
+import type { ApiError, AuthSuccessResponse } from "@/types/user";
 
-interface RequestConfig extends RequestInit {
-  params?: Record<string, string>;
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
+
+let isRefreshing = false;
+let refreshPromise: Promise<AuthSuccessResponse> | null = null;
+
+function handleAuthFailure(): void {
+  if (typeof window !== "undefined") {
+    localStorage.removeItem("nesto_access_token");
+    localStorage.removeItem("nesto_refresh_token");
+  }
+  store.dispatch(logout());
+  if (typeof window !== "undefined") {
+    window.location.href = "/login";
+  }
 }
 
-class ApiClient {
-  private baseUrl: string;
+export async function apiClient<T>(
+  path: string,
+  options?: RequestInit & { skipAuth?: boolean }
+): Promise<T> {
+  const { skipAuth, ...init } = options ?? {};
 
-  constructor(baseUrl: string) {
-    this.baseUrl = baseUrl;
-  }
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...(init.headers as Record<string, string>),
+  };
 
-  private async request<T>(
-    endpoint: string,
-    config: RequestConfig = {}
-  ): Promise<T> {
-    const { params, ...init } = config;
-    let url = `${this.baseUrl}${endpoint}`;
-
-    if (params) {
-      const searchParams = new URLSearchParams(params);
-      url += `?${searchParams.toString()}`;
-    }
-
-    const headers: HeadersInit = {
-      "Content-Type": "application/json",
-      ...init.headers,
-    };
-
-    const token =
-      typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  if (!skipAuth && typeof window !== "undefined") {
+    const token = localStorage.getItem("nesto_access_token");
     if (token) {
-      (headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
+      headers["Authorization"] = `Bearer ${token}`;
     }
+  }
 
-    const response = await fetch(url, { ...init, headers });
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    ...init,
+    headers,
+  });
 
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({
-        message: "An error occurred",
+  if (response.status === 401 && !skipAuth) {
+    if (typeof window === "undefined") {
+      const body = await response.json().catch(() => ({
+        code: "UNAUTHORIZED",
+        message: "Unauthorized",
+        requestId: "",
+        timestamp: "",
+        path,
       }));
-      throw new Error(error.message || `HTTP ${response.status}`);
+      throw body as ApiError;
     }
 
-    return response.json();
+    const refreshToken = localStorage.getItem("nesto_refresh_token");
+    if (!refreshToken) {
+      handleAuthFailure();
+      throw {
+        code: "UNAUTHORIZED",
+        message: "Session expired",
+        requestId: "",
+        timestamp: "",
+        path,
+      } as ApiError;
+    }
+
+    if (!isRefreshing) {
+      isRefreshing = true;
+      refreshPromise = fetch(`${API_BASE_URL}/auth/refresh`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refreshToken }),
+      })
+        .then(async (res) => {
+          if (!res.ok) throw new Error("Refresh failed");
+          return (await res.json()) as AuthSuccessResponse;
+        })
+        .finally(() => {
+          isRefreshing = false;
+          refreshPromise = null;
+        });
+    }
+
+    try {
+      const refreshData = await refreshPromise!;
+      localStorage.setItem(
+        "nesto_access_token",
+        refreshData.tokens.accessToken
+      );
+      localStorage.setItem(
+        "nesto_refresh_token",
+        refreshData.tokens.refreshToken
+      );
+
+      const currentUser = store.getState().auth.user;
+      if (currentUser) {
+        store.dispatch(
+          setCredentials({
+            user: currentUser,
+            accessToken: refreshData.tokens.accessToken,
+            refreshToken: refreshData.tokens.refreshToken,
+          })
+        );
+      }
+
+      headers["Authorization"] = `Bearer ${refreshData.tokens.accessToken}`;
+      const retryResponse = await fetch(`${API_BASE_URL}${path}`, {
+        ...init,
+        headers,
+      });
+
+      if (!retryResponse.ok) {
+        const body = await retryResponse.json().catch(() => ({
+          code: "UNKNOWN",
+          message: "Request failed after token refresh",
+          requestId: "",
+          timestamp: "",
+          path,
+        }));
+        throw body as ApiError;
+      }
+
+      return (await retryResponse.json()) as T;
+    } catch {
+      handleAuthFailure();
+      throw {
+        code: "UNAUTHORIZED",
+        message: "Session expired",
+        requestId: "",
+        timestamp: "",
+        path,
+      } as ApiError;
+    }
   }
 
-  get<T>(endpoint: string, config?: RequestConfig) {
-    return this.request<T>(endpoint, { ...config, method: "GET" });
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({
+      code: "UNKNOWN",
+      message: `HTTP ${response.status}`,
+      requestId: "",
+      timestamp: "",
+      path,
+    }));
+    throw body as ApiError;
   }
 
-  post<T>(endpoint: string, data?: unknown, config?: RequestConfig) {
-    return this.request<T>(endpoint, {
-      ...config,
-      method: "POST",
-      body: JSON.stringify(data),
-    });
+  if (response.status === 204 || response.headers.get("content-length") === "0") {
+    return undefined as T;
   }
 
-  put<T>(endpoint: string, data?: unknown, config?: RequestConfig) {
-    return this.request<T>(endpoint, {
-      ...config,
-      method: "PUT",
-      body: JSON.stringify(data),
-    });
-  }
-
-  patch<T>(endpoint: string, data?: unknown, config?: RequestConfig) {
-    return this.request<T>(endpoint, {
-      ...config,
-      method: "PATCH",
-      body: JSON.stringify(data),
-    });
-  }
-
-  delete<T>(endpoint: string, config?: RequestConfig) {
-    return this.request<T>(endpoint, { ...config, method: "DELETE" });
-  }
+  return (await response.json()) as T;
 }
-
-export const apiClient = new ApiClient(API_BASE_URL);

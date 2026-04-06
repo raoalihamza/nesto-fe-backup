@@ -3,9 +3,33 @@
 import { Provider } from "react-redux";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { useState, type ReactNode } from "react";
-import { store } from "@/store";
+import { useState, useEffect, type ReactNode } from "react";
+import { store, useAppDispatch } from "@/store";
+import { restoreCredentials, logout } from "@/store/slices/authSlice";
+import { authService } from "@/lib/api/auth.service";
 import { TooltipProvider } from "@/components/ui/tooltip";
+
+function AuthInitializer({ children }: { children: ReactNode }) {
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    const accessToken = localStorage.getItem("nesto_access_token");
+    if (!accessToken) return;
+
+    authService
+      .me()
+      .then(({ user }) => {
+        dispatch(restoreCredentials({ user, accessToken }));
+      })
+      .catch(() => {
+        localStorage.removeItem("nesto_access_token");
+        localStorage.removeItem("nesto_refresh_token");
+        dispatch(logout());
+      });
+  }, [dispatch]);
+
+  return <>{children}</>;
+}
 
 export function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(
@@ -23,7 +47,9 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
-        <TooltipProvider>{children}</TooltipProvider>
+        <AuthInitializer>
+          <TooltipProvider>{children}</TooltipProvider>
+        </AuthInitializer>
         <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>
     </Provider>
