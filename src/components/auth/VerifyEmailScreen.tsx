@@ -97,9 +97,11 @@ export function VerifyEmailScreen() {
                   disabled={resendMutation.isPending}
                   className="border-brand text-brand hover:bg-brand/5"
                 >
-                  {resendMutation.isPending
-                    ? "..."
-                    : t("resendVerification")}
+                  {resendMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    t("resendVerification")
+                  )}
                 </Button>
               )}
               {resendMutation.isError && (

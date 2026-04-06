@@ -1,8 +1,13 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { Button } from "@/components/ui/button";
-import Image from "next/image";
+import { GoogleLogin } from "@react-oauth/google";
+import LoginSocialFacebook from "@greatsumini/react-facebook-login";
+import { useGoogleSocialLogin, useFacebookSocialLogin } from "@/hooks/auth/useSocialLogin";
+import { toast } from "sonner";
+
+const btnClass =
+  "flex h-12 w-full items-center justify-start gap-4 rounded-lg border border-gray-200 bg-background px-6 text-sm font-normal transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-50";
 
 function GoogleIcon() {
   return (
@@ -44,55 +49,76 @@ function AppleIcon() {
 }
 
 interface SocialLoginButtonsProps {
-  onSocialLogin: (provider: "google" | "facebook" | "apple") => void;
   isLoading?: boolean;
 }
 
-export function SocialLoginButtons({
-  onSocialLogin,
-  isLoading,
-}: SocialLoginButtonsProps) {
+export function SocialLoginButtons({ isLoading }: SocialLoginButtonsProps) {
   const t = useTranslations("auth");
+  const googleMutation = useGoogleSocialLogin();
+  const facebookMutation = useFacebookSocialLogin();
 
   return (
     <div className="flex flex-col gap-3">
-      <Button
-        type="button"
-        variant="outline"
-        className="h-12 w-full justify-start gap-4 rounded-lg border-gray-200 px-6 text-sm font-normal"
-        onClick={() => onSocialLogin("google")}
-        disabled={isLoading}
+      <div
+        className={`relative ${isLoading || googleMutation.isPending ? "pointer-events-none opacity-50" : ""}`}
       >
-        <Image src="/icons/google.svg" alt="Google" width={24} height={24} />
-        <span className="flex-1 text-center">{t("signInWithGoogle")}</span>
-      </Button>
+        <div className={`${btnClass} pointer-events-none`}>
+          <GoogleIcon />
+          <span className="flex-1 text-center">
+            {googleMutation.isPending ? "..." : t("signInWithGoogle")}
+          </span>
+        </div>
+        <div className="absolute inset-0 cursor-pointer opacity-0">
+          <GoogleLogin
+            onSuccess={(credentialResponse) => {
+              const idToken = credentialResponse.credential;
+              if (!idToken) {
+                toast.error(t("socialLoginError"));
+                return;
+              }
+              googleMutation.mutate(idToken);
+            }}
+            onError={() => toast.error(t("socialLoginError"))}
+            useOneTap={false}
+            text="signin_with"
+            shape="rectangular"
+            theme="outline"
+            size="large"
+            width="400"
+          />
+        </div>
+      </div>
 
-      <Button
-        type="button"
-        variant="outline"
-        className="h-12 w-full justify-start gap-4 rounded-lg border-gray-200 px-6 text-sm font-normal"
-        onClick={() => onSocialLogin("facebook")}
-        disabled={isLoading}
+      <LoginSocialFacebook
+        appId={process.env.NEXT_PUBLIC_FACEBOOK_APP_ID ?? ""}
+        onSuccess={(res) => {
+          if (res.accessToken) {
+            facebookMutation.mutate(res.accessToken);
+          } else {
+            toast.error(t("socialLoginError"));
+          }
+        }}
+        onFail={() => {
+          toast.error(t("socialLoginError"));
+        }}
       >
-        <Image
-          src="/icons/facebook.svg"
-          alt="Facebook"
-          width={24}
-          height={24}
-        />
-        <span className="flex-1 text-center">{t("signInWithFacebook")}</span>
-      </Button>
+        <button type="button" className={btnClass} disabled={facebookMutation.isPending || isLoading}>
+          <FacebookIcon />
+          <span className="flex-1 text-center">
+            {facebookMutation.isPending ? "..." : t("signInWithFacebook")}
+          </span>
+        </button>
+      </LoginSocialFacebook>
 
-      <Button
+      <button
         type="button"
-        variant="outline"
-        className="h-12 w-full justify-start gap-4 rounded-lg border-gray-200 px-6 text-sm font-normal"
-        onClick={() => onSocialLogin("apple")}
+        className={btnClass}
+        onClick={() => toast.info(t("comingSoon"))}
         disabled={isLoading}
       >
-        <Image src="/icons/apple.svg" alt="Apple" width={24} height={24} />
+        <AppleIcon />
         <span className="flex-1 text-center">{t("signInWithApple")}</span>
-      </Button>
+      </button>
     </div>
   );
 }

@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { useTranslations } from "next-intl";
 import { registerSchema, type RegisterFormValues } from "@/lib/validations/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader2, Mail } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,6 @@ import { Label } from "@/components/ui/label";
 import { NestoLogo } from "@/components/auth/NestoLogo";
 import { SocialLoginButtons } from "@/components/auth/SocialLoginButtons";
 import { useRegister } from "@/hooks/auth/useRegister";
-import { toast } from "sonner";
 
 export function RegisterForm() {
   const t = useTranslations("auth");
@@ -25,6 +24,7 @@ export function RegisterForm() {
     register,
     handleSubmit,
     formState: { errors },
+    getValues,
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
   });
@@ -38,9 +38,29 @@ export function RegisterForm() {
     });
   };
 
-  const handleSocialLogin = () => {
-    toast.info(t("comingSoon"));
-  };
+  if (registerMutation.isSuccess) {
+    return (
+      <div className="w-full max-w-[400px] space-y-6">
+        <div className="flex justify-center pb-2">
+          <NestoLogo size="lg" />
+        </div>
+        <div className="flex flex-col items-center space-y-4 text-center">
+          <Mail className="h-12 w-12 text-brand" />
+          <h2 className="text-xl font-bold text-foreground">
+            {t("registrationSuccess")}
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            {t("registrationSuccessSubtitle", { email: getValues("email") })}
+          </p>
+          <Link href="/login">
+            <Button className="btn-brand-shadow bg-brand text-white hover:opacity-90">
+              {t("goToLogin")}
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-[400px] space-y-6">
@@ -178,7 +198,11 @@ export function RegisterForm() {
           disabled={registerMutation.isPending}
           className="btn-brand-shadow h-12 w-full rounded-lg bg-brand text-white hover:opacity-90"
         >
-          {registerMutation.isPending ? "..." : t("continue")}
+          {registerMutation.isPending ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : (
+            t("continue")
+          )}
         </Button>
       </form>
 
@@ -198,10 +222,7 @@ export function RegisterForm() {
         <div className="h-px flex-1 bg-gray-400" />
       </div>
 
-      <SocialLoginButtons
-        onSocialLogin={handleSocialLogin}
-        isLoading={registerMutation.isPending}
-      />
+      <SocialLoginButtons isLoading={registerMutation.isPending} />
     </div>
   );
 }

@@ -8,6 +8,7 @@ import { store, useAppDispatch } from "@/store";
 import { restoreCredentials, logout } from "@/store/slices/authSlice";
 import { authService } from "@/lib/api/auth.service";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 
 function AuthInitializer({ children }: { children: ReactNode }) {
   const dispatch = useAppDispatch();
@@ -46,12 +47,16 @@ export function Providers({ children }: { children: ReactNode }) {
 
   return (
     <Provider store={store}>
-      <QueryClientProvider client={queryClient}>
-        <AuthInitializer>
-          <TooltipProvider>{children}</TooltipProvider>
-        </AuthInitializer>
-        <ReactQueryDevtools initialIsOpen={false} />
-      </QueryClientProvider>
+      <GoogleOAuthProvider
+        clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? ""}
+      >
+        <QueryClientProvider client={queryClient}>
+          <AuthInitializer>
+            <TooltipProvider>{children}</TooltipProvider>
+          </AuthInitializer>
+          <ReactQueryDevtools initialIsOpen={false} />
+        </QueryClientProvider>
+      </GoogleOAuthProvider>
     </Provider>
   );
 }

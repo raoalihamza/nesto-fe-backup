@@ -8,7 +8,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "Nesto — Real Estate Marketplace",
+    default: "Nesto - Real Estate Marketplace",
     template: "%s | Nesto",
   },
   description:

@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { useTranslations } from "next-intl";
 import { loginSchema, type LoginFormValues } from "@/lib/validations/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,6 @@ import { Label } from "@/components/ui/label";
 import { NestoLogo } from "@/components/auth/NestoLogo";
 import { SocialLoginButtons } from "@/components/auth/SocialLoginButtons";
 import { useLogin } from "@/hooks/auth/useLogin";
-import { toast } from "sonner";
 
 export function LoginForm() {
   const t = useTranslations("auth");
@@ -30,10 +29,6 @@ export function LoginForm() {
 
   const onSubmit = (data: LoginFormValues) => {
     loginMutation.mutate({ email: data.email, password: data.password });
-  };
-
-  const handleSocialLogin = () => {
-    toast.info(t("comingSoon"));
   };
 
   return (
@@ -112,7 +107,11 @@ export function LoginForm() {
           disabled={loginMutation.isPending}
           className="btn-brand-shadow h-12 w-full rounded-lg bg-brand text-white hover:opacity-90"
         >
-          {loginMutation.isPending ? "..." : t("continue")}
+          {loginMutation.isPending ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : (
+            t("continue")
+          )}
         </Button>
       </form>
 
@@ -132,10 +131,7 @@ export function LoginForm() {
         <div className="h-px flex-1 bg-gray-400" />
       </div>
 
-      <SocialLoginButtons
-        onSocialLogin={handleSocialLogin}
-        isLoading={loginMutation.isPending}
-      />
+      <SocialLoginButtons isLoading={loginMutation.isPending} />
     </div>
   );
 }

@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { NestoLogo } from "@/components/auth/NestoLogo";
-import { Eye, EyeOff, CheckCircle2 } from "lucide-react";
+import { Eye, EyeOff, CheckCircle2, Loader2 } from "lucide-react";
 
 export function ResetPasswordForm() {
   const t = useTranslations("auth");
@@ -161,7 +161,11 @@ export function ResetPasswordForm() {
           disabled={mutation.isPending}
           className="btn-brand-shadow h-12 w-full rounded-lg bg-brand text-white hover:opacity-90"
         >
-          {mutation.isPending ? "..." : t("setNewPassword")}
+          {mutation.isPending ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : (
+            t("setNewPassword")
+          )}
         </Button>
       </form>
     </div>

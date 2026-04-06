@@ -47,7 +47,10 @@
     "verificationFailed": "Verification failed",
     "verificationFailedSubtitle": "This link may have expired or already been used.",
     "resendVerification": "Resend verification email",
-    "verificationResent": "Verification email sent! Check your inbox."
+    "verificationResent": "Verification email sent! Check your inbox.",
+    "registrationSuccess": "Check your email",
+    "registrationSuccessSubtitle": "We've sent a verification link to {email}. Please verify your email to continue.",
+    "socialLoginError": "Social login failed. Please try again."
   },
   "home": {
     "seeCoolPlaces": "Посмотрите классные места вокруг вас",

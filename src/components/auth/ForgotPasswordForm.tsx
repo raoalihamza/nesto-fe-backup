@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { NestoLogo } from "@/components/auth/NestoLogo";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Loader2 } from "lucide-react";
 
 export function ForgotPasswordForm() {
   const t = useTranslations("auth");
@@ -98,7 +98,11 @@ export function ForgotPasswordForm() {
           disabled={mutation.isPending}
           className="btn-brand-shadow h-12 w-full rounded-lg bg-brand text-white hover:opacity-90"
         >
-          {mutation.isPending ? "..." : t("sendResetLink")}
+          {mutation.isPending ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : (
+            t("sendResetLink")
+          )}
         </Button>
       </form>
 

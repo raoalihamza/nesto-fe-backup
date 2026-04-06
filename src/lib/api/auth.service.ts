@@ -115,4 +115,20 @@ export const authService = {
       body: JSON.stringify({ currentPassword, newPassword, revokeOtherSessions }),
     });
   },
+
+  googleLogin(idToken: string): Promise<AuthSuccessResponse> {
+    return apiClient<AuthSuccessResponse>("/auth/google", {
+      method: "POST",
+      body: JSON.stringify({ idToken, device: DEVICE }),
+      skipAuth: true,
+    });
+  },
+
+  facebookLogin(accessToken: string): Promise<AuthSuccessResponse> {
+    return apiClient<AuthSuccessResponse>("/auth/facebook", {
+      method: "POST",
+      body: JSON.stringify({ accessToken, device: DEVICE }),
+      skipAuth: true,
+    });
+  },
 };
