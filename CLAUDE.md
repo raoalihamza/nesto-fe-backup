@@ -1,69 +1,82 @@
-# CLAUDE.md — Auth Section Update
-# Replace the relevant sections in your existing CLAUDE.md with the content below.
+# Nesto — Claude Code Context
 
----
+## Project
+Real estate marketplace for Uzbekistan. Zillow-like platform.
+Client: Timur Rakhmatov. Built by: Ali (Cherry Byte Technologies).
 
-## API Layer Architecture (CRITICAL — applies to ALL future API work)
+## Tech Stack
+- Next.js 16.1.7, React 19, TypeScript (strict)
+- Tailwind v4 + shadcn/ui (base-nova style)
+- next-intl v4 (en default, uz, ru)
+- Redux Toolkit — authSlice, uiSlice, listingFormSlice, saleListingSlice
+- TanStack Query (server state)
+- react-hook-form + zod
+- nuqs (URL filters)
+- Mapbox (react-map-gl + mapbox-gl-draw)
+- react-dropzone
+- Port: 3001
 
-### 3-Layer Pattern
-```
-src/lib/api/client.ts         ← centralized fetch wrapper (single source of truth)
-src/lib/api/auth.service.ts   ← pure async functions for auth endpoints
-src/hooks/auth/               ← TanStack Query hooks consumed by components
-```
+## Brand
+Primary color: #C02121 — available as `bg-brand`, `text-brand`, `border-brand`
+Button shadow class: `btn-brand-shadow` (defined in globals.css)
+Logo: SVG at /icons/nesto-logo-navbar.svg (already in public)
 
-### client.ts responsibilities
-- Prepends `NEXT_PUBLIC_API_URL` (staging: https://api.nesto-staging.thecbt.live/v1)
-- Auto-injects `Authorization: Bearer <accessToken>` from localStorage
-- On 401: reads refreshToken from localStorage → POST /auth/refresh → retries original request
-- If refresh fails: clears localStorage tokens + dispatches `logout()` to Redux store + redirects to /login
-- Throws typed `ApiError` with `{ message, code, status }` on all non-2xx responses
+## Key Rules
+- Every string → `useTranslations()` from next-intl, no hardcoded text
+- Paths → `@/` alias only
+- "use client" → only on interactive components
+- No bottom mobile nav bar
+- No NextAuth — backend provides auth APIs directly
+- API base: `process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001"`
 
-### Token Storage (CRITICAL)
-- `accessToken` → Redux `authSlice.accessToken` (in-memory for components) + `localStorage` key `nesto_access_token`
-- `refreshToken` → `localStorage` key `nesto_refresh_token` only
-- On app boot: `AuthProvider` (in Providers.tsx or layout) reads localStorage and dispatches `restoreCredentials` to Redux
-- `client.ts` reads tokens from localStorage directly (not from Redux store) to avoid circular deps
+## i18n
+- Locales: en (default), uz, ru
+- Messages: src/messages/en.json, uz.json, ru.json
+- Routing: src/i18n/routing.ts
+- All routes are under src/app/[locale]/
 
-### Backend Auth API Base
-- Staging: `https://api.nesto-staging.thecbt.live/v1`
-- Env var: `NEXT_PUBLIC_API_URL`
-- All auth routes: `POST /auth/register`, `POST /auth/login`, etc. (no `/api/` prefix)
+## Route Groups
+- (auth) — login, register, forgot-password, reset-password — no navbar
+- (main) — buy, rent, sell, search, saved, messages, property/[slug]
+- (owner) — dashboard, listings/create (rent), listings/sale, listings/sale/create
+- (rent-listing) — rent stepper, no navbar
 
----
+## Current State (what's built)
+- Auth: LoginForm, RegisterForm, SocialLoginButtons, NestoLogo
+- Layout: Navbar, LanguageSwitcher, Footer
+- Home: HeroSection, PropertyGridSection, FeatureCardsSection
+- Common: Providers, ListingTypeModal
+- Owner: Dashboard (Overview tab fully built), ListingTable, ListingCard, ListingStatusBadge
+- Redux: authSlice, uiSlice, listingFormSlice, saleListingSlice
+- Draft: draftMiddleware, clearAllDraftData, useLocalDraft
+- Rent listing stepper: ALL 9 STEPS DONE in src/components/rent-listing-form/
+- Sale listing: Screen 1 (map + address) + Screen 2 (full form) DONE
 
-## authSlice — Updated Shape
-```ts
-interface AuthState {
-  user: BackendUser | null;      // matches backend /auth/me response
-  accessToken: string | null;    // in-memory copy (localStorage is source of truth for client.ts)
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  error: string | null;
-}
-```
-Reducers: `setCredentials(user, accessToken)`, `logout()`, `restoreCredentials(user, accessToken)`, `setLoading`, `setError`, `clearError`
+## Dashboard Tabs — Current vs Expected
+- Overview tab: DONE (property management table + messages panel)
+- Favorites tab: placeholder only — needs full implementation
+- My Listings tab: placeholder only — needs full implementation
+- Messages tab: placeholder only
+- Settings tab: placeholder only
 
----
+## What's NOT built yet (this session)
+- Dashboard "My Listings" tab — full table with correct filters + Upload Sheet button
+- Dashboard "Favorites" tab — property grid with sub-tabs (Favorites / Hidden Homes)
+- propertySlice — savedIds[], hiddenIds[] arrays for favorites/hidden state
 
-## Auth Routes Built
-- `/login` — LoginForm wired to useLogin hook ✅
-- `/register` — RegisterForm wired to useRegister hook ✅ (has firstName, lastName, email, password, confirmPassword)
-- `/forgot-password` — ForgotPasswordForm, sends reset email ✅
-- `/reset-password` — ResetPasswordForm, reads ?token= from URL ✅
-- `/verify-email` — VerifyEmailScreen, auto-calls API on load, reads ?token= from URL, has resend option ✅
+## PropertyCard location
+- src/components/property/PropertyCard.tsx
+- Takes `property: PropertyPreview` prop
+- Heart button exists but has no onClick logic yet
 
-## Auth Functions Written (no page yet)
-- `authService.me()` — GET /auth/me (profile page TBD)
-- `authService.updateMe()` — PATCH /auth/me (profile page TBD)
-- `authService.changePassword()` — POST /auth/change-password (profile page TBD)
-- `authService.logoutAll()` — POST /auth/logout-all (settings page TBD)
+## Dummy Data
+- src/lib/constants/dummyProperties.ts
+- DUMMY_PROPERTIES (8 full objects), DUMMY_PROPERTY_PREVIEWS, DUMMY_MY_LISTINGS
+- All images: /images/property.jpg, hero: /images/hero.png
 
-## Social Login
-- Buttons exist in UI (SocialLoginButtons component) but show "Coming soon" toast — NOT implemented
-
----
-
-## Hooks Location
-- Auth hooks: `src/hooks/auth/` (NOT `src/lib/hooks/`)
-- `src/lib/hooks/useAuth.ts` — DELETED (replaced by individual hooks)
+## shadcn Components Available
+button, input, textarea, card, badge, dialog, drawer, sheet,
+dropdown-menu, select, checkbox, radio-group, switch, slider,
+tabs, avatar, skeleton, toast, sonner, tooltip, popover,
+calendar, progress, separator, label, form, table, command,
+scroll-area, alert, breadcrumb

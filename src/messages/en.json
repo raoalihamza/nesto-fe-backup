@@ -90,8 +90,13 @@
     "propertyManagement": "Property Management",
     "all": "All",
     "forRent": "For Rent",
+    "forSale": "For Sale",
+    "drafted": "Drafted",
     "archived": "Archived",
-    "sold": "Sold"
+    "sold": "Sold",
+    "uploadSheet": "Upload Sheet",
+    "favorites": "Favorites",
+    "hiddenHomes": "Hidden Homes"
   },
   "listing": {
     "saveAndExit": "Save & exit",

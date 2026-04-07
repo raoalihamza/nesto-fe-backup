@@ -90,8 +90,13 @@
     "propertyManagement": "Mulk boshqaruvi",
     "all": "Hammasi",
     "forRent": "Ijaraga",
+    "forSale": "Sotuvda",
+    "drafted": "Qoralama",
     "archived": "Arxivlangan",
-    "sold": "Sotilgan"
+    "sold": "Sotilgan",
+    "uploadSheet": "Jadval yuklash",
+    "favorites": "Sevimlilar",
+    "hiddenHomes": "Yashirilgan uylar"
   },
   "listing": {
     "saveAndExit": "Saqlash va chiqish",

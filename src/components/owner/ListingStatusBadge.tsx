@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-type ListingStatus = "active" | "pending" | "rented" | "archived" | "sold";
+type ListingStatus = "active" | "pending" | "rented" | "archived" | "sold" | "drafted";
 
 const statusStyles: Record<ListingStatus, string> = {
   active: "bg-[var(--status-active)]/10 text-[var(--status-active)]",
@@ -8,6 +8,7 @@ const statusStyles: Record<ListingStatus, string> = {
   rented: "bg-[var(--status-rented)]/10 text-[var(--status-rented)]",
   archived: "bg-[var(--status-archived)]/10 text-[var(--status-archived)]",
   sold: "bg-[var(--status-sold)]/10 text-[var(--status-sold)]",
+  drafted: "bg-muted text-muted-foreground",
 };
 
 interface ListingStatusBadgeProps {

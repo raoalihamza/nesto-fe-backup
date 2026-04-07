@@ -1,0 +1,14 @@
+[
+    {
+        "relation": [
+            "delegate_permission/common.handle_all_urls"
+        ],
+        "target": {
+            "namespace": "android_app",
+            "package_name": "com.nesto.cherrybyte",
+            "sha256_cert_fingerprints": [
+                "57:B5:3F:60:87:E5:68:AC:3C:8F:55:B4:21:8F:84:07:7C:F1:BF:CF:D4:93:34:26:4F:26:33:7E:4B:70:F9:E8"
+            ]
+        }
+    }
+]

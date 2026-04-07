@@ -90,8 +90,13 @@
     "propertyManagement": "Управление недвижимостью",
     "all": "Все",
     "forRent": "В аренду",
+    "forSale": "На продажу",
+    "drafted": "Черновики",
     "archived": "Архив",
-    "sold": "Проданные"
+    "sold": "Проданные",
+    "uploadSheet": "Загрузить таблицу",
+    "favorites": "Избранное",
+    "hiddenHomes": "Скрытые дома"
   },
   "listing": {
     "saveAndExit": "Сохранить и выйти",

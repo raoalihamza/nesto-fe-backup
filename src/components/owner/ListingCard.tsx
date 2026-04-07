@@ -11,8 +11,10 @@ interface ListingCardProps {
     id: string;
     title: string;
     address: string;
-    status: "active" | "pending" | "rented" | "archived" | "sold";
-    rent: number;
+    status: "active" | "pending" | "rented" | "archived" | "sold" | "drafted";
+    listingType?: "rent" | "sale";
+    rent: number | null;
+    salePrice?: number | null;
     leaseDuration: string;
     image: string;
   };
@@ -58,12 +60,20 @@ export function ListingCard({ listing }: ListingCardProps) {
             <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
               {t("forRent").split(" ").pop()}
             </p>
-            <p className="text-sm font-bold text-foreground">
-              ${listing.rent.toLocaleString()}
-              <span className="text-xs font-normal text-muted-foreground">
-                {t("perMonth")}
-              </span>
-            </p>
+            {listing.listingType === "sale" && listing.salePrice ? (
+              <p className="text-sm font-bold text-foreground">
+                ${listing.salePrice.toLocaleString()}
+              </p>
+            ) : listing.rent ? (
+              <p className="text-sm font-bold text-foreground">
+                ${listing.rent.toLocaleString()}
+                <span className="text-xs font-normal text-muted-foreground">
+                  {t("perMonth")}
+                </span>
+              </p>
+            ) : (
+              <p className="text-sm font-bold text-foreground">—</p>
+            )}
           </div>
           <div className="text-right">
             <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">

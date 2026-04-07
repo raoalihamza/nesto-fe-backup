@@ -15,6 +15,7 @@ import {
 interface PropertyCardProps {
   property: PropertyPreview;
   className?: string;
+  isFavorite?: boolean;
 }
 
 function formatPrice(price: number): string {
@@ -25,7 +26,7 @@ function formatPrice(price: number): string {
   }).format(price);
 }
 
-export function PropertyCard({ property, className }: PropertyCardProps) {
+export function PropertyCard({ property, className, isFavorite }: PropertyCardProps) {
   const t = useTranslations("property");
 
   const price =
@@ -75,7 +76,14 @@ export function PropertyCard({ property, className }: PropertyCardProps) {
             }}
             className="absolute right-2.5 top-2.5 flex h-8 w-8 items-center justify-center"
           >
-            <Heart className="h-6 w-5 fill-transparent text-white stroke-2 drop-shadow-[0_1px_3px_rgba(0,0,0,0.4)]" />
+            <Heart
+              className={cn(
+                "h-6 w-5 stroke-2 drop-shadow-[0_1px_3px_rgba(0,0,0,0.4)]",
+                isFavorite
+                  ? "fill-red-500 text-red-500"
+                  : "fill-transparent text-white"
+              )}
+            />
           </button>
 
           {/* Image pager dots */}
