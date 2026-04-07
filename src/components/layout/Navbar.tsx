@@ -63,7 +63,7 @@ export function Navbar() {
                   </Link>
                 ))}
                 <div className="my-2 h-px bg-gray-200" />
-                {RIGHT_LINKS.map((link) => (
+                {RIGHT_LINKS.filter((link) => link.key !== "manageRentals" || isAuthenticated).map((link) => (
                   <Link
                     key={link.key}
                     href={link.href}
@@ -103,7 +103,7 @@ export function Navbar() {
 
         {/* Desktop: right nav */}
         <div className="hidden items-center gap-1 lg:flex">
-          {RIGHT_LINKS.map((link) => (
+          {RIGHT_LINKS.filter((link) => link.key !== "manageRentals" || isAuthenticated).map((link) => (
             <Link
               key={link.key}
               href={link.href}

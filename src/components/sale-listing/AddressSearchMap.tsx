@@ -30,8 +30,8 @@ const US_STATES = [
   "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY",
 ] as const;
 
-const DEFAULT_CENTER = { lat: 41.2995, lng: 69.2401 };
-const DEFAULT_ZOOM = 13;
+const DEFAULT_CENTER = { lat: 40.7128, lng: -74.006 }; // New York City
+const DEFAULT_ZOOM = 12;
 
 interface SearchResult {
   address: string;
@@ -91,6 +91,43 @@ export function AddressSearchMap() {
     }
   }, [street, city, state, zip]);
 
+  const handleMapClick = useCallback(async (evt: { lngLat: { lat: number; lng: number } }) => {
+    const { lat, lng } = evt.lngLat;
+
+    try {
+      const response = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${MAPBOX_TOKEN}&types=address&limit=1`
+      );
+      const data = await response.json();
+
+      if (data.features && data.features.length > 0) {
+        const feature = data.features[0];
+        const context: { id: string; text: string; short_code?: string }[] = feature.context ?? [];
+
+        const streetNum = (feature.address as string) ?? "";
+        const streetName = (feature.text as string) ?? "";
+        const postcode = context.find((c) => c.id.startsWith("postcode"))?.text ?? "";
+        const cityName = context.find((c) => c.id.startsWith("place"))?.text ?? "";
+        const regionCode = context.find((c) => c.id.startsWith("region"))?.short_code ?? "";
+        const stateCode = regionCode.replace("US-", "");
+
+        setStreet(`${streetNum} ${streetName}`.trim());
+        setCity(cityName);
+        setState(stateCode);
+        setZip(postcode);
+
+        setSearchResult({
+          address: feature.place_name as string,
+          coordinates: { lat, lng },
+        });
+
+        setViewState((prev) => ({ ...prev, latitude: lat, longitude: lng, zoom: 16 }));
+      }
+    } catch {
+      // reverse geocoding failed silently
+    }
+  }, []);
+
   const handleConfirmLocation = useCallback(() => {
     if (!searchResult) return;
 
@@ -109,14 +146,16 @@ export function AddressSearchMap() {
   }, [dispatch, router, searchResult, street, unit, city, state, zip]);
 
   return (
-    <div className="relative flex min-h-[calc(100vh-64px)] flex-col">
+    <div className="relative flex flex-col px-4 pt-2 md:px-8">
       {/* Map */}
-      <div className="relative flex-1">
+      <div className="relative h-[65vh] overflow-hidden rounded-[10px]">
         <Map
           {...viewState}
           onMove={(evt: { viewState: typeof viewState }) => setViewState(evt.viewState)}
+          onClick={handleMapClick}
           mapboxAccessToken={MAPBOX_TOKEN}
-          mapStyle="mapbox://styles/mapbox/light-v11"
+          mapStyle="mapbox://styles/mapbox/streets-v12"
+          cooperativeGestures={true}
           style={{ width: "100%", height: "100%" }}
         >
           <NavigationControl position="top-right" showCompass={false} />
@@ -134,7 +173,7 @@ export function AddressSearchMap() {
               <Popup
                 latitude={searchResult.coordinates.lat}
                 longitude={searchResult.coordinates.lng}
-                offset={40}
+                offset={10}
                 closeOnClick={false}
                 closeButton={false}
                 anchor="bottom"
@@ -157,7 +196,7 @@ export function AddressSearchMap() {
       </div>
 
       {/* Search Card */}
-      <div className="relative z-10 -mt-16 px-4 pb-6 md:-mt-24 md:px-8">
+      <div className="relative z-10 -mt-10 px-4 pb-6 md:-mt-14 md:px-8">
         <div className="mx-auto max-w-5xl rounded-xl bg-white p-4 shadow-lg md:p-6">
           {/* Desktop: single row */}
           <div className="hidden items-end gap-3 md:flex">
