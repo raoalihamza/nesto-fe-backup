@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Pencil, Eye } from "lucide-react";
+import { Pencil, Eye, Archive } from "lucide-react";
 
 import { ListingStatusBadge } from "@/components/owner/ListingStatusBadge";
 
@@ -73,7 +73,11 @@ export function ListingTable({ listings }: ListingTableProps) {
               <td className="px-4 py-4">
                 <div className="flex gap-1">
                   <button className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer">
-                    <Pencil className="size-4" />
+                    {listing.status === "drafted" ? (
+                      <Pencil className="size-4" />
+                    ) : (
+                      <Archive className="size-4" />
+                    )}
                   </button>
                   <button className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer">
                     <Eye className="size-4" />
