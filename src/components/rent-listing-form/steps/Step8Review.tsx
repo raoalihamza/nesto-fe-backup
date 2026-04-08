@@ -9,6 +9,7 @@ import {
   goToSubStep,
   setCostsAndFees,
 } from "@/store/slices/listingFormSlice";
+import type { ListingContextData } from "@/store/slices/listingFormSlice";
 import { Switch } from "@/components/ui/switch";
 import {
   DropdownMenu,
@@ -29,8 +30,10 @@ import type { FeeCategory, PropertyFee } from "@/types/property";
 
 // ── Helpers ────────────────────────────────────────────────
 
-function buildAddress(fd: { street: string; city: string; state: string; zip: string }) {
-  return [fd.street, fd.city, fd.state, fd.zip].filter(Boolean).join(", ") || null;
+function buildAddress(ctx: ListingContextData): string | null {
+  if (!ctx.city && !ctx.stateCode) return null;
+  const parts = [ctx.addressLine1, ctx.city, ctx.stateCode, ctx.postalCode].filter(Boolean);
+  return parts.join(", ") || null;
 }
 
 function formatCurrency(amount: number | null) {
@@ -44,8 +47,8 @@ function joinLabels(items: string[], tFn: (key: string) => string): string | nul
 }
 
 const LISTED_BY_LABEL: Record<string, string> = {
-  owner: "propertyOwner",
-  management: "managementCompany",
+  property_owner: "propertyOwner",
+  management_company: "managementCompany",
   tenant: "tenant",
 };
 
@@ -61,16 +64,19 @@ const FEE_CATEGORIES: {
 ];
 
 const REQUIREMENT_LABEL: Record<string, string> = {
-  included_in_base: "includedInBase",
   required: "required",
   optional: "optional",
   situational: "situational",
 };
 
 const FREQUENCY_LABEL: Record<string, string> = {
-  monthly: "paidMonthly",
-  annually: "paidAnnually",
   one_time: "paidOneTime",
+  monthly: "paidMonthly",
+  weekly: "paidWeekly",
+  yearly: "paidYearly",
+  per_lease: "paidPerLease",
+  per_occurrence: "paidPerOccurrence",
+  other: "other",
 };
 
 // ── Completion pie SVG ─────────────────────────────────────
@@ -82,9 +88,7 @@ function CompletionPie({ percent }: { percent: number }) {
 
   return (
     <svg width="48" height="48" viewBox="0 0 48 48" className="shrink-0">
-      {/* Background circle */}
       <circle cx="24" cy="24" r={radius} fill="none" stroke="#e5e7eb" strokeWidth="5" />
-      {/* Progress arc */}
       <circle
         cx="24"
         cy="24"
@@ -180,10 +184,10 @@ export function Step8Review() {
 
   const dispatch = useAppDispatch();
   const formData = useAppSelector((s) => s.listingForm.formData);
-  const { propertyInfo, rentDetails, media, amenities, screening, costsAndFees, finalDetails } =
+  const { listingContext, propertyInfo, rentDetails, media, amenities, screeningCriteria, costsAndFees, finalDetails } =
     formData;
 
-  // Fee modal state (costs section is partially interactive)
+  const [showTotalMonthlyPrice, setShowTotalMonthlyPrice] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalCategory, setModalCategory] = useState<FeeCategory>("administrative");
   const [editingFee, setEditingFee] = useState<PropertyFee | null>(null);
@@ -191,13 +195,13 @@ export function Step8Review() {
   // Compute required completion
   const completionInfo = useMemo(() => {
     const checks = [
-      { key: "bedrooms", ok: propertyInfo.bedrooms !== 0 },
-      { key: "bathrooms", ok: propertyInfo.bathrooms !== 0 },
+      { key: "totalBedrooms", ok: propertyInfo.totalBedrooms !== null },
+      { key: "totalBathrooms", ok: propertyInfo.totalBathrooms !== null },
       { key: "monthlyRent", ok: rentDetails.monthlyRent !== null },
       { key: "photos", ok: media.photos.length > 0 },
-      { key: "leaseDuration", ok: finalDetails.leaseDuration !== "" },
-      { key: "contactName", ok: finalDetails.contactName !== "" },
-      { key: "contactEmail", ok: finalDetails.contactEmail !== "" },
+      { key: "leaseDuration", ok: finalDetails.leaseDuration !== null },
+      { key: "name", ok: finalDetails.name !== null },
+      { key: "email", ok: finalDetails.email !== null },
     ];
     const complete = checks.filter((c) => c.ok).length;
     const total = checks.length;
@@ -208,7 +212,6 @@ export function Step8Review() {
       percent: Math.round((complete / total) * 100),
     };
   }, [propertyInfo, rentDetails, media, finalDetails]);
-
 
   // Navigation helpers
   function editStep(step: number, subStep?: number) {
@@ -234,7 +237,7 @@ export function Step8Review() {
   function handleDeleteFee(feeId: string) {
     dispatch(
       setCostsAndFees({
-        fees: costsAndFees.fees.filter((f) => f.id !== feeId),
+        fees: costsAndFees.fees.filter((f) => f.feeId !== feeId),
       })
     );
   }
@@ -243,7 +246,7 @@ export function Step8Review() {
     if (editingFee) {
       dispatch(
         setCostsAndFees({
-          fees: costsAndFees.fees.map((f) => (f.id === fee.id ? fee : f)),
+          fees: costsAndFees.fees.map((f) => (f.feeId === fee.feeId ? fee : f)),
         })
       );
     } else {
@@ -262,12 +265,13 @@ export function Step8Review() {
   }
 
   // Build display values
-  const address = buildAddress(finalDetails);
-  const specialOffer = rentDetails.specialOfferDescription || null;
+  const address = buildAddress(listingContext);
+  const specialOffer = rentDetails.specialOffer?.description ?? null;
 
   // Amenities display
   const interiorParts: string[] = [];
-  if (amenities.laundry) interiorParts.push(tAmen(`laundryOptions.${amenities.laundry}`));
+  if (amenities.laundry.length > 0)
+    interiorParts.push(amenities.laundry.map((l) => tAmen(`laundryOptions.${l}`)).join(", "));
   if (amenities.cooling.length > 0)
     interiorParts.push(
       `${tAmen("cooling")}: ${amenities.cooling.map((c) => tAmen(`coolingOptions.${c}`)).join(", ")}`
@@ -284,17 +288,17 @@ export function Step8Review() {
     interiorParts.push(
       `${tAmen("flooring")}: ${amenities.flooring.map((f) => tAmen(`flooringOptions.${f}`)).join(", ")}`
     );
-  if (amenities.other.length > 0)
+  if (amenities.otherAmenities.length > 0)
     interiorParts.push(
-      `${tAmen("otherAmenities")}: ${amenities.other.map((o) => tAmen(`otherOptions.${o}`)).join(", ")}`
+      `${tAmen("otherAmenities")}: ${amenities.otherAmenities.map((o) => tAmen(`otherOptions.${o}`)).join(", ")}`
     );
   const interiorDisplay = interiorParts.length > 0 ? interiorParts.join("\n") : null;
 
   const propertyAmenParts: string[] = [];
   if (amenities.parking.length > 0)
     propertyAmenParts.push(joinLabels(amenities.parking, (k) => tAmen(`parkingOptions.${k}`))!);
-  if (amenities.outdoor.length > 0)
-    propertyAmenParts.push(joinLabels(amenities.outdoor, (k) => tAmen(`outdoorOptions.${k}`))!);
+  if (amenities.outdoorAmenities.length > 0)
+    propertyAmenParts.push(joinLabels(amenities.outdoorAmenities, (k) => tAmen(`outdoorOptions.${k}`))!);
   if (amenities.accessibility.length > 0)
     propertyAmenParts.push(
       joinLabels(amenities.accessibility, (k) => tAmen(`accessibilityOptions.${k}`))!
@@ -304,17 +308,17 @@ export function Step8Review() {
   // Screening display
   const financialParts: string[] = [];
   financialParts.push(
-    `${tScreen("minIncomeToRentRatio")}: ${screening.minIncomeToRentRatio || tScreen("notSet")}`
+    `${tScreen("minIncomeToRentRatio")}: ${screeningCriteria.minimumIncomeToRentRatio || tScreen("notSet")}`
   );
   financialParts.push(
-    `${tScreen("minCreditScore")}: ${screening.minCreditScore || tScreen("notSet")}`
+    `${tScreen("minCreditScore")}: ${screeningCriteria.minimumCreditScore !== null ? screeningCriteria.minimumCreditScore : tScreen("notSet")}`
   );
   const financialDisplay = financialParts.join("\n");
 
   const petDisplay =
-    screening.petsAllowed === null
+    screeningCriteria.arePetsAllowed === null
       ? tScreen("notSet")
-      : screening.petsAllowed
+      : screeningCriteria.arePetsAllowed
         ? t("petsAllowed")
         : t("noPets");
 
@@ -323,12 +327,13 @@ export function Step8Review() {
     ? tFinal(LISTED_BY_LABEL[finalDetails.listedBy])
     : "None";
 
-  const tourBookingDisplay = finalDetails.bookToursInstantly
+  const tourBookingDisplay = finalDetails.bookingToursInstantly
     ? tFinal("bookToursInstantly")
     : tScreen("notSet");
 
   const editLabel = tCommon("edit");
   const addLabel = tCommon("add");
+  const tourUrl = media.tours3d[0]?.publicUrl ?? null;
 
   return (
     <div className="w-full max-w-lg">
@@ -352,9 +357,7 @@ export function Step8Review() {
         </div>
         <button
           type="button"
-          onClick={() => {
-            // Preview placeholder — toast coming soon
-          }}
+          onClick={() => {}}
           className="shrink-0 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent"
         >
           {t("previewListing")}
@@ -371,7 +374,7 @@ export function Step8Review() {
         />
         <FieldRow
           label={t("hidePropertyAddress")}
-          value={finalDetails.hideAddress ? tFinal("yes") : tFinal("no")}
+          value={finalDetails.hidePropertyAddress ? tFinal("yes") : tFinal("no")}
           onEdit={() => editStep(6, 5)}
           editLabel={editLabel}
         />
@@ -387,13 +390,13 @@ export function Step8Review() {
         />
         <FieldRow
           label={tProp("bedrooms")}
-          value={propertyInfo.bedrooms || null}
+          value={propertyInfo.totalBedrooms}
           onEdit={() => editStep(0)}
           editLabel={editLabel}
         />
         <FieldRow
           label={tProp("bathrooms")}
-          value={propertyInfo.bathrooms || null}
+          value={propertyInfo.totalBathrooms}
           onEdit={() => editStep(0)}
           editLabel={editLabel}
         />
@@ -405,7 +408,7 @@ export function Step8Review() {
         />
         <FieldRow
           label={t("propertyDescription")}
-          value={finalDetails.description || null}
+          value={finalDetails.propertyDescription}
           onEdit={() => editStep(6, 4)}
           editLabel={editLabel}
         />
@@ -446,14 +449,14 @@ export function Step8Review() {
               <p className="text-sm font-medium text-foreground">{t("photos")}</p>
               {media.photos.length > 0 ? (
                 <div className="flex gap-2">
-                  {media.photos.slice(0, 3).map((photo, idx) => (
+                  {media.photos.slice(0, 3).map((photo) => (
                     <div
-                      key={idx}
+                      key={photo.mediaId}
                       className="relative h-14 w-14 overflow-hidden rounded-md border border-border"
                     >
                       <Image
-                        src={photo}
-                        alt={`Photo ${idx + 1}`}
+                        src={photo.publicUrl}
+                        alt={photo.mediaId}
                         fill
                         className="object-cover"
                       />
@@ -481,9 +484,9 @@ export function Step8Review() {
         {/* 3D Tour */}
         <FieldRow
           label={tMedia("tourHeading")}
-          value={media.tourUrl || null}
+          value={tourUrl}
           onEdit={() => editStep(2)}
-          editLabel={media.tourUrl ? editLabel : tMedia("addTour")}
+          editLabel={tourUrl ? editLabel : tMedia("addTour")}
         />
       </ReviewSection>
 
@@ -519,8 +522,8 @@ export function Step8Review() {
         <FieldRow
           label={t("additionalAmenities")}
           value={
-            amenities.other.length > 0
-              ? joinLabels(amenities.other, (k) => tAmen(`otherOptions.${k}`))
+            amenities.otherAmenities.length > 0
+              ? joinLabels(amenities.otherAmenities, (k) => tAmen(`otherOptions.${k}`))
               : null
           }
           onEdit={() => editStep(3)}
@@ -577,10 +580,8 @@ export function Step8Review() {
               </button>
             </div>
             <Switch
-              checked={costsAndFees.showTotalMonthlyPrice}
-              onCheckedChange={(checked) =>
-                dispatch(setCostsAndFees({ showTotalMonthlyPrice: checked }))
-              }
+              checked={showTotalMonthlyPrice}
+              onCheckedChange={setShowTotalMonthlyPrice}
             />
           </div>
         </div>
@@ -607,21 +608,21 @@ export function Step8Review() {
                   </button>
                 </div>
                 {fees.map((fee) => (
-                  <div key={fee.id} className="border-t border-border py-3 pl-8">
+                  <div key={fee.feeId} className="border-t border-border py-3 pl-8">
                     <div className="flex items-start justify-between">
                       <div className="space-y-0.5">
-                        <p className="text-sm font-medium text-foreground">{fee.name}</p>
+                        <p className="text-sm font-medium text-foreground">{fee.feeName}</p>
                         {fee.description && (
                           <p className="text-xs text-muted-foreground">{fee.description}</p>
                         )}
                         <p className="text-xs text-muted-foreground">
                           <span className="font-semibold text-foreground">
-                            ${fee.amount}
+                            ${fee.feeAmount}
                           </span>{" "}
                           {tCosts("each")},{" "}
                           {tCosts(FREQUENCY_LABEL[fee.paymentFrequency])} |{" "}
-                          {tCosts(REQUIREMENT_LABEL[fee.isRequired])} |{" "}
-                          {fee.isRefundable ? tCosts("refundable") : tCosts("nonRefundable")}
+                          {tCosts(REQUIREMENT_LABEL[fee.feeRequiredType])} |{" "}
+                          {fee.refundability === "refundable" ? tCosts("refundable") : tCosts("nonRefundable")}
                         </p>
                       </div>
                       <DropdownMenu>
@@ -632,7 +633,7 @@ export function Step8Review() {
                           <DropdownMenuItem onClick={() => handleEditFee(fee)}>
                             {tCommon("edit")}
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleDeleteFee(fee.id)}>
+                          <DropdownMenuItem onClick={() => handleDeleteFee(fee.feeId)}>
                             {tCommon("delete")}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -650,25 +651,25 @@ export function Step8Review() {
       <ReviewSection title={tFinal("title")}>
         <FieldRow
           label={tFinal("dateAvailable")}
-          value={finalDetails.dateAvailable || null}
+          value={finalDetails.dateAvailable}
           onEdit={() => editStep(6, 0)}
           editLabel={editLabel}
         />
         <FieldRow
           label={tFinal("leaseTermsLabel")}
-          value={finalDetails.leaseTerms || null}
+          value={finalDetails.leaseTerms}
           onEdit={() => editStep(6, 0)}
           editLabel={editLabel}
         />
         <FieldRow
           label={t("renterInsurance")}
-          value={finalDetails.requireRentersInsurance ? tFinal("yes") : tFinal("no")}
+          value={finalDetails.requiresRentersInsurance === true ? tFinal("yes") : tFinal("no")}
           onEdit={() => editStep(6, 0)}
           editLabel={editLabel}
         />
         <FieldRow
           label={tFinal("leaseDuration")}
-          value={finalDetails.leaseDuration || null}
+          value={finalDetails.leaseDuration}
           onEdit={() => editStep(6, 0)}
           editLabel={editLabel}
         />
@@ -680,25 +681,25 @@ export function Step8Review() {
         />
         <FieldRow
           label={tFinal("nameLabel")}
-          value={finalDetails.contactName || null}
+          value={finalDetails.name}
           onEdit={() => editStep(6, 1)}
           editLabel={editLabel}
         />
         <FieldRow
           label={tFinal("emailLabel")}
-          value={finalDetails.contactEmail || null}
+          value={finalDetails.email}
           onEdit={() => editStep(6, 1)}
           editLabel={editLabel}
         />
         <FieldRow
           label={tFinal("phoneNumberLabel")}
-          value={finalDetails.contactPhone || null}
+          value={finalDetails.phoneNumber}
           onEdit={() => editStep(6, 2)}
           editLabel={editLabel}
         />
         <FieldRow
           label={tFinal("allowPhoneContact")}
-          value={finalDetails.allowPhoneContact ? tFinal("yes") : tFinal("no")}
+          value={finalDetails.allowRentersToContactByPhone ? tFinal("yes") : tFinal("no")}
           onEdit={() => editStep(6, 2)}
           editLabel={editLabel}
         />

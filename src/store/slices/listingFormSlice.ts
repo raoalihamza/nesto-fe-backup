@@ -9,182 +9,243 @@ import type {
   ParkingOption,
   OutdoorOption,
   AccessibilityOption,
-  OtherAmenityOption,
   PropertyFee,
+  FeeCategory,
+  FeeFormat,
+  FeeFrequency,
+  FeeRequiredType,
+  FeeRefundability,
 } from "@/types/property";
+
+// Re-export for use in components
+export type {
+  FeeCategory,
+  FeeFormat,
+  FeeFrequency,
+  FeeRequiredType,
+  FeeRefundability,
+  PropertyFee,
+};
 
 // ── Step form data types ────────────────────────────────────
 
+export interface ListingContextData {
+  title: string | null;
+  propertyType: string | null;
+  addressLine1: string | null;
+  addressLine2: string | null;
+  city: string | null;
+  stateCode: string | null;
+  postalCode: string | null;
+  countryCode: string;
+  latitude: number | null;
+  longitude: number | null;
+}
+
 export interface PropertyInfoData {
-  bedrooms: number;
-  bathrooms: number;
   squareFootage: number | null;
+  totalBedrooms: number | null;
+  totalBathrooms: string | null;
+}
+
+export interface SpecialOfferData {
+  offerStartDate: string | null;
+  offerEndDate: string | null;
+  description: string | null;
 }
 
 export interface RentDetailsData {
   monthlyRent: number | null;
   securityDeposit: number | null;
-  specialOfferStart: string;
-  specialOfferEnd: string;
-  specialOfferDescription: string;
+  specialOffer: SpecialOfferData | null;
+}
+
+export interface DraftMediaItem {
+  mediaId: string;
+  publicUrl: string;
+  status: "PENDING" | "READY";
+  mediaType: "PHOTO" | "VIDEO" | "TOUR_3D";
+  sortOrder?: number;
 }
 
 export interface MediaData {
-  photos: string[];
-  coverPhotoIndex: number;
-  tourUrl: string;
+  items: DraftMediaItem[];
+  photos: DraftMediaItem[];
+  tours3d: DraftMediaItem[];
 }
 
 export interface AmenitiesData {
-  laundry: LaundryOption | null;
+  laundry: LaundryOption[];
   cooling: CoolingOption[];
   heating: HeatingOption[];
   appliances: ApplianceOption[];
   flooring: FlooringOption[];
+  furnished: string[];
   parking: ParkingOption[];
-  outdoor: OutdoorOption[];
+  outdoorAmenities: OutdoorOption[];
   accessibility: AccessibilityOption[];
-  other: OtherAmenityOption[];
+  otherAmenities: string[];
 }
 
-export interface ScreeningData {
-  petsAllowed: boolean | null;
-  petPolicyNegotiable: boolean;
-  minIncomeToRentRatio: string;
-  incomeNegotiable: boolean;
-  minCreditScore: string;
-  creditNegotiable: boolean;
+export interface ScreeningCriteriaData {
+  arePetsAllowed: boolean | null;
+  petPolicyNegotiable: boolean | null;
+  minimumIncomeToRentRatio: string | null;
+  incomeToRentRatioNegotiable: boolean | null;
+  minimumMonthlyPreTaxIncome: string | null;
+  minimumCreditScore: number | null;
+  creditScoreNegotiable: boolean | null;
 }
 
 export interface CostsAndFeesData {
   fees: PropertyFee[];
-  showTotalMonthlyPrice: boolean;
 }
 
 export interface FinalDetailsData {
+  leaseTerms: string | null;
+  requiresRentersInsurance: boolean | null;
   listedBy: ListedBy | null;
-  street: string;
-  city: string;
-  state: string;
-  zip: string;
-  country: string;
-  hideAddress: boolean;
-  coordinates: { lat: number; lng: number } | null;
-  dateAvailable: string;
-  leaseDuration: string;
-  leaseTerms: string;
-  requireRentersInsurance: boolean;
-  description: string;
-  contactName: string;
-  contactEmail: string;
-  contactPhone: string;
-  allowPhoneContact: boolean;
+  name: string | null;
+  email: string | null;
+  phoneNumber: string | null;
+  bookingToursInstantly: boolean | null;
+  propertyDescription: string | null;
+  hidePropertyAddress: boolean;
+  dateAvailable: string | null;
+  leaseDuration: string | null;
+  allowRentersToContactByPhone: boolean;
   acceptOnlineApplications: boolean;
-  bookToursInstantly: boolean;
+}
+
+export interface DraftValidationIssue {
+  section: string;
+  field: string;
+  message: string;
+}
+
+export interface DraftProgressData {
+  currentStep: string;
+  lastCompletedStep: string | null;
+  completedSteps: string[];
+  publishReady: boolean;
+  validationIssues: DraftValidationIssue[];
 }
 
 export interface ListingFormData {
+  listingContext: ListingContextData;
   propertyInfo: PropertyInfoData;
   rentDetails: RentDetailsData;
   media: MediaData;
   amenities: AmenitiesData;
-  screening: ScreeningData;
+  screeningCriteria: ScreeningCriteriaData;
   costsAndFees: CostsAndFeesData;
   finalDetails: FinalDetailsData;
 }
 
-export interface CompletionStatus {
-  requiredComplete: boolean;
-  missingRequired: string[];
-  missingRecommended: string[];
-  qualityScore: number;
+export interface RentDraftResponse {
+  id: string;
+  ownerId: string;
+  listingType: string;
+  status: string;
+  publishedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  listingContext: ListingContextData;
+  progress: DraftProgressData;
+  propertyInfo: PropertyInfoData;
+  rentDetails: RentDetailsData;
+  media: MediaData;
+  amenities: AmenitiesData;
+  screeningCriteria: ScreeningCriteriaData;
+  costsAndFees: CostsAndFeesData;
+  finalDetails: FinalDetailsData;
 }
 
 // ── Initial values ──────────────────────────────────────────
 
+const initialListingContext: ListingContextData = {
+  title: null,
+  propertyType: null,
+  addressLine1: null,
+  addressLine2: null,
+  city: null,
+  stateCode: null,
+  postalCode: null,
+  countryCode: "US",
+  latitude: null,
+  longitude: null,
+};
+
 const initialPropertyInfo: PropertyInfoData = {
-  bedrooms: 0,
-  bathrooms: 0,
   squareFootage: null,
+  totalBedrooms: null,
+  totalBathrooms: null,
 };
 
 const initialRentDetails: RentDetailsData = {
   monthlyRent: null,
   securityDeposit: null,
-  specialOfferStart: "",
-  specialOfferEnd: "",
-  specialOfferDescription: "",
+  specialOffer: null,
 };
 
 const initialMedia: MediaData = {
+  items: [],
   photos: [],
-  coverPhotoIndex: 0,
-  tourUrl: "",
+  tours3d: [],
 };
 
 const initialAmenities: AmenitiesData = {
-  laundry: null,
+  laundry: [],
   cooling: [],
   heating: [],
   appliances: [],
   flooring: [],
+  furnished: [],
   parking: [],
-  outdoor: [],
+  outdoorAmenities: [],
   accessibility: [],
-  other: [],
+  otherAmenities: [],
 };
 
-const initialScreening: ScreeningData = {
-  petsAllowed: null,
-  petPolicyNegotiable: false,
-  minIncomeToRentRatio: "",
-  incomeNegotiable: false,
-  minCreditScore: "",
-  creditNegotiable: false,
+const initialScreeningCriteria: ScreeningCriteriaData = {
+  arePetsAllowed: null,
+  petPolicyNegotiable: null,
+  minimumIncomeToRentRatio: null,
+  incomeToRentRatioNegotiable: null,
+  minimumMonthlyPreTaxIncome: null,
+  minimumCreditScore: null,
+  creditScoreNegotiable: null,
 };
 
 const initialCostsAndFees: CostsAndFeesData = {
   fees: [],
-  showTotalMonthlyPrice: false,
 };
 
 const initialFinalDetails: FinalDetailsData = {
+  leaseTerms: null,
+  requiresRentersInsurance: null,
   listedBy: null,
-  street: "",
-  city: "",
-  state: "",
-  zip: "",
-  country: "",
-  hideAddress: false,
-  coordinates: null,
-  dateAvailable: "",
-  leaseDuration: "",
-  leaseTerms: "",
-  requireRentersInsurance: false,
-  description: "",
-  contactName: "",
-  contactEmail: "",
-  contactPhone: "",
-  allowPhoneContact: false,
+  name: null,
+  email: null,
+  phoneNumber: null,
+  bookingToursInstantly: null,
+  propertyDescription: null,
+  hidePropertyAddress: false,
+  dateAvailable: null,
+  leaseDuration: null,
+  allowRentersToContactByPhone: false,
   acceptOnlineApplications: false,
-  bookToursInstantly: false,
 };
 
 const initialFormData: ListingFormData = {
+  listingContext: initialListingContext,
   propertyInfo: initialPropertyInfo,
   rentDetails: initialRentDetails,
   media: initialMedia,
   amenities: initialAmenities,
-  screening: initialScreening,
+  screeningCriteria: initialScreeningCriteria,
   costsAndFees: initialCostsAndFees,
   finalDetails: initialFinalDetails,
-};
-
-const initialCompletionStatus: CompletionStatus = {
-  requiredComplete: false,
-  missingRequired: [],
-  missingRecommended: [],
-  qualityScore: 0,
 };
 
 // ── Slice state ─────────────────────────────────────────────
@@ -195,10 +256,9 @@ interface ListingFormState {
   completedSteps: number[];
   formData: ListingFormData;
   draftId: string | null;
-  isDirty: boolean;
   isSaving: boolean;
   lastSavedAt: string | null;
-  completionStatus: CompletionStatus;
+  draftProgress: DraftProgressData | null;
 }
 
 const initialState: ListingFormState = {
@@ -207,10 +267,9 @@ const initialState: ListingFormState = {
   completedSteps: [],
   formData: initialFormData,
   draftId: null,
-  isDirty: false,
   isSaving: false,
   lastSavedAt: null,
-  completionStatus: initialCompletionStatus,
+  draftProgress: null,
 };
 
 // ── Slice ───────────────────────────────────────────────────
@@ -234,41 +293,34 @@ const listingFormSlice = createSlice({
     },
 
     // Step setters
+    setListingContext(state, action: PayloadAction<Partial<ListingContextData>>) {
+      state.formData.listingContext = { ...state.formData.listingContext, ...action.payload };
+    },
     setPropertyInfo(state, action: PayloadAction<Partial<PropertyInfoData>>) {
       state.formData.propertyInfo = { ...state.formData.propertyInfo, ...action.payload };
-      state.isDirty = true;
     },
     setRentDetails(state, action: PayloadAction<Partial<RentDetailsData>>) {
       state.formData.rentDetails = { ...state.formData.rentDetails, ...action.payload };
-      state.isDirty = true;
     },
     setMedia(state, action: PayloadAction<Partial<MediaData>>) {
       state.formData.media = { ...state.formData.media, ...action.payload };
-      state.isDirty = true;
     },
     setAmenities(state, action: PayloadAction<Partial<AmenitiesData>>) {
       state.formData.amenities = { ...state.formData.amenities, ...action.payload };
-      state.isDirty = true;
     },
-    setScreening(state, action: PayloadAction<Partial<ScreeningData>>) {
-      state.formData.screening = { ...state.formData.screening, ...action.payload };
-      state.isDirty = true;
+    setScreeningCriteria(state, action: PayloadAction<Partial<ScreeningCriteriaData>>) {
+      state.formData.screeningCriteria = { ...state.formData.screeningCriteria, ...action.payload };
     },
     setCostsAndFees(state, action: PayloadAction<Partial<CostsAndFeesData>>) {
       state.formData.costsAndFees = { ...state.formData.costsAndFees, ...action.payload };
-      state.isDirty = true;
     },
     setFinalDetails(state, action: PayloadAction<Partial<FinalDetailsData>>) {
       state.formData.finalDetails = { ...state.formData.finalDetails, ...action.payload };
-      state.isDirty = true;
     },
 
     // Draft management
     setDraftId(state, action: PayloadAction<string | null>) {
       state.draftId = action.payload;
-    },
-    setIsDirty(state, action: PayloadAction<boolean>) {
-      state.isDirty = action.payload;
     },
     setIsSaving(state, action: PayloadAction<boolean>) {
       state.isSaving = action.payload;
@@ -277,18 +329,18 @@ const listingFormSlice = createSlice({
       state.lastSavedAt = action.payload;
     },
 
-    // Restore from sessionStorage — only formData + navigation
-    restoreFromSession(
-      state,
-      action: PayloadAction<{
-        formData: ListingFormData;
-        currentStep: number;
-        currentSubStep: number;
-      }>
-    ) {
-      state.formData = action.payload.formData;
-      state.currentStep = action.payload.currentStep;
-      state.currentSubStep = action.payload.currentSubStep;
+    // Hydrates full Redux state from API response
+    restoreFromDraft(state, action: PayloadAction<RentDraftResponse>) {
+      state.draftId = action.payload.id;
+      state.formData.listingContext = action.payload.listingContext;
+      state.formData.propertyInfo = action.payload.propertyInfo;
+      state.formData.rentDetails = action.payload.rentDetails;
+      state.formData.media = action.payload.media;
+      state.formData.amenities = action.payload.amenities;
+      state.formData.screeningCriteria = action.payload.screeningCriteria;
+      state.formData.costsAndFees = action.payload.costsAndFees;
+      state.formData.finalDetails = action.payload.finalDetails;
+      state.draftProgress = action.payload.progress;
     },
 
     // Full reset
@@ -302,18 +354,18 @@ export const {
   goToStep,
   goToSubStep,
   markStepComplete,
+  setListingContext,
   setPropertyInfo,
   setRentDetails,
   setMedia,
   setAmenities,
-  setScreening,
+  setScreeningCriteria,
   setCostsAndFees,
   setFinalDetails,
   setDraftId,
-  setIsDirty,
   setIsSaving,
   setLastSavedAt,
-  restoreFromSession,
+  restoreFromDraft,
   resetListingForm,
 } = listingFormSlice.actions;
 

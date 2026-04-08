@@ -5,7 +5,8 @@ import { useTranslations } from "next-intl";
 import { useDropzone } from "react-dropzone";
 import { useAppSelector, useAppDispatch } from "@/store";
 import { setMedia } from "@/store/slices/listingFormSlice";
-import { CloudUpload, LayoutGrid, X } from "lucide-react";
+import type { DraftMediaItem } from "@/store/slices/listingFormSlice";
+import { CloudUpload, X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -22,14 +23,25 @@ export function Step3Media() {
   const media = useAppSelector((s) => s.listingForm.formData.media);
 
   const [tourModalOpen, setTourModalOpen] = useState(false);
-  const [tourUrlInput, setTourUrlInput] = useState(media.tourUrl);
+  const [tourUrlInput, setTourUrlInput] = useState(media.tours3d[0]?.publicUrl ?? "");
 
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
-      const newUrls = acceptedFiles.map((file) => URL.createObjectURL(file));
-      dispatch(setMedia({ photos: [...media.photos, ...newUrls] }));
+      // TODO: next prompt replaces this with presign → upload → confirm flow
+      const tempItems: DraftMediaItem[] = acceptedFiles.map((file) => ({
+        mediaId: crypto.randomUUID(),
+        publicUrl: URL.createObjectURL(file),
+        status: "PENDING" as const,
+        mediaType: "PHOTO" as const,
+      }));
+      dispatch(
+        setMedia({
+          photos: [...media.photos, ...tempItems],
+          items: [...media.items, ...tempItems],
+        })
+      );
     },
-    [dispatch, media.photos],
+    [dispatch, media.photos, media.items],
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -37,24 +49,38 @@ export function Step3Media() {
     accept: { "image/*": [".jpg", ".jpeg", ".png", ".webp"] },
   });
 
-  function removePhoto(index: number) {
-    const updated = media.photos.filter((_, i) => i !== index);
-    const newCoverIndex =
-      media.coverPhotoIndex >= updated.length
-        ? Math.max(0, updated.length - 1)
-        : media.coverPhotoIndex;
-    dispatch(setMedia({ photos: updated, coverPhotoIndex: newCoverIndex }));
+  function removePhoto(item: DraftMediaItem) {
+    dispatch(
+      setMedia({
+        photos: media.photos.filter((p) => p.mediaId !== item.mediaId),
+        items: media.items.filter((i) => i.mediaId !== item.mediaId),
+      })
+    );
   }
 
   function handleSaveTourUrl() {
-    dispatch(setMedia({ tourUrl: tourUrlInput }));
+    // TODO: next prompt replaces this with presign → upload → confirm flow
+    const tempTour: DraftMediaItem = {
+      mediaId: crypto.randomUUID(),
+      publicUrl: tourUrlInput,
+      status: "PENDING",
+      mediaType: "TOUR_3D",
+    };
+    dispatch(setMedia({ tours3d: [tempTour], items: [...media.items.filter((i) => i.mediaType !== "TOUR_3D"), tempTour] }));
     setTourModalOpen(false);
   }
 
   function removeTourUrl() {
-    dispatch(setMedia({ tourUrl: "" }));
+    dispatch(
+      setMedia({
+        tours3d: [],
+        items: media.items.filter((i) => i.mediaType !== "TOUR_3D"),
+      })
+    );
     setTourUrlInput("");
   }
+
+  const tourUrl = media.tours3d[0]?.publicUrl ?? "";
 
   return (
     <div className="flex flex-1 flex-col">
@@ -85,16 +111,16 @@ export function Step3Media() {
           {/* Photo thumbnails */}
           {media.photos.length > 0 && (
             <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4">
-              {media.photos.map((url, index) => (
-                <div key={index} className="group relative aspect-square">
+              {media.photos.map((item) => (
+                <div key={item.mediaId} className="group relative aspect-square">
                   <img
-                    src={url}
-                    alt={`Photo ${index + 1}`}
+                    src={item.publicUrl}
+                    alt={item.mediaId}
                     className="size-full rounded-lg object-cover"
                   />
                   <button
                     type="button"
-                    onClick={() => removePhoto(index)}
+                    onClick={() => removePhoto(item)}
                     className="absolute -top-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full bg-destructive text-white opacity-0 transition-opacity group-hover:opacity-100"
                   >
                     <X className="size-3" />
@@ -114,9 +140,9 @@ export function Step3Media() {
             {t("tourSubtitle")}
           </p>
 
-          {media.tourUrl ? (
+          {tourUrl ? (
             <div className="mt-4 flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-3 py-2">
-              <span className="flex-1 truncate text-sm">{media.tourUrl}</span>
+              <span className="flex-1 truncate text-sm">{tourUrl}</span>
               <button
                 type="button"
                 onClick={removeTourUrl}

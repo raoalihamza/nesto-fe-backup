@@ -60,9 +60,9 @@ export function Step1PropertyInfo() {
             {t("bedrooms")} <span className="text-brand">*</span>
           </label>
           <Select
-            value={data.bedrooms > 0 ? String(data.bedrooms) : ""}
+            value={data.totalBedrooms !== null ? String(data.totalBedrooms) : ""}
             onValueChange={(val) =>
-              dispatch(setPropertyInfo({ bedrooms: Number(val) || 8 }))
+              dispatch(setPropertyInfo({ totalBedrooms: Number(val) || 8 }))
             }
           >
             <SelectTrigger className="h-12! w-full text-base">
@@ -84,9 +84,9 @@ export function Step1PropertyInfo() {
             {t("bathrooms")} <span className="text-brand">*</span>
           </label>
           <Select
-            value={data.bathrooms > 0 ? String(data.bathrooms) : ""}
+            value={data.totalBathrooms ?? ""}
             onValueChange={(val) =>
-              dispatch(setPropertyInfo({ bathrooms: Number(val) || 4 }))
+              dispatch(setPropertyInfo({ totalBathrooms: val }))
             }
           >
             <SelectTrigger className="h-12! w-full text-base">

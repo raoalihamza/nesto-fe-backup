@@ -31,7 +31,7 @@ export function FinalStep1LeaseTerms() {
           {t("leaseTermsLabel")}
         </Label>
         <Textarea
-          value={finalDetails.leaseTerms}
+          value={finalDetails.leaseTerms ?? ""}
           onChange={(e) =>
             dispatch(setFinalDetails({ leaseTerms: e.target.value }))
           }
@@ -46,10 +46,10 @@ export function FinalStep1LeaseTerms() {
         </p>
 
         <RadioGroup
-          value={finalDetails.requireRentersInsurance ? "yes" : "no"}
+          value={finalDetails.requiresRentersInsurance === true ? "yes" : finalDetails.requiresRentersInsurance === false ? "no" : ""}
           onValueChange={(val) =>
             dispatch(
-              setFinalDetails({ requireRentersInsurance: val === "yes" })
+              setFinalDetails({ requiresRentersInsurance: val === "yes" })
             )
           }
           className="space-y-3"

@@ -25,7 +25,8 @@ import type {
   FeeCategory,
   FeeFormat,
   FeeFrequency,
-  FeeRequirement,
+  FeeRequiredType,
+  FeeRefundability,
   PropertyFee,
 } from "@/types/property";
 
@@ -61,32 +62,32 @@ export function AdminFeeModal({
   const t = useTranslations("listing.costs");
   const tCommon = useTranslations("common");
 
-  const [name, setName] = useState("");
+  const [feeName, setFeeName] = useState("");
   const [paymentFrequency, setPaymentFrequency] = useState<FeeFrequency | "">("");
-  const [format, setFormat] = useState<FeeFormat | "">("");
-  const [amount, setAmount] = useState<number>(0);
-  const [isRequired, setIsRequired] = useState<FeeRequirement>("included_in_base");
-  const [isRefundable, setIsRefundable] = useState(false);
+  const [feeFormat, setFeeFormat] = useState<FeeFormat | "">("");
+  const [feeAmount, setFeeAmount] = useState<number>(0);
+  const [feeRequiredType, setFeeRequiredType] = useState<FeeRequiredType>("required");
+  const [refundability, setRefundability] = useState<FeeRefundability>(null);
   const [description, setDescription] = useState("");
 
   function resetForm() {
-    setName("");
+    setFeeName("");
     setPaymentFrequency("");
-    setFormat("");
-    setAmount(0);
-    setIsRequired("included_in_base");
-    setIsRefundable(false);
+    setFeeFormat("");
+    setFeeAmount(0);
+    setFeeRequiredType("required");
+    setRefundability(null);
     setDescription("");
   }
 
   useCallback(() => {
     if (editingFee) {
-      setName(editingFee.name);
+      setFeeName(editingFee.feeName);
       setPaymentFrequency(editingFee.paymentFrequency);
-      setFormat(editingFee.format);
-      setAmount(editingFee.amount);
-      setIsRequired(editingFee.isRequired);
-      setIsRefundable(editingFee.isRefundable);
+      setFeeFormat(editingFee.feeFormat);
+      setFeeAmount(editingFee.feeAmount);
+      setFeeRequiredType(editingFee.feeRequiredType);
+      setRefundability(editingFee.refundability ?? null);
       setDescription(editingFee.description ?? "");
     } else {
       resetForm();
@@ -95,14 +96,15 @@ export function AdminFeeModal({
 
   function handleSave() {
     const fee: PropertyFee = {
-      id: editingFee?.id ?? Date.now().toString(),
+      feeId: editingFee?.feeId ?? crypto.randomUUID(),
       category,
-      name,
+      feeName,
       paymentFrequency: paymentFrequency as FeeFrequency,
-      format: format as FeeFormat,
-      amount,
-      isRequired,
-      isRefundable,
+      feeFormat: feeFormat as FeeFormat,
+      feeAmount,
+      includedInRent: false,
+      feeRequiredType,
+      refundability,
       description: description || undefined,
     };
     onSave(fee);
@@ -136,7 +138,7 @@ export function AdminFeeModal({
                 {t("feeName")}
                 <span className="text-brand">*</span>
               </label>
-              <Select value={name} onValueChange={(v) => setName(v ?? "")}>
+              <Select value={feeName} onValueChange={(v) => setFeeName(v ?? "")}>
                 <SelectTrigger className="h-12! w-full text-base">
                   <SelectValue placeholder={t("selectFeeName")} />
                 </SelectTrigger>
@@ -162,9 +164,13 @@ export function AdminFeeModal({
                   <SelectValue placeholder={t("selectFrequency")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="monthly">{t("monthly")}</SelectItem>
-                  <SelectItem value="annually">{t("annually")}</SelectItem>
                   <SelectItem value="one_time">{t("oneTime")}</SelectItem>
+                  <SelectItem value="monthly">{t("monthly")}</SelectItem>
+                  <SelectItem value="weekly">{t("weekly")}</SelectItem>
+                  <SelectItem value="yearly">{t("yearly")}</SelectItem>
+                  <SelectItem value="per_lease">{t("perLease")}</SelectItem>
+                  <SelectItem value="per_occurrence">{t("perOccurrence")}</SelectItem>
+                  <SelectItem value="other">{t("other")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -178,8 +184,8 @@ export function AdminFeeModal({
                 <span className="text-brand">*</span>
               </label>
               <Select
-                value={format}
-                onValueChange={(v) => setFormat(v as FeeFormat)}
+                value={feeFormat}
+                onValueChange={(v) => setFeeFormat(v as FeeFormat)}
               >
                 <SelectTrigger className="h-12! w-full text-base">
                   <SelectValue placeholder={t("selectFormat")} />
@@ -197,14 +203,14 @@ export function AdminFeeModal({
               </label>
               <div className="relative">
                 <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm text-muted-foreground">
-                  {format === "percentage" ? "%" : "$"}
+                  {feeFormat === "percentage" ? "%" : "$"}
                 </span>
                 <Input
                   type="number"
                   min={0}
                   step="0.01"
-                  value={amount || ""}
-                  onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
+                  value={feeAmount || ""}
+                  onChange={(e) => setFeeAmount(parseFloat(e.target.value) || 0)}
                   className="h-12 pl-7 text-base"
                   placeholder="0.00"
                 />
@@ -212,7 +218,7 @@ export function AdminFeeModal({
             </div>
           </div>
 
-          {/* Row 3: Is required + Is refundable */}
+          {/* Row 3: Fee required type + Refundability */}
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <div>
               <p className="mb-2 text-sm font-medium text-foreground">
@@ -220,18 +226,11 @@ export function AdminFeeModal({
                 <span className="text-brand">*</span>
               </p>
               <RadioGroup
-                value={isRequired}
-                onValueChange={(v) => setIsRequired(v as FeeRequirement)}
+                value={feeRequiredType}
+                onValueChange={(v) => setFeeRequiredType(v as FeeRequiredType)}
                 className="space-y-2"
               >
-                {(
-                  [
-                    "included_in_base",
-                    "required",
-                    "optional",
-                    "situational",
-                  ] as FeeRequirement[]
-                ).map((opt) => (
+                {(["required", "optional", "situational"] as FeeRequiredType[]).map((opt) => (
                   <div key={opt} className="flex items-center gap-2">
                     <RadioGroupItem
                       value={opt}
@@ -239,15 +238,7 @@ export function AdminFeeModal({
                       className="border-brand text-brand"
                     />
                     <Label htmlFor={`req-${opt}`} className="text-sm cursor-pointer">
-                      {t(
-                        opt === "included_in_base"
-                          ? "includedInBase"
-                          : opt === "required"
-                            ? "required"
-                            : opt === "optional"
-                              ? "optional"
-                              : "situational"
-                      )}
+                      {t(opt)}
                     </Label>
                   </div>
                 ))}
@@ -261,8 +252,10 @@ export function AdminFeeModal({
                 </span>
               </p>
               <RadioGroup
-                value={isRefundable ? "refundable" : "non_refundable"}
-                onValueChange={(v) => setIsRefundable(v === "refundable")}
+                value={refundability ?? "non_refundable"}
+                onValueChange={(v) =>
+                  setRefundability(v === "non_refundable" ? "non_refundable" : "refundable")
+                }
                 className="space-y-2"
               >
                 <div className="flex items-center gap-2">

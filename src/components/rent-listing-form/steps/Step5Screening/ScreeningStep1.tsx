@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useAppSelector, useAppDispatch } from "@/store";
-import { setScreening } from "@/store/slices/listingFormSlice";
+import { setScreeningCriteria } from "@/store/slices/listingFormSlice";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Info } from "lucide-react";
@@ -10,7 +10,7 @@ import { Info } from "lucide-react";
 export function ScreeningStep1() {
   const t = useTranslations("listing.screening");
   const dispatch = useAppDispatch();
-  const screening = useAppSelector((s) => s.listingForm.formData.screening);
+  const screeningCriteria = useAppSelector((s) => s.listingForm.formData.screeningCriteria);
 
   return (
     <div className="w-full max-w-md space-y-6">
@@ -28,9 +28,9 @@ export function ScreeningStep1() {
         <div className="flex gap-3">
           <button
             type="button"
-            onClick={() => dispatch(setScreening({ petsAllowed: true }))}
+            onClick={() => dispatch(setScreeningCriteria({ arePetsAllowed: true }))}
             className={`rounded-full border px-6 py-2 text-sm font-medium transition-colors ${
-              screening.petsAllowed === true
+              screeningCriteria.arePetsAllowed === true
                 ? "border-brand bg-brand text-white"
                 : "border-border bg-white text-foreground hover:border-muted-foreground"
             }`}
@@ -39,9 +39,9 @@ export function ScreeningStep1() {
           </button>
           <button
             type="button"
-            onClick={() => dispatch(setScreening({ petsAllowed: false }))}
+            onClick={() => dispatch(setScreeningCriteria({ arePetsAllowed: false }))}
             className={`rounded-full border px-6 py-2 text-sm font-medium transition-colors ${
-              screening.petsAllowed === false
+              screeningCriteria.arePetsAllowed === false
                 ? "border-brand bg-brand text-white"
                 : "border-border bg-white text-foreground hover:border-muted-foreground"
             }`}
@@ -51,7 +51,7 @@ export function ScreeningStep1() {
         </div>
 
         {/* Info alert when No is selected */}
-        {screening.petsAllowed === false && (
+        {screeningCriteria.arePetsAllowed === false && (
           <div className="flex gap-3 rounded-lg border border-destructive/20 bg-destructive/10 p-3">
             <Info className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
             <p className="text-sm text-foreground">
@@ -64,9 +64,9 @@ export function ScreeningStep1() {
         <div className="flex items-center gap-2">
           <Checkbox
             id="petPolicyNegotiable"
-            checked={screening.petPolicyNegotiable}
+            checked={screeningCriteria.petPolicyNegotiable === true}
             onCheckedChange={(checked) =>
-              dispatch(setScreening({ petPolicyNegotiable: checked === true }))
+              dispatch(setScreeningCriteria({ petPolicyNegotiable: checked === true }))
             }
           />
           <Label

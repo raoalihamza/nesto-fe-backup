@@ -30,9 +30,9 @@ export function FinalStep5Description() {
           {t("descriptionLabel")}
         </Label>
         <Textarea
-          value={finalDetails.description}
+          value={finalDetails.propertyDescription ?? ""}
           onChange={(e) =>
-            dispatch(setFinalDetails({ description: e.target.value }))
+            dispatch(setFinalDetails({ propertyDescription: e.target.value }))
           }
           className="min-h-[160px] text-base"
         />

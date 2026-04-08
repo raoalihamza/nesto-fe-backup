@@ -1,108 +1,90 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { useTranslations } from "next-intl";
-import { Plus } from "lucide-react";
+import { useState } from "react";
+import { useTranslations, useLocale } from "next-intl";
+import { Plus, Home, Heart } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { ListingTypeModal } from "@/components/common/ListingTypeModal";
 import { ListingTable, ListingCard } from "@/components/owner";
 import { PropertyCard } from "@/components/property/PropertyCard";
-import {
-  DUMMY_MY_LISTINGS,
-  DUMMY_PROPERTY_PREVIEWS,
-} from "@/lib/constants/dummyProperties";
+import { useSavedHomes, useArchiveListing, useMyListings } from "@/hooks/listings";
 
-type ListingStatus =
-  | "active"
-  | "pending"
-  | "rented"
-  | "archived"
-  | "sold"
-  | "drafted";
 type OverviewFilter = "all" | "forRent" | "archived" | "sold";
 type MyListingsFilter = "all" | "forRent" | "forSale" | "drafted";
 type MainTab = "overview" | "savedHomes" | "myListings" | "messages" | "settings";
 type FavoritesSubTab = "favorites" | "hiddenHomes";
 
-const typedListings = DUMMY_MY_LISTINGS as Array<
-  Omit<(typeof DUMMY_MY_LISTINGS)[number], "status"> & { status: ListingStatus }
->;
-
-const overviewFilterMap: Record<OverviewFilter, string[] | null> = {
-  all: null,
-  forRent: ["active", "pending", "rented"],
-  archived: ["archived"],
-  sold: ["sold"],
+const overviewTabMap: Record<OverviewFilter, "all" | "for-rent" | "archived" | "sold"> = {
+  all: "all",
+  forRent: "for-rent",
+  archived: "archived",
+  sold: "sold",
 };
 
-// Dummy saved/hidden IDs for the Favorites tab
-const DUMMY_SAVED_IDS = ["1", "2", "3", "4", "5", "6", "7", "8"];
-const DUMMY_HIDDEN_IDS = ["5", "6"];
+const myListingsTabMap: Record<MyListingsFilter, "all" | "for-rent" | "for-sale" | "draft" | "archived" | "sold"> = {
+  all: "all",
+  forRent: "for-rent",
+  forSale: "for-sale",
+  drafted: "draft",
+};
 
 export default function DashboardPage() {
   const t = useTranslations("dashboard");
+  const locale = useLocale();
   const [listingModalOpen, setListingModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<MainTab>("overview");
   const [overviewFilter, setOverviewFilter] = useState<OverviewFilter>("all");
-  const [myListingsFilter, setMyListingsFilter] =
-    useState<MyListingsFilter>("all");
+  const [myListingsFilter, setMyListingsFilter] = useState<MyListingsFilter>("all");
   const [favSubTab, setFavSubTab] = useState<FavoritesSubTab>("favorites");
 
-  // Overview tab listings
-  const overviewListings = useMemo(() => {
-    const allowed = overviewFilterMap[overviewFilter];
-    if (!allowed) return typedListings;
-    return typedListings.filter((l) => allowed.includes(l.status));
-  }, [overviewFilter]);
-
-  // My Listings tab listings
-  const myListings = useMemo(() => {
-    if (myListingsFilter === "all") return typedListings;
-    if (myListingsFilter === "drafted")
-      return typedListings.filter((l) => l.status === "drafted");
-    if (myListingsFilter === "forRent")
-      return typedListings.filter(
-        (l) => l.listingType === "rent" && l.status !== "drafted"
-      );
-    if (myListingsFilter === "forSale")
-      return typedListings.filter(
-        (l) => l.listingType === "sale" && l.status !== "drafted"
-      );
-    return typedListings;
-  }, [myListingsFilter]);
-
-  // Favorites tab properties
-  const favoritesProperties = useMemo(
-    () => DUMMY_PROPERTY_PREVIEWS.filter((p) => DUMMY_SAVED_IDS.includes(p.id)),
-    []
+  const { data: savedHomesData, isLoading: savedHomesLoading } = useSavedHomes(
+    { locale },
+    { enabled: activeTab === "savedHomes" }
   );
-  const hiddenProperties = useMemo(
-    () => DUMMY_PROPERTY_PREVIEWS.filter((p) => DUMMY_HIDDEN_IDS.includes(p.id)),
-    []
-  );
+
+  const { data: overviewData, isLoading: overviewLoading } = useMyListings({
+    tab: overviewTabMap[overviewFilter],
+    locale,
+  });
+
+  const myListingsApiTab = myListingsTabMap[myListingsFilter];
+  const { data: myListingsData, isLoading: myListingsLoading } = useMyListings({
+    tab: myListingsApiTab,
+    locale,
+  });
+
+  const archiveMutation = useArchiveListing();
 
   const overviewFilters: { key: OverviewFilter; label: string }[] = [
-    { key: "all", label: t("all") },
-    { key: "forRent", label: t("forRent") },
-    { key: "archived", label: t("archived") },
-    { key: "sold", label: t("sold") },
+    { key: "all",      label: `${t("all")}${overviewData ? ` (${overviewData.counts.all})` : ""}` },
+    { key: "forRent",  label: `${t("forRent")}${overviewData ? ` (${overviewData.counts.forRent})` : ""}` },
+    { key: "archived", label: `${t("archived")}${overviewData ? ` (${overviewData.counts.archived})` : ""}` },
+    { key: "sold",     label: `${t("sold")}${overviewData ? ` (${overviewData.counts.sold})` : ""}` },
   ];
 
   const myListingsFilters: { key: MyListingsFilter; label: string }[] = [
-    { key: "all", label: t("all") },
-    { key: "forRent", label: t("forRent") },
+    { key: "all",     label: `${t("all")}${myListingsData ? ` (${myListingsData.counts.all})` : ""}` },
+    { key: "forRent", label: `${t("forRent")}${myListingsData ? ` (${myListingsData.counts.forRent})` : ""}` },
     { key: "forSale", label: t("forSale") },
     { key: "drafted", label: t("drafted") },
   ];
 
   const mainTabs: { key: MainTab; label: string }[] = [
-    { key: "overview", label: t("overview") },
-    { key: "savedHomes", label: t("favorites") },
-    { key: "myListings", label: t("myListings") },
-    { key: "messages", label: t("messages") },
-    { key: "settings", label: t("settings") },
+    { key: "overview",    label: t("overview") },
+    { key: "savedHomes",  label: t("favorites") },
+    { key: "myListings",  label: t("myListings") },
+    { key: "messages",    label: t("messages") },
+    { key: "settings",    label: t("settings") },
   ];
+
+  const skeletonRows = (
+    <div className="space-y-2 p-4">
+      {[...Array(4)].map((_, i) => (
+        <div key={i} className="h-16 rounded-lg bg-muted animate-pulse" />
+      ))}
+    </div>
+  );
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-8">
@@ -175,14 +157,30 @@ export default function DashboardPage() {
 
             {/* Desktop Table */}
             <div className="hidden sm:block">
-              <ListingTable listings={overviewListings} />
+              {overviewLoading ? skeletonRows : (
+                <ListingTable
+                  listings={overviewData?.items ?? []}
+                  onArchive={(id) => archiveMutation.mutate({ listingId: id, locale })}
+                />
+              )}
             </div>
 
             {/* Mobile Cards */}
             <div className="flex flex-col gap-3 sm:hidden">
-              {overviewListings.map((listing) => (
-                <ListingCard key={listing.id} listing={listing} />
-              ))}
+              {overviewLoading ? skeletonRows : overviewData?.items.length === 0 || !overviewData ? (
+                <div className="flex flex-col items-center gap-3 py-16 text-muted-foreground">
+                  <Home className="size-10 opacity-30" />
+                  <p className="text-sm font-medium">No listings to show</p>
+                </div>
+              ) : (
+                overviewData.items.map((listing) => (
+                  <ListingCard
+                    key={listing.id}
+                    listing={listing}
+                    onArchive={(id) => archiveMutation.mutate({ listingId: id, locale })}
+                  />
+                ))
+              )}
             </div>
           </div>
 
@@ -202,7 +200,7 @@ export default function DashboardPage() {
           <div className="mb-6 inline-flex items-center gap-1 rounded-[12px] border border-border bg-[#E8F0F7] p-1">
             {(
               [
-                { key: "favorites", label: t("favorites") },
+                { key: "favorites",   label: t("favorites") },
                 { key: "hiddenHomes", label: t("hiddenHomes") },
               ] as { key: FavoritesSubTab; label: string }[]
             ).map((sub) => (
@@ -222,31 +220,34 @@ export default function DashboardPage() {
 
           {/* Favorites — Property Grid */}
           {favSubTab === "favorites" && (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {favoritesProperties.map((property) => (
-                <PropertyCard
-                  key={property.id}
-                  property={property}
-                  isFavorite
-                />
-              ))}
-            </div>
+            <>
+              {savedHomesLoading ? (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  {[0, 1, 2, 3].map((i) => (
+                    <div key={i} className="h-64 rounded-2xl bg-muted animate-pulse" />
+                  ))}
+                </div>
+              ) : savedHomesData?.items.length === 0 || !savedHomesData ? (
+                <div className="flex flex-col items-center gap-3 py-20 text-muted-foreground">
+                  <Heart className="size-10 opacity-30" />
+                  <p className="text-sm font-medium">No saved homes yet</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  {savedHomesData.items.map((item) => (
+                    <PropertyCard key={item.id} item={item} />
+                  ))}
+                </div>
+              )}
+            </>
           )}
 
-          {/* Hidden Homes — placeholder, remove `false &&` when implementing */}
+          {/* Hidden Homes — placeholder */}
           {favSubTab === "hiddenHomes" && (
             <div className="rounded-xl border border-border bg-card p-6">
               <h2 className="text-lg font-bold text-foreground">
                 {t("hiddenHomes")}
               </h2>
-            </div>
-          )}
-
-          {false && favSubTab === "hiddenHomes" && (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {hiddenProperties.map((property) => (
-                <PropertyCard key={property.id} property={property} />
-              ))}
             </div>
           )}
         </div>
@@ -294,14 +295,30 @@ export default function DashboardPage() {
 
           {/* Desktop Table */}
           <div className="hidden sm:block">
-            <ListingTable listings={myListings} />
+            {myListingsLoading ? skeletonRows : (
+              <ListingTable
+                listings={myListingsData?.items ?? []}
+                onArchive={(id) => archiveMutation.mutate({ listingId: id, locale })}
+              />
+            )}
           </div>
 
           {/* Mobile Cards */}
           <div className="flex flex-col gap-3 sm:hidden">
-            {myListings.map((listing) => (
-              <ListingCard key={listing.id} listing={listing} />
-            ))}
+            {myListingsLoading ? skeletonRows : myListingsData?.items.length === 0 || !myListingsData ? (
+              <div className="flex flex-col items-center gap-3 py-16 text-muted-foreground">
+                <Home className="size-10 opacity-30" />
+                <p className="text-sm font-medium">No listings to show</p>
+              </div>
+            ) : (
+              myListingsData.items.map((listing) => (
+                <ListingCard
+                  key={listing.id}
+                  listing={listing}
+                  onArchive={(id) => archiveMutation.mutate({ listingId: id, locale })}
+                />
+              ))
+            )}
           </div>
         </div>
       )}

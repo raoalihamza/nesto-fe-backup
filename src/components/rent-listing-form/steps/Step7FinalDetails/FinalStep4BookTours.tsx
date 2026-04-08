@@ -12,7 +12,7 @@ export function FinalStep4BookTours() {
     (s) => s.listingForm.formData.finalDetails
   );
 
-  const selected = finalDetails.bookToursInstantly;
+  const selected = finalDetails.bookingToursInstantly === true;
 
   return (
     <div className="w-full max-w-md space-y-6">
@@ -29,7 +29,7 @@ export function FinalStep4BookTours() {
       <button
         type="button"
         onClick={() =>
-          dispatch(setFinalDetails({ bookToursInstantly: !selected }))
+          dispatch(setFinalDetails({ bookingToursInstantly: !selected }))
         }
         className={`w-full max-w-xs cursor-pointer rounded-xl border-2 p-5 text-left transition-all ${
           selected

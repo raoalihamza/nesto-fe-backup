@@ -51,16 +51,19 @@ const FEE_CATEGORIES: {
 ];
 
 const REQUIREMENT_LABEL: Record<string, string> = {
-  included_in_base: "includedInBase",
   required: "required",
   optional: "optional",
   situational: "situational",
 };
 
 const FREQUENCY_LABEL: Record<string, string> = {
-  monthly: "paidMonthly",
-  annually: "paidAnnually",
   one_time: "paidOneTime",
+  monthly: "paidMonthly",
+  weekly: "paidWeekly",
+  yearly: "paidYearly",
+  per_lease: "paidPerLease",
+  per_occurrence: "paidPerOccurrence",
+  other: "other",
 };
 
 export function Step6CostsAndFees() {
@@ -71,6 +74,7 @@ export function Step6CostsAndFees() {
     (s) => s.listingForm.formData.costsAndFees
   );
 
+  const [showTotalMonthlyPrice, setShowTotalMonthlyPrice] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalCategory, setModalCategory] = useState<FeeCategory>("administrative");
   const [editingFee, setEditingFee] = useState<PropertyFee | null>(null);
@@ -90,7 +94,7 @@ export function Step6CostsAndFees() {
   function handleDeleteFee(feeId: string) {
     dispatch(
       setCostsAndFees({
-        fees: costsAndFees.fees.filter((f) => f.id !== feeId),
+        fees: costsAndFees.fees.filter((f) => f.feeId !== feeId),
       })
     );
   }
@@ -99,7 +103,7 @@ export function Step6CostsAndFees() {
     if (editingFee) {
       dispatch(
         setCostsAndFees({
-          fees: costsAndFees.fees.map((f) => (f.id === fee.id ? fee : f)),
+          fees: costsAndFees.fees.map((f) => (f.feeId === fee.feeId ? fee : f)),
         })
       );
     } else {
@@ -149,10 +153,8 @@ export function Step6CostsAndFees() {
             </button>
           </div>
           <Switch
-            checked={costsAndFees.showTotalMonthlyPrice}
-            onCheckedChange={(checked) =>
-              dispatch(setCostsAndFees({ showTotalMonthlyPrice: checked }))
-            }
+            checked={showTotalMonthlyPrice}
+            onCheckedChange={setShowTotalMonthlyPrice}
           />
         </div>
       </div>
@@ -183,13 +185,13 @@ export function Step6CostsAndFees() {
               {/* Fee items for this category */}
               {fees.map((fee) => (
                 <div
-                  key={fee.id}
+                  key={fee.feeId}
                   className="border-t border-border py-3 pl-8"
                 >
                   <div className="flex items-start justify-between">
                     <div className="space-y-0.5">
                       <p className="text-sm font-medium text-foreground">
-                        {fee.name}
+                        {fee.feeName}
                       </p>
                       {fee.description && (
                         <p className="text-xs text-muted-foreground">
@@ -198,11 +200,11 @@ export function Step6CostsAndFees() {
                       )}
                       <p className="text-xs text-muted-foreground">
                         <span className="font-semibold text-foreground">
-                          ${fee.amount}
+                          ${fee.feeAmount}
                         </span>{" "}
                         {t("each")}, {t(FREQUENCY_LABEL[fee.paymentFrequency])}{" "}
-                        | {t(REQUIREMENT_LABEL[fee.isRequired])} |{" "}
-                        {fee.isRefundable ? t("refundable") : t("nonRefundable")}
+                        | {t(REQUIREMENT_LABEL[fee.feeRequiredType])} |{" "}
+                        {fee.refundability === "refundable" ? t("refundable") : t("nonRefundable")}
                       </p>
                     </div>
                     <DropdownMenu>
@@ -214,7 +216,7 @@ export function Step6CostsAndFees() {
                           {tCommon("edit")}
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          onClick={() => handleDeleteFee(fee.id)}
+                          onClick={() => handleDeleteFee(fee.feeId)}
                         >
                           {tCommon("delete")}
                         </DropdownMenuItem>

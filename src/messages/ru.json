@@ -96,7 +96,8 @@
     "sold": "Проданные",
     "uploadSheet": "Загрузить таблицу",
     "favorites": "Избранное",
-    "hiddenHomes": "Скрытые дома"
+    "hiddenHomes": "Скрытые дома",
+    "comingSoon": "Скоро"
   },
   "listing": {
     "saveAndExit": "Сохранить и выйти",
@@ -208,7 +209,7 @@
       "parkingOptions": {
         "attached_garage": "Пристроенный гараж",
         "detached_garage": "Отдельный гараж",
-        "off_street": "Парковка вне улицы"
+        "off_street_parking": "Парковка вне улицы"
       },
       "outdoorAmenities": "Удобства на улице",
       "outdoorOptions": {

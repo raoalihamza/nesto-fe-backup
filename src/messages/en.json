@@ -96,7 +96,8 @@
     "sold": "Sold",
     "uploadSheet": "Upload Sheet",
     "favorites": "Favorites",
-    "hiddenHomes": "Hidden Homes"
+    "hiddenHomes": "Hidden Homes",
+    "comingSoon": "Coming soon"
   },
   "listing": {
     "saveAndExit": "Save & exit",
@@ -208,7 +209,7 @@
       "parkingOptions": {
         "attached_garage": "Attached garage",
         "detached_garage": "Detached garage",
-        "off_street": "Off-street parking"
+        "off_street_parking": "Off-street parking"
       },
       "outdoorAmenities": "Outdoor amenities",
       "outdoorOptions": {

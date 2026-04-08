@@ -96,7 +96,8 @@
     "sold": "Sotilgan",
     "uploadSheet": "Jadval yuklash",
     "favorites": "Sevimlilar",
-    "hiddenHomes": "Yashirilgan uylar"
+    "hiddenHomes": "Yashirilgan uylar",
+    "comingSoon": "Tez kunda"
   },
   "listing": {
     "saveAndExit": "Saqlash va chiqish",
@@ -208,7 +209,7 @@
       "parkingOptions": {
         "attached_garage": "Biriktirilgan garaj",
         "detached_garage": "Alohida garaj",
-        "off_street": "Ko'chadan tashqari to'xtash"
+        "off_street_parking": "Ko'chadan tashqari to'xtash"
       },
       "outdoorAmenities": "Tashqi qulayliklar",
       "outdoorOptions": {

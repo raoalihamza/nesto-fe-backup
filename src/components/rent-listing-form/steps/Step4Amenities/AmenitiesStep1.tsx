@@ -12,13 +12,12 @@ import type {
   HeatingOption,
   ApplianceOption,
   FlooringOption,
-  OtherAmenityOption,
 } from "@/types/property";
 
 const LAUNDRY_OPTIONS: LaundryOption[] = [
   "washer_dryer_included",
   "washer_dryer_hookups",
-  "shared_or_in_building",
+  "shared_in_building",
   "no_laundry",
 ];
 
@@ -37,7 +36,7 @@ const APPLIANCE_OPTIONS: ApplianceOption[] = [
   "refrigerator",
 ];
 const FLOORING_OPTIONS: FlooringOption[] = ["carpet", "hardwood", "tile"];
-const OTHER_OPTIONS: OtherAmenityOption[] = ["furnished"];
+const OTHER_OPTIONS = ["furnished"] as const;
 
 export function AmenitiesStep1() {
   const t = useTranslations("listing.amenities");
@@ -65,9 +64,9 @@ export function AmenitiesStep1() {
             <span className="text-brand">*</span>
           </h3>
           <RadioGroup
-            value={amenities.laundry ?? undefined}
+            value={amenities.laundry[0] ?? ""}
             onValueChange={(val: string) =>
-              dispatch(setAmenities({ laundry: val as LaundryOption }))
+              dispatch(setAmenities({ laundry: [val as LaundryOption] }))
             }
             className="mt-3 space-y-3"
           >
@@ -215,11 +214,11 @@ export function AmenitiesStep1() {
               <div key={opt} className="flex items-center gap-3">
                 <Checkbox
                   id={`other-${opt}`}
-                  checked={amenities.other.includes(opt)}
+                  checked={amenities.otherAmenities.includes(opt)}
                   onCheckedChange={() =>
                     dispatch(
                       setAmenities({
-                        other: toggleArray(amenities.other, opt),
+                        otherAmenities: toggleArray(amenities.otherAmenities, opt),
                       }),
                     )
                   }

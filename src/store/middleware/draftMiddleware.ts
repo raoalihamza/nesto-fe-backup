@@ -1,13 +1,9 @@
 import type { Middleware } from "@reduxjs/toolkit";
-import type { ListingFormData } from "@/store/slices/listingFormSlice";
-
-const DRAFT_KEY = "nesto_stepper_draft";
 
 interface StoreWithListingForm {
   listingForm: {
-    formData: ListingFormData;
+    draftId: string | null;
     currentStep: number;
-    currentSubStep: number;
   };
 }
 
@@ -24,11 +20,12 @@ export const draftMiddleware: Middleware<any, any, any> = (store) => (next) => (
   ) {
     try {
       const state = store.getState() as StoreWithListingForm;
-      const { formData, currentStep, currentSubStep } = state.listingForm;
-      sessionStorage.setItem(
-        DRAFT_KEY,
-        JSON.stringify({ formData, currentStep, currentSubStep })
-      );
+      const { draftId, currentStep } = state.listingForm;
+
+      if (draftId !== null) {
+        sessionStorage.setItem("nesto_rent_draft_id", draftId);
+      }
+      sessionStorage.setItem("nesto_rent_draft_step", currentStep.toString());
     } catch {
       // sessionStorage unavailable or quota exceeded — silently ignore
     }

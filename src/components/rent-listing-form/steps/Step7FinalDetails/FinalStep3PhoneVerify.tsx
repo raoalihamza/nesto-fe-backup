@@ -19,15 +19,15 @@ export function FinalStep3PhoneVerify() {
   );
 
   const [phoneStep, setPhoneStep] = useState<PhoneStep>(
-    finalDetails.contactPhone ? "verified" : "idle"
+    finalDetails.phoneNumber ? "verified" : "idle"
   );
-  const [phoneInput, setPhoneInput] = useState(finalDetails.contactPhone);
+  const [phoneInput, setPhoneInput] = useState(finalDetails.phoneNumber ?? "");
   const [otpValues, setOtpValues] = useState<string[]>(Array(6).fill(""));
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const handleSendOtp = useCallback(() => {
     if (!phoneInput.trim()) return;
-    dispatch(setFinalDetails({ contactPhone: phoneInput.trim() }));
+    dispatch(setFinalDetails({ phoneNumber: phoneInput.trim() }));
     setOtpValues(Array(6).fill(""));
     setPhoneStep("otp");
   }, [phoneInput, dispatch]);
@@ -143,7 +143,7 @@ export function FinalStep3PhoneVerify() {
         {phoneStep === "otp" && (
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              {t("verifyCode", { phone: finalDetails.contactPhone })}
+              {t("verifyCode", { phone: finalDetails.phoneNumber ?? "" })}
             </p>
 
             <div className="flex gap-2">
@@ -182,7 +182,7 @@ export function FinalStep3PhoneVerify() {
             <div className="flex items-center gap-2">
               <CheckCircle className="h-4.5 w-4.5 text-green-600" />
               <span className="text-sm font-medium text-foreground">
-                {finalDetails.contactPhone}
+                {finalDetails.phoneNumber}
               </span>
               <span className="text-xs font-medium text-green-600">
                 {t("verified")}

@@ -15,7 +15,7 @@ import type {
 const PARKING_OPTIONS: ParkingOption[] = [
   "attached_garage",
   "detached_garage",
-  "off_street",
+  "off_street_parking",
 ];
 const OUTDOOR_OPTIONS: OutdoorOption[] = ["balcony_or_deck", "pool"];
 const ACCESSIBILITY_OPTIONS: AccessibilityOption[] = ["disabled_access"];
@@ -86,11 +86,11 @@ export function AmenitiesStep2() {
               <div key={opt} className="flex items-center gap-3">
                 <Checkbox
                   id={`outdoor-${opt}`}
-                  checked={amenities.outdoor.includes(opt)}
+                  checked={amenities.outdoorAmenities.includes(opt)}
                   onCheckedChange={() =>
                     dispatch(
                       setAmenities({
-                        outdoor: toggleArray(amenities.outdoor, opt),
+                        outdoorAmenities: toggleArray(amenities.outdoorAmenities, opt),
                       }),
                     )
                   }

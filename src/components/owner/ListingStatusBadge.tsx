@@ -1,31 +1,30 @@
 import { cn } from "@/lib/utils";
 
-type ListingStatus = "active" | "pending" | "rented" | "archived" | "sold" | "drafted";
-
-const statusStyles: Record<ListingStatus, string> = {
-  active: "bg-[var(--status-active)]/10 text-[var(--status-active)]",
-  pending: "bg-[var(--status-pending)]/10 text-[var(--status-pending)]",
-  rented: "bg-[var(--status-rented)]/10 text-[var(--status-rented)]",
-  archived: "bg-[var(--status-archived)]/10 text-[var(--status-archived)]",
-  sold: "bg-[var(--status-sold)]/10 text-[var(--status-sold)]",
-  drafted: "bg-muted text-muted-foreground",
+const toneStyles: Record<string, string> = {
+  success: "bg-[var(--status-active)]/10 text-[var(--status-active)]",
+  warning: "bg-[var(--status-pending)]/10 text-[var(--status-pending)]",
+  info:    "bg-[var(--status-rented)]/10 text-[var(--status-rented)]",
+  neutral: "bg-[var(--status-archived)]/10 text-[var(--status-archived)]",
+  accent:  "bg-[var(--status-sold)]/10 text-[var(--status-sold)]",
 };
+const fallback = "bg-muted text-muted-foreground";
 
 interface ListingStatusBadgeProps {
-  status: ListingStatus;
+  statusLabel: string;
+  statusTone: string;
   className?: string;
 }
 
-export function ListingStatusBadge({ status, className }: ListingStatusBadgeProps) {
+export function ListingStatusBadge({ statusLabel, statusTone, className }: ListingStatusBadgeProps) {
   return (
     <span
       className={cn(
         "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize",
-        statusStyles[status],
+        toneStyles[statusTone] ?? fallback,
         className
       )}
     >
-      {status}
+      {statusLabel}
     </span>
   );
 }

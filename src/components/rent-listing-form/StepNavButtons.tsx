@@ -1,8 +1,6 @@
 "use client";
 
-import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
 import { useAppSelector, useAppDispatch } from "@/store";
 import {
   goToStep,
@@ -22,17 +20,11 @@ const SUB_STEP_COUNTS: Record<number, number> = {
   6: 6, // Final details
 };
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
-
 export function StepNavButtons() {
   const t = useTranslations("listing");
-  const router = useRouter();
   const dispatch = useAppDispatch();
   const currentStep = useAppSelector((s) => s.listingForm.currentStep);
   const currentSubStep = useAppSelector((s) => s.listingForm.currentSubStep);
-  const formData = useAppSelector((s) => s.listingForm.formData);
-  const [isPublishing, setIsPublishing] = useState(false);
 
   const isFirstStep = currentStep === 0;
   const isLastStep = currentStep === TOTAL_STEPS - 1;
@@ -52,30 +44,8 @@ export function StepNavButtons() {
   }
 
   async function handlePublish() {
-    if (isPublishing) return;
-    setIsPublishing(true);
-
-    try {
-      const res = await fetch(`${API_BASE}/api/listings/publish`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => null);
-        throw new Error(data?.message ?? t("publish.errorGeneric"));
-      }
-
-      clearAllDraftData();
-      router.push("/dashboard");
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : t("publish.errorGeneric");
-      toast.error(message);
-    } finally {
-      setIsPublishing(false);
-    }
+    // TODO: next prompt will implement publish API call
+    toast.info("Publish coming soon");
   }
 
   function handleNext() {
@@ -108,14 +78,9 @@ export function StepNavButtons() {
 
       <Button
         onClick={handleNext}
-        disabled={isPublishing}
         className="h-10 rounded-lg bg-brand px-6 text-sm font-medium text-white btn-brand-shadow hover:bg-brand-dark"
       >
-        {isLastStep
-          ? isPublishing
-            ? t("publish.publishing")
-            : t("publish.publishListing")
-          : t("next")}
+        {isLastStep ? t("publish.publishListing") : t("next")}
       </Button>
     </div>
   );

@@ -15,7 +15,7 @@ export function FinalStep6ConfirmDetails() {
   const rows = [
     {
       label: t("hidePropertyAddress"),
-      value: finalDetails.hideAddress ? t("yes") : t("no"),
+      value: finalDetails.hidePropertyAddress ? t("yes") : t("no"),
       learnMore: true,
       editSubStep: 0,
     },
@@ -36,7 +36,7 @@ export function FinalStep6ConfirmDetails() {
     },
     {
       label: t("allowPhoneContact"),
-      value: finalDetails.allowPhoneContact ? t("yes") : t("no"),
+      value: finalDetails.allowRentersToContactByPhone ? t("yes") : t("no"),
       learnMore: true,
       editSubStep: 2,
     },

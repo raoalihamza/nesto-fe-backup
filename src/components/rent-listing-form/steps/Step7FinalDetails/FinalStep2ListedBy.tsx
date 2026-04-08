@@ -9,6 +9,12 @@ import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import type { ListedBy } from "@/types/property";
 
+const LISTED_BY_OPTIONS: ListedBy[] = [
+  "property_owner",
+  "management_company",
+  "tenant",
+];
+
 export function FinalStep2ListedBy() {
   const t = useTranslations("listing.finalDetails");
   const tCommon = useTranslations("common");
@@ -36,39 +42,29 @@ export function FinalStep2ListedBy() {
         </p>
 
         <RadioGroup
-          value={finalDetails.listedBy ?? "owner"}
+          value={finalDetails.listedBy ?? "property_owner"}
           onValueChange={(val) =>
             dispatch(setFinalDetails({ listedBy: val as ListedBy }))
           }
           className="space-y-3"
         >
-          <div className="flex items-center gap-3">
-            <RadioGroupItem value="owner" id="listed-owner" />
-            <Label
-              htmlFor="listed-owner"
-              className="cursor-pointer text-sm text-foreground"
-            >
-              {t("propertyOwner")}
-            </Label>
-          </div>
-          <div className="flex items-center gap-3">
-            <RadioGroupItem value="management" id="listed-management" />
-            <Label
-              htmlFor="listed-management"
-              className="cursor-pointer text-sm text-foreground"
-            >
-              {t("managementCompany")}
-            </Label>
-          </div>
-          <div className="flex items-center gap-3">
-            <RadioGroupItem value="tenant" id="listed-tenant" />
-            <Label
-              htmlFor="listed-tenant"
-              className="cursor-pointer text-sm text-foreground"
-            >
-              {t("tenant")}
-            </Label>
-          </div>
+          {LISTED_BY_OPTIONS.map((opt) => (
+            <div key={opt} className="flex items-center gap-3">
+              <RadioGroupItem value={opt} id={`listed-${opt}`} />
+              <Label
+                htmlFor={`listed-${opt}`}
+                className="cursor-pointer text-sm text-foreground"
+              >
+                {t(
+                  opt === "property_owner"
+                    ? "propertyOwner"
+                    : opt === "management_company"
+                      ? "managementCompany"
+                      : "tenant"
+                )}
+              </Label>
+            </div>
+          ))}
         </RadioGroup>
       </div>
 
@@ -79,9 +75,9 @@ export function FinalStep2ListedBy() {
           <span className="text-brand">*</span>
         </Label>
         <Input
-          value={finalDetails.contactName || "Kurtesan"}
+          value={finalDetails.name || "Kurtesan"}
           onChange={(e) =>
-            dispatch(setFinalDetails({ contactName: e.target.value }))
+            dispatch(setFinalDetails({ name: e.target.value }))
           }
           className="h-12 text-base"
         />
@@ -95,9 +91,9 @@ export function FinalStep2ListedBy() {
         </Label>
         <div className="flex items-center gap-3">
           <Input
-            value={finalDetails.contactEmail || "hey@kurtesan.com"}
+            value={finalDetails.email || "hey@kurtesan.com"}
             onChange={(e) =>
-              dispatch(setFinalDetails({ contactEmail: e.target.value }))
+              dispatch(setFinalDetails({ email: e.target.value }))
             }
             className="h-12 text-base bg-brand/5 border-brand/30"
             readOnly

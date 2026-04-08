@@ -36,9 +36,11 @@ export function SpecialOfferModal({
   function handleAddOffer() {
     dispatch(
       setRentDetails({
-        specialOfferStart: startDate,
-        specialOfferEnd: endDate,
-        specialOfferDescription: description,
+        specialOffer: {
+          offerStartDate: startDate || null,
+          offerEndDate: endDate || null,
+          description: description || null,
+        },
       }),
     );
     onOpenChange(false);

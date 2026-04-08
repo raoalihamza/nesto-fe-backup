@@ -3,7 +3,7 @@
 import { useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { useAppSelector, useAppDispatch } from "@/store";
-import { restoreFromSession } from "@/store/slices/listingFormSlice";
+import { setDraftId, goToStep } from "@/store/slices/listingFormSlice";
 import { StepSubHeader } from "@/components/rent-listing-form/StepSubHeader";
 import { StepProgressBar } from "@/components/rent-listing-form/StepProgressBar";
 import { StepNavButtons } from "@/components/rent-listing-form/StepNavButtons";
@@ -16,8 +16,6 @@ import { Step6CostsAndFees } from "@/components/rent-listing-form/steps/Step6Cos
 import { Step7FinalDetails } from "@/components/rent-listing-form/steps/Step7FinalDetails";
 import { Step8Review } from "@/components/rent-listing-form/steps/Step8Review";
 import { Step9PayPublish } from "@/components/rent-listing-form/steps/Step9PayPublish";
-
-const SESSION_KEY = "nesto_stepper_draft";
 
 const STEP_KEYS = [
   "propertyInfo",
@@ -72,31 +70,32 @@ export function StepperLayout() {
   const dispatch = useAppDispatch();
   const currentStep = useAppSelector((s) => s.listingForm.currentStep);
   const currentSubStep = useAppSelector((s) => s.listingForm.currentSubStep);
-  const isDirty = useAppSelector((s) => s.listingForm.isDirty);
   const draftId = useAppSelector((s) => s.listingForm.draftId);
 
-  // Restore session on mount
+  // On mount: read sessionStorage for draftId and step
   useEffect(() => {
-    if (draftId) return; // API draft already loaded, skip session restore
-    try {
-      const raw = sessionStorage.getItem(SESSION_KEY);
-      if (raw) {
-        const snapshot = JSON.parse(raw);
-        dispatch(restoreFromSession(snapshot));
-      }
-    } catch {
-      // sessionStorage unavailable or corrupt data
+    const savedDraftId = sessionStorage.getItem("nesto_rent_draft_id");
+    const savedStep = sessionStorage.getItem("nesto_rent_draft_step");
+    if (savedDraftId) {
+      dispatch(setDraftId(savedDraftId));
+      // TODO: next prompt will add API call here: GET /listings/rent/drafts/{savedDraftId}
     }
-  }, [draftId, dispatch]);
+    if (savedStep) {
+      const stepNum = parseInt(savedStep, 10);
+      if (!isNaN(stepNum)) {
+        dispatch(goToStep(stepNum));
+      }
+    }
+  }, [dispatch]);
 
-  // beforeunload guard
+  // beforeunload guard — warn if active draft exists
   const handleBeforeUnload = useCallback(
     (e: BeforeUnloadEvent) => {
-      if (isDirty) {
+      if (draftId !== null) {
         e.preventDefault();
       }
     },
-    [isDirty]
+    [draftId]
   );
 
   useEffect(() => {

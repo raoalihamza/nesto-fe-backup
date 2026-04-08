@@ -1,65 +1,60 @@
 export type ListingType = "rent" | "sale";
 export type PropertyType = "house" | "apartment" | "condo" | "townhouse" | "land";
 export type PropertyStatus = "active" | "pending" | "rented" | "sold" | "archived" | "draft";
-export type ListedBy = "owner" | "management" | "tenant";
+export type ListedBy = "property_owner" | "management_company" | "tenant";
 
 export type LaundryOption =
   | "washer_dryer_included"
   | "washer_dryer_hookups"
-  | "shared_or_in_building"
+  | "shared_in_building"
   | "no_laundry";
 
 export type CoolingOption = "central" | "wall" | "window";
 export type HeatingOption = "baseboard" | "forced_air" | "heat_pump" | "wall";
 export type ApplianceOption = "dishwasher" | "freezer" | "microwave" | "oven" | "refrigerator";
 export type FlooringOption = "carpet" | "hardwood" | "tile";
-export type ParkingOption = "attached_garage" | "detached_garage" | "off_street";
+export type ParkingOption = "attached_garage" | "detached_garage" | "off_street_parking";
 export type OutdoorOption = "balcony_or_deck" | "pool";
 export type AccessibilityOption = "disabled_access";
-export type OtherAmenityOption = "furnished";
 
 export interface PropertyAmenities {
-  laundry: LaundryOption | null;
+  laundry: LaundryOption[];
   cooling: CoolingOption[];
   heating: HeatingOption[];
   appliances: ApplianceOption[];
   flooring: FlooringOption[];
+  furnished: string[];
   parking: ParkingOption[];
-  outdoor: OutdoorOption[];
+  outdoorAmenities: OutdoorOption[];
   accessibility: AccessibilityOption[];
-  other: OtherAmenityOption[];
+  otherAmenities: string[];
 }
 
 export type FeeCategory = "administrative" | "parking" | "utilities" | "other";
-export type FeeRequirement = "included_in_base" | "required" | "optional" | "situational";
-export type FeeFrequency = "monthly" | "annually" | "one_time";
+export type FeeFrequency =
+  | "one_time"
+  | "monthly"
+  | "weekly"
+  | "yearly"
+  | "per_lease"
+  | "per_occurrence"
+  | "other";
 export type FeeFormat = "fixed" | "percentage";
+export type FeeRequiredType = "required" | "optional" | "situational";
+export type FeeRefundability = "non_refundable" | "refundable" | null;
 
 export interface PropertyFee {
-  id: string;
+  feeId: string;
   category: FeeCategory;
-  name: string;
+  feeName: string;
   paymentFrequency: FeeFrequency;
-  format: FeeFormat;
-  amount: number;
-  isRequired: FeeRequirement;
-  isRefundable: boolean;
+  feeFormat: FeeFormat;
+  feeAmount: number;
+  includedInRent?: boolean;
+  feeRequiredType: FeeRequiredType;
+  refundability?: FeeRefundability;
   description?: string;
-}
-
-export interface SpecialOffer {
-  startDate: string;
-  endDate: string;
-  description: string;
-}
-
-export interface ScreeningCriteria {
-  petsAllowed: boolean;
-  petPolicyNegotiable: boolean;
-  minIncomeToRentRatio: string | null;
-  incomeNegotiable: boolean;
-  minCreditScore: string | null;
-  creditNegotiable: boolean;
+  sortOrder?: number;
 }
 
 export interface PropertyContact {
@@ -104,7 +99,6 @@ export interface Property {
   bathrooms: number;
   monthlyRent: number | null;
   securityDeposit: number | null;
-  specialOffer: SpecialOffer | null;
   showTotalMonthlyPrice: boolean;
   fees: PropertyFee[];
   salePrice: number | null;
@@ -114,7 +108,6 @@ export interface Property {
   requireRentersInsurance: boolean;
   media: PropertyMedia;
   amenities: PropertyAmenities;
-  screening: ScreeningCriteria;
   contact: PropertyContact;
   acceptOnlineApplications: boolean;
   bookToursInstantly: boolean;
@@ -145,7 +138,6 @@ export interface PropertyPreview {
   salePrice: number | null;
   leaseDuration: string;
   coverPhoto: string;
-  specialOffer: SpecialOffer | null;
   savedCount: number;
   contactName: string;
   tag?: string;

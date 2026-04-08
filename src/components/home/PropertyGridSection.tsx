@@ -32,7 +32,7 @@ export function PropertyGridSection({
       )}
       <div className="grid grid-cols-1 gap-x-5 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
         {displayItems.map((property, i) => (
-          <PropertyCard key={`${property.id}-${i}`} property={property} />
+          <PropertyCard key={`${property.id}-${i}`} item={property} />
         ))}
       </div>
     </section>

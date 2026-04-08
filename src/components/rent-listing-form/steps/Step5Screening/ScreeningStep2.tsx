@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useAppSelector, useAppDispatch } from "@/store";
-import { setScreening } from "@/store/slices/listingFormSlice";
+import { setScreeningCriteria } from "@/store/slices/listingFormSlice";
 import {
   Select,
   SelectContent,
@@ -14,11 +14,17 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 
 const INCOME_RATIO_OPTIONS = ["2x", "2.5x", "3x", "3.5x", "4x"];
+const CREDIT_SCORE_OPTIONS = [
+  { value: "580", label: "creditFair" },
+  { value: "670", label: "creditGood" },
+  { value: "740", label: "creditVeryGood" },
+  { value: "800", label: "creditExceptional" },
+];
 
 export function ScreeningStep2() {
   const t = useTranslations("listing.screening");
   const dispatch = useAppDispatch();
-  const screening = useAppSelector((s) => s.listingForm.formData.screening);
+  const screeningCriteria = useAppSelector((s) => s.listingForm.formData.screeningCriteria);
 
   return (
     <div className="w-full max-w-md space-y-6">
@@ -37,11 +43,11 @@ export function ScreeningStep2() {
           {t("minIncomeToRentRatio")}
         </p>
         <Select
-          value={screening.minIncomeToRentRatio || "not_set"}
+          value={screeningCriteria.minimumIncomeToRentRatio || "not_set"}
           onValueChange={(value) =>
             dispatch(
-              setScreening({
-                minIncomeToRentRatio: value === "not_set" ? "" : (value ?? ""),
+              setScreeningCriteria({
+                minimumIncomeToRentRatio: value === "not_set" ? null : value,
               })
             )
           }
@@ -63,9 +69,9 @@ export function ScreeningStep2() {
         <div className="flex items-center gap-2">
           <Checkbox
             id="incomeNegotiable"
-            checked={screening.incomeNegotiable}
+            checked={screeningCriteria.incomeToRentRatioNegotiable === true}
             onCheckedChange={(checked) =>
-              dispatch(setScreening({ incomeNegotiable: checked === true }))
+              dispatch(setScreeningCriteria({ incomeToRentRatioNegotiable: checked === true }))
             }
           />
           <Label
@@ -91,11 +97,15 @@ export function ScreeningStep2() {
           {t("minCreditScore")}
         </p>
         <Select
-          value={screening.minCreditScore || "not_set"}
+          value={
+            screeningCriteria.minimumCreditScore !== null
+              ? String(screeningCriteria.minimumCreditScore)
+              : "not_set"
+          }
           onValueChange={(value) =>
             dispatch(
-              setScreening({
-                minCreditScore: value === "not_set" ? "" : (value ?? ""),
+              setScreeningCriteria({
+                minimumCreditScore: value === "not_set" ? null : Number(value),
               })
             )
           }
@@ -105,21 +115,20 @@ export function ScreeningStep2() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="not_set">{t("notSet")}</SelectItem>
-            <SelectItem value="fair">{t("creditFair")}</SelectItem>
-            <SelectItem value="good">{t("creditGood")}</SelectItem>
-            <SelectItem value="very_good">{t("creditVeryGood")}</SelectItem>
-            <SelectItem value="exceptional">
-              {t("creditExceptional")}
-            </SelectItem>
+            {CREDIT_SCORE_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {t(opt.label)}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
 
         <div className="flex items-center gap-2">
           <Checkbox
             id="creditNegotiable"
-            checked={screening.creditNegotiable}
+            checked={screeningCriteria.creditScoreNegotiable === true}
             onCheckedChange={(checked) =>
-              dispatch(setScreening({ creditNegotiable: checked === true }))
+              dispatch(setScreeningCriteria({ creditScoreNegotiable: checked === true }))
             }
           />
           <Label
