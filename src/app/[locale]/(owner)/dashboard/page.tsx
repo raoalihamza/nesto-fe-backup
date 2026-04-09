@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Plus, Home, Heart } from "lucide-react";
 
@@ -9,6 +9,8 @@ import { ListingTypeModal } from "@/components/common/ListingTypeModal";
 import { ListingTable, ListingCard } from "@/components/owner";
 import { PropertyCard } from "@/components/property/PropertyCard";
 import { useSavedHomes, useArchiveListing, useMyListings } from "@/hooks/listings";
+import { useRouter } from "@/i18n/routing";
+import type { MyListingItem } from "@/types/listings";
 
 type OverviewFilter = "all" | "forRent" | "archived" | "sold";
 type MyListingsFilter = "all" | "forRent" | "forSale" | "drafted";
@@ -54,18 +56,48 @@ export default function DashboardPage() {
     locale,
   });
 
+  const router = useRouter();
   const archiveMutation = useArchiveListing();
+
+  const handleEditDraft = useCallback(
+    (listing: MyListingItem) => {
+      router.push(`/listings/create/${listing.id}`);
+    },
+    [router]
+  );
+
+  // Filter drafts out of "For Rent" / "For Sale" sub-tabs (not "All" or "Drafted")
+  const shouldFilterDrafts = (tab: string) =>
+    tab === "for-rent" || tab === "for-sale";
+
+  const overviewItems =
+    shouldFilterDrafts(overviewTabMap[overviewFilter])
+      ? (overviewData?.items ?? []).filter((item) => item.status.toLowerCase() !== "draft")
+      : (overviewData?.items ?? []);
+
+  const myListingsItems =
+    shouldFilterDrafts(myListingsApiTab)
+      ? (myListingsData?.items ?? []).filter((item) => item.status.toLowerCase() !== "draft")
+      : (myListingsData?.items ?? []);
+
+  // Count drafts so we can subtract from "For Rent" display count
+  const overviewDraftCount = overviewData
+    ? (overviewData.items ?? []).filter((i) => i.status.toLowerCase() === "draft").length
+    : 0;
+  const myListingsDraftCount = myListingsData
+    ? (myListingsData.items ?? []).filter((i) => i.status.toLowerCase() === "draft").length
+    : 0;
 
   const overviewFilters: { key: OverviewFilter; label: string }[] = [
     { key: "all",      label: `${t("all")}${overviewData ? ` (${overviewData.counts.all})` : ""}` },
-    { key: "forRent",  label: `${t("forRent")}${overviewData ? ` (${overviewData.counts.forRent})` : ""}` },
+    { key: "forRent",  label: `${t("forRent")}${overviewData ? ` (${Math.max(0, overviewData.counts.forRent - overviewDraftCount)})` : ""}` },
     { key: "archived", label: `${t("archived")}${overviewData ? ` (${overviewData.counts.archived})` : ""}` },
     { key: "sold",     label: `${t("sold")}${overviewData ? ` (${overviewData.counts.sold})` : ""}` },
   ];
 
   const myListingsFilters: { key: MyListingsFilter; label: string }[] = [
     { key: "all",     label: `${t("all")}${myListingsData ? ` (${myListingsData.counts.all})` : ""}` },
-    { key: "forRent", label: `${t("forRent")}${myListingsData ? ` (${myListingsData.counts.forRent})` : ""}` },
+    { key: "forRent", label: `${t("forRent")}${myListingsData ? ` (${Math.max(0, myListingsData.counts.forRent - myListingsDraftCount)})` : ""}` },
     { key: "forSale", label: t("forSale") },
     { key: "drafted", label: t("drafted") },
   ];
@@ -159,25 +191,27 @@ export default function DashboardPage() {
             <div className="hidden sm:block">
               {overviewLoading ? skeletonRows : (
                 <ListingTable
-                  listings={overviewData?.items ?? []}
+                  listings={overviewItems}
                   onArchive={(id) => archiveMutation.mutate({ listingId: id, locale })}
+                  onEditDraft={handleEditDraft}
                 />
               )}
             </div>
 
             {/* Mobile Cards */}
             <div className="flex flex-col gap-3 sm:hidden">
-              {overviewLoading ? skeletonRows : overviewData?.items.length === 0 || !overviewData ? (
+              {overviewLoading ? skeletonRows : overviewItems.length === 0 ? (
                 <div className="flex flex-col items-center gap-3 py-16 text-muted-foreground">
                   <Home className="size-10 opacity-30" />
                   <p className="text-sm font-medium">No listings to show</p>
                 </div>
               ) : (
-                overviewData.items.map((listing) => (
+                overviewItems.map((listing) => (
                   <ListingCard
                     key={listing.id}
                     listing={listing}
                     onArchive={(id) => archiveMutation.mutate({ listingId: id, locale })}
+                    onEditDraft={handleEditDraft}
                   />
                 ))
               )}
@@ -297,25 +331,27 @@ export default function DashboardPage() {
           <div className="hidden sm:block">
             {myListingsLoading ? skeletonRows : (
               <ListingTable
-                listings={myListingsData?.items ?? []}
+                listings={myListingsItems}
                 onArchive={(id) => archiveMutation.mutate({ listingId: id, locale })}
+                onEditDraft={handleEditDraft}
               />
             )}
           </div>
 
           {/* Mobile Cards */}
           <div className="flex flex-col gap-3 sm:hidden">
-            {myListingsLoading ? skeletonRows : myListingsData?.items.length === 0 || !myListingsData ? (
+            {myListingsLoading ? skeletonRows : myListingsItems.length === 0 ? (
               <div className="flex flex-col items-center gap-3 py-16 text-muted-foreground">
                 <Home className="size-10 opacity-30" />
                 <p className="text-sm font-medium">No listings to show</p>
               </div>
             ) : (
-              myListingsData.items.map((listing) => (
+              myListingsItems.map((listing) => (
                 <ListingCard
                   key={listing.id}
                   listing={listing}
                   onArchive={(id) => archiveMutation.mutate({ listingId: id, locale })}
+                  onEditDraft={handleEditDraft}
                 />
               ))
             )}

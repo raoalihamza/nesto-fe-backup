@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useAppSelector, useAppDispatch } from "@/store";
 import { setCostsAndFees } from "@/store/slices/listingFormSlice";
+import { rentDraftService } from "@/lib/api/rentDraft.service";
+import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import {
   DropdownMenu,
@@ -73,6 +75,7 @@ export function Step6CostsAndFees() {
   const costsAndFees = useAppSelector(
     (s) => s.listingForm.formData.costsAndFees
   );
+  const draftId = useAppSelector((s) => s.listingForm.draftId);
 
   const [showTotalMonthlyPrice, setShowTotalMonthlyPrice] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -91,30 +94,73 @@ export function Step6CostsAndFees() {
     setModalOpen(true);
   }
 
-  function handleDeleteFee(feeId: string) {
-    dispatch(
-      setCostsAndFees({
-        fees: costsAndFees.fees.filter((f) => f.feeId !== feeId),
-      })
-    );
+  async function handleDeleteFee(feeId: string) {
+    if (!draftId) return;
+    try {
+      await rentDraftService.deleteFee(draftId, feeId);
+      dispatch(
+        setCostsAndFees({
+          fees: costsAndFees.fees.filter((f) => f.feeId !== feeId),
+        })
+      );
+    } catch {
+      toast.error("Failed to delete fee.");
+    }
   }
 
-  function handleSaveFee(fee: PropertyFee) {
-    if (editingFee) {
-      dispatch(
-        setCostsAndFees({
-          fees: costsAndFees.fees.map((f) => (f.feeId === fee.feeId ? fee : f)),
-        })
-      );
-    } else {
-      dispatch(
-        setCostsAndFees({
-          fees: [...costsAndFees.fees, fee],
-        })
-      );
+  async function handleSaveFee(
+    feeData: Omit<PropertyFee, "feeId"> & { feeId?: string }
+  ) {
+    if (!draftId) {
+      toast.error("Please complete previous steps first.");
+      return;
     }
-    setModalOpen(false);
-    setEditingFee(null);
+
+    try {
+      if (editingFee) {
+        const updated = await rentDraftService.updateFee(
+          draftId,
+          editingFee.feeId,
+          {
+            category: feeData.category,
+            feeName: feeData.feeName,
+            paymentFrequency: feeData.paymentFrequency,
+            feeFormat: feeData.feeFormat,
+            feeAmount: feeData.feeAmount,
+            feeRequiredType: feeData.feeRequiredType,
+            refundability: feeData.refundability,
+            description: feeData.description,
+          }
+        );
+        dispatch(
+          setCostsAndFees({
+            fees: costsAndFees.fees.map((f) =>
+              f.feeId === editingFee.feeId ? updated : f
+            ),
+          })
+        );
+      } else {
+        const created = await rentDraftService.createFee(draftId, {
+          category: feeData.category,
+          feeName: feeData.feeName,
+          paymentFrequency: feeData.paymentFrequency,
+          feeFormat: feeData.feeFormat,
+          feeAmount: feeData.feeAmount,
+          feeRequiredType: feeData.feeRequiredType,
+          refundability: feeData.refundability,
+          description: feeData.description,
+        });
+        dispatch(
+          setCostsAndFees({
+            fees: [...costsAndFees.fees, created],
+          })
+        );
+      }
+      setModalOpen(false);
+      setEditingFee(null);
+    } catch {
+      toast.error("Failed to save fee. Please try again.");
+    }
   }
 
   function getFeesForCategory(category: FeeCategory) {

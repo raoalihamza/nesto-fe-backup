@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useAppSelector, useAppDispatch } from "@/store";
 import { setFinalDetails } from "@/store/slices/listingFormSlice";
@@ -22,6 +23,14 @@ export function FinalStep2ListedBy() {
   const finalDetails = useAppSelector(
     (s) => s.listingForm.formData.finalDetails
   );
+
+  // Persist default value to Redux on mount so it gets saved to the API
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!finalDetails.listedBy) {
+      dispatch(setFinalDetails({ listedBy: "property_owner" }));
+    }
+  }, []);
 
   return (
     <div className="w-full max-w-md space-y-6">

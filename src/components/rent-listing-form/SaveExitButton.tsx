@@ -1,36 +1,31 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useAppSelector, useAppDispatch } from "@/store";
-import { setIsSaving, setLastSavedAt } from "@/store/slices/listingFormSlice";
-import { clearAllDraftData } from "@/lib/utils/clearDraft";
+import { useAppSelector } from "@/store";
 import { useRouter } from "@/i18n/routing";
 import { Button } from "@/components/ui/button";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
+import { toast } from "sonner";
+import { useSaveStep } from "@/hooks/rentDraft";
 
 export function SaveExitButton() {
   const t = useTranslations("listing");
-  const dispatch = useAppDispatch();
   const router = useRouter();
   const isSaving = useAppSelector((s) => s.listingForm.isSaving);
-  const formData = useAppSelector((s) => s.listingForm.formData);
+  const currentStep = useAppSelector((s) => s.listingForm.currentStep);
+
+  const { saveStep } = useSaveStep();
 
   async function handleSaveAndExit() {
-    dispatch(setIsSaving(true));
-    try {
-      await fetch(`${API_BASE}/api/listings/draft`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-      dispatch(setLastSavedAt(new Date().toISOString()));
-      clearAllDraftData();
+    // Steps 7 (Review) and 8 (Pay & Publish) don't need save — just navigate
+    if (currentStep >= 7) {
       router.push("/dashboard");
-    } catch {
-      // TODO: show error toast
-    } finally {
-      dispatch(setIsSaving(false));
+      return;
+    }
+
+    const success = await saveStep(currentStep);
+    if (success) {
+      router.push("/dashboard");
+      toast.success("Draft saved!");
     }
   }
 

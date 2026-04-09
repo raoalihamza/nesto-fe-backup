@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
-import { useAppSelector, useAppDispatch } from "@/store";
-import { setDraftId, goToStep } from "@/store/slices/listingFormSlice";
+import { useAppSelector } from "@/store";
+import { useRestoreDraft } from "@/hooks/rentDraft";
+import { Loader2 } from "lucide-react";
 import { StepSubHeader } from "@/components/rent-listing-form/StepSubHeader";
 import { StepProgressBar } from "@/components/rent-listing-form/StepProgressBar";
 import { StepNavButtons } from "@/components/rent-listing-form/StepNavButtons";
@@ -65,28 +66,26 @@ function getStepComponent(step: number) {
   }
 }
 
-export function StepperLayout() {
+interface StepperLayoutProps {
+  draftId?: string;
+}
+
+export function StepperLayout({ draftId: draftIdFromUrl }: StepperLayoutProps) {
   const t = useTranslations("listing.steps");
-  const dispatch = useAppDispatch();
   const currentStep = useAppSelector((s) => s.listingForm.currentStep);
   const currentSubStep = useAppSelector((s) => s.listingForm.currentSubStep);
   const draftId = useAppSelector((s) => s.listingForm.draftId);
+  const { restoreDraft } = useRestoreDraft();
+  const [isRestoring, setIsRestoring] = useState(false);
 
-  // On mount: read sessionStorage for draftId and step
+  // On mount: if draftId in URL → fetch draft and jump to last step
   useEffect(() => {
-    const savedDraftId = sessionStorage.getItem("nesto_rent_draft_id");
-    const savedStep = sessionStorage.getItem("nesto_rent_draft_step");
-    if (savedDraftId) {
-      dispatch(setDraftId(savedDraftId));
-      // TODO: next prompt will add API call here: GET /listings/rent/drafts/{savedDraftId}
+    if (draftIdFromUrl) {
+      setIsRestoring(true);
+      restoreDraft(draftIdFromUrl).finally(() => setIsRestoring(false));
     }
-    if (savedStep) {
-      const stepNum = parseInt(savedStep, 10);
-      if (!isNaN(stepNum)) {
-        dispatch(goToStep(stepNum));
-      }
-    }
-  }, [dispatch]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // beforeunload guard — warn if active draft exists
   const handleBeforeUnload = useCallback(
@@ -110,6 +109,14 @@ export function StepperLayout() {
   const subStepLabel = totalSubSteps
     ? `${currentSubStep + 1} of ${totalSubSteps}`
     : undefined;
+
+  if (isRestoring) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-white">
+        <Loader2 className="size-8 animate-spin text-brand" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen flex-col bg-white">

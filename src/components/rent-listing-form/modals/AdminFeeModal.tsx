@@ -35,7 +35,7 @@ interface AdminFeeModalProps {
   onOpenChange: (open: boolean) => void;
   category: FeeCategory;
   editingFee: PropertyFee | null;
-  onSave: (fee: PropertyFee) => void;
+  onSave: (fee: Omit<PropertyFee, "feeId"> & { feeId?: string }) => void;
 }
 
 const FEE_NAMES_BY_CATEGORY: Record<FeeCategory, string[]> = {
@@ -95,8 +95,8 @@ export function AdminFeeModal({
   }, [editingFee, open]);
 
   function handleSave() {
-    const fee: PropertyFee = {
-      feeId: editingFee?.feeId ?? crypto.randomUUID(),
+    onSave({
+      ...(editingFee ? { feeId: editingFee.feeId } : {}),
       category,
       feeName,
       paymentFrequency: paymentFrequency as FeeFrequency,
@@ -106,8 +106,7 @@ export function AdminFeeModal({
       feeRequiredType,
       refundability,
       description: description || undefined,
-    };
-    onSave(fee);
+    } as Omit<PropertyFee, "feeId"> & { feeId?: string });
     resetForm();
   }
 

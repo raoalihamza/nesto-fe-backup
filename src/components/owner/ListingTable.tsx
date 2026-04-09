@@ -4,14 +4,20 @@ import Image from "next/image";
 import { Pencil, Eye, Archive, Home } from "lucide-react";
 
 import { ListingStatusBadge } from "@/components/owner/ListingStatusBadge";
+import { formatListingPrice, formatListingLocation } from "@/lib/utils/listingDisplay";
 import type { MyListingItem } from "@/types/listings";
+
+function isDraft(listing: MyListingItem) {
+  return listing.status.toLowerCase() === "draft";
+}
 
 interface ListingTableProps {
   listings: MyListingItem[];
   onArchive?: (id: string) => void;
+  onEditDraft?: (listing: MyListingItem) => void;
 }
 
-export function ListingTable({ listings, onArchive }: ListingTableProps) {
+export function ListingTable({ listings, onArchive, onEditDraft }: ListingTableProps) {
   return (
     <div className="overflow-x-auto">
       <table className="w-full border-separate border-spacing-y-1">
@@ -53,7 +59,7 @@ export function ListingTable({ listings, onArchive }: ListingTableProps) {
                       {listing.title}
                     </p>
                     <p className="truncate text-xs text-muted-foreground">
-                      {listing.location.displayAddress ?? `${listing.location.city}, ${listing.location.state}`}
+                      {formatListingLocation(listing.location)}
                     </p>
                   </div>
                 </div>
@@ -73,14 +79,19 @@ export function ListingTable({ listings, onArchive }: ListingTableProps) {
               </td>
               <td className="px-4 py-4">
                 <p className="text-sm text-foreground">
-                  {listing.pricing.currency}{" "}
-                  {parseFloat(listing.pricing.amount).toLocaleString()}
-                  {listing.pricing.suffix ?? ""}
+                  {formatListingPrice(listing.pricing)}
                 </p>
               </td>
               <td className="px-4 py-4">
                 <div className="flex gap-1">
-                  {listing.actionFlags.canArchive ? (
+                  {isDraft(listing) ? (
+                    <button
+                      className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
+                      onClick={() => onEditDraft?.(listing)}
+                    >
+                      <Pencil className="size-4" />
+                    </button>
+                  ) : listing.actionFlags.canArchive ? (
                     <button
                       className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
                       onClick={() => onArchive?.(listing.id)}

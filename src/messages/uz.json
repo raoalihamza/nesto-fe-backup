@@ -101,6 +101,7 @@
   },
   "listing": {
     "saveAndExit": "Saqlash va chiqish",
+    "saving": "Saqlanmoqda...",
     "back": "Orqaga",
     "next": "Keyingi",
     "steps": {
@@ -171,7 +172,7 @@
       "laundryOptions": {
         "washer_dryer_included": "Kir yuvish-quritish mashinasi mavjud",
         "washer_dryer_hookups": "Kir yuvish-quritish ulanishlari",
-        "shared_or_in_building": "Umumiy yoki binoda",
+        "shared_in_building": "Umumiy yoki binoda",
         "no_laundry": "Kir yuvish imkoniyati yo'q"
       },
       "cooling": "Sovutish",
@@ -281,8 +282,13 @@
       "fixedAmount": "Belgilangan miqdor",
       "percentage": "Foiz",
       "monthly": "Oylik",
+      "weekly": "Haftalik",
       "annually": "Yillik",
+      "yearly": "Yillik",
       "oneTime": "Bir martalik",
+      "perLease": "Ijara bo'yicha",
+      "perOccurrence": "Har bir holat uchun",
+      "other": "Boshqa",
       "isRequired": "Bu to'lov majburiymi?",
       "isRefundable": "Bu to'lov qaytariladimi?",
       "description": "Tavsif",
@@ -333,6 +339,14 @@
       "hidePropertyAddress": "Mulk manzilini yashirish",
       "dateAvailable": "Mavjud sana",
       "leaseDuration": "Ijara muddati",
+      "selectLeaseDuration": "Ijara muddatini tanlang",
+      "leaseDurationOptions": {
+        "month_to_month": "Oyma-oy",
+        "3_months": "3 oy",
+        "6_months": "6 oy",
+        "1_year": "1 yil",
+        "2_years": "2 yil"
+      },
       "allowPhoneContact": "Ijarachilarga telefon orqali bog'lanishga ruxsat berish",
       "acceptOnlineApplications": "Nesto onlayn arizalarini qabul qilish",
       "yes": "Ha",

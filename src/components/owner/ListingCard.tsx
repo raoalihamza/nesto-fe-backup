@@ -5,14 +5,20 @@ import { Pencil, Eye, Archive } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { ListingStatusBadge } from "@/components/owner/ListingStatusBadge";
+import { formatListingPrice, formatListingLocation } from "@/lib/utils/listingDisplay";
 import type { MyListingItem } from "@/types/listings";
+
+function isDraft(listing: MyListingItem) {
+  return listing.status.toLowerCase() === "draft";
+}
 
 interface ListingCardProps {
   listing: MyListingItem;
   onArchive?: (id: string) => void;
+  onEditDraft?: (listing: MyListingItem) => void;
 }
 
-export function ListingCard({ listing, onArchive }: ListingCardProps) {
+export function ListingCard({ listing, onArchive, onEditDraft }: ListingCardProps) {
   const t = useTranslations("property");
 
   return (
@@ -34,21 +40,29 @@ export function ListingCard({ listing, onArchive }: ListingCardProps) {
               {listing.title}
             </h3>
             <p className="truncate text-xs text-muted-foreground">
-              {listing.location.displayAddress ?? `${listing.location.city}, ${listing.location.state}`}
+              {formatListingLocation(listing.location)}
             </p>
           </div>
           <div className="flex shrink-0 gap-1.5">
-            {listing.actionFlags.canArchive && (
+            {isDraft(listing) ? (
+              <button
+                className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                onClick={() => onEditDraft?.(listing)}
+              >
+                <Pencil className="size-3.5" />
+              </button>
+            ) : listing.actionFlags.canArchive ? (
               <button
                 className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
                 onClick={() => onArchive?.(listing.id)}
               >
                 <Archive className="size-3.5" />
               </button>
+            ) : (
+              <button className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground">
+                <Pencil className="size-3.5" />
+              </button>
             )}
-            <button className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground">
-              <Pencil className="size-3.5" />
-            </button>
             <button className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground">
               <Eye className="size-3.5" />
             </button>
@@ -61,13 +75,7 @@ export function ListingCard({ listing, onArchive }: ListingCardProps) {
               {t("forRent").split(" ").pop()}
             </p>
             <p className="text-sm font-bold text-foreground">
-              {listing.pricing.currency}{" "}
-              {parseFloat(listing.pricing.amount).toLocaleString()}
-              {listing.pricing.suffix && (
-                <span className="text-xs font-normal text-muted-foreground">
-                  {listing.pricing.suffix}
-                </span>
-              )}
+              {formatListingPrice(listing.pricing)}
             </p>
           </div>
           <div className="text-right">

@@ -7,17 +7,15 @@ import {
   goToSubStep,
   markStepComplete,
 } from "@/store/slices/listingFormSlice";
-import { clearAllDraftData } from "@/lib/utils/clearDraft";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
+import { useSaveStep, usePublishDraft } from "@/hooks/rentDraft";
 
 const TOTAL_STEPS = 9;
 
-// Steps that have multiple sub-steps: stepIndex → total sub-steps
 const SUB_STEP_COUNTS: Record<number, number> = {
-  3: 2, // Amenities
-  4: 2, // Screening
-  6: 6, // Final details
+  3: 2,
+  4: 2,
+  6: 6,
 };
 
 export function StepNavButtons() {
@@ -25,6 +23,10 @@ export function StepNavButtons() {
   const dispatch = useAppDispatch();
   const currentStep = useAppSelector((s) => s.listingForm.currentStep);
   const currentSubStep = useAppSelector((s) => s.listingForm.currentSubStep);
+  const isSaving = useAppSelector((s) => s.listingForm.isSaving);
+
+  const { saveStep } = useSaveStep();
+  const { publish } = usePublishDraft();
 
   const isFirstStep = currentStep === 0;
   const isLastStep = currentStep === TOTAL_STEPS - 1;
@@ -43,22 +45,29 @@ export function StepNavButtons() {
     }
   }
 
-  async function handlePublish() {
-    // TODO: next prompt will implement publish API call
-    toast.info("Publish coming soon");
-  }
-
-  function handleNext() {
+  async function handleNext() {
     if (isLastStep) {
-      handlePublish();
+      await publish();
       return;
     }
+
+    // Step 7 (Review) navigates without save — review already loaded on mount
+    if (currentStep === 7) {
+      dispatch(markStepComplete(7));
+      dispatch(goToStep(8));
+      return;
+    }
+
+    // All other steps: save then navigate
+    const success = await saveStep(currentStep);
+    if (!success) return;
 
     if (currentSubStep < totalSubSteps - 1) {
       dispatch(goToSubStep(currentSubStep + 1));
     } else {
       dispatch(markStepComplete(currentStep));
       dispatch(goToStep(currentStep + 1));
+      dispatch(goToSubStep(0));
     }
   }
 
@@ -68,6 +77,7 @@ export function StepNavButtons() {
         <Button
           variant="outline"
           onClick={handleBack}
+          disabled={isSaving}
           className="h-10 rounded-lg px-6 text-sm font-medium"
         >
           {t("back")}
@@ -78,9 +88,14 @@ export function StepNavButtons() {
 
       <Button
         onClick={handleNext}
+        disabled={isSaving}
         className="h-10 rounded-lg bg-brand px-6 text-sm font-medium text-white btn-brand-shadow hover:bg-brand-dark"
       >
-        {isLastStep ? t("publish.publishListing") : t("next")}
+        {isSaving
+          ? t("saving")
+          : isLastStep
+            ? t("publish.publishListing")
+            : t("next")}
       </Button>
     </div>
   );

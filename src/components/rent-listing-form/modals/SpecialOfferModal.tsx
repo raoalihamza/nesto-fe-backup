@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useAppDispatch } from "@/store";
 import { setRentDetails } from "@/store/slices/listingFormSlice";
+import { format } from "date-fns";
 import {
   Dialog,
   DialogContent,
@@ -11,9 +12,15 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 import Image from "next/image";
 
 interface SpecialOfferModalProps {
@@ -29,30 +36,30 @@ export function SpecialOfferModal({
   const tCommon = useTranslations("common");
   const dispatch = useAppDispatch();
 
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [startDate, setStartDate] = useState<Date | undefined>();
+  const [endDate, setEndDate] = useState<Date | undefined>();
   const [description, setDescription] = useState("");
 
   function handleAddOffer() {
     dispatch(
       setRentDetails({
         specialOffer: {
-          offerStartDate: startDate || null,
-          offerEndDate: endDate || null,
+          offerStartDate: startDate ? format(startDate, "yyyy-MM-dd") : null,
+          offerEndDate: endDate ? format(endDate, "yyyy-MM-dd") : null,
           description: description || null,
         },
       }),
     );
     onOpenChange(false);
-    setStartDate("");
-    setEndDate("");
+    setStartDate(undefined);
+    setEndDate(undefined);
     setDescription("");
   }
 
   function handleCancel() {
     onOpenChange(false);
-    setStartDate("");
-    setEndDate("");
+    setStartDate(undefined);
+    setEndDate(undefined);
     setDescription("");
   }
 
@@ -75,48 +82,68 @@ export function SpecialOfferModal({
               <label className="mb-2 block text-sm font-medium text-foreground">
                 {t("offerStartDate")}
               </label>
-              <div className="relative">
-                <Input
-                  type="text"
-                  placeholder={t("datePlaceholder")}
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="h-12 pr-10 text-base"
-                />
-                <div className="absolute top-1/2 right-3  -translate-y-1/2 text-foreground cursor-pointer">
-                  <Image
-                    src="/icons/calendar.svg"
-                    alt="Calendar"
-                    width={20}
-                    height={20}
-                    className="cursor-pointer"
+              <Popover>
+                <PopoverTrigger>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "h-12 w-full justify-start text-left text-base font-normal",
+                      !startDate && "text-muted-foreground"
+                    )}
+                  >
+                    {startDate ? format(startDate, "MM/dd/yyyy") : t("datePlaceholder")}
+                    <Image
+                      src="/icons/calendar.svg"
+                      alt="Calendar"
+                      width={20}
+                      height={20}
+                      className="ml-auto"
+                    />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={startDate}
+                    onSelect={setStartDate}
+                    initialFocus
                   />
-                </div>
-              </div>
+                </PopoverContent>
+              </Popover>
             </div>
 
             <div>
               <label className="mb-2 block text-sm font-medium text-foreground">
                 {t("offerEndDate")}
               </label>
-              <div className="relative">
-                <Input
-                  type="text"
-                  placeholder={t("datePlaceholder")}
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="h-12 pr-10 text-base"
-                />
-                <div className="absolute top-1/2 right-3  -translate-y-1/2 text-foreground cursor-pointer">
-                  <Image
-                    src="/icons/calendar.svg"
-                    alt="Calendar"
-                    width={20}
-                    height={20}
-                    className="cursor-pointer"
+              <Popover>
+                <PopoverTrigger>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "h-12 w-full justify-start text-left text-base font-normal",
+                      !endDate && "text-muted-foreground"
+                    )}
+                  >
+                    {endDate ? format(endDate, "MM/dd/yyyy") : t("datePlaceholder")}
+                    <Image
+                      src="/icons/calendar.svg"
+                      alt="Calendar"
+                      width={20}
+                      height={20}
+                      className="ml-auto"
+                    />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={endDate}
+                    onSelect={setEndDate}
+                    initialFocus
                   />
-                </div>
-              </div>
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
 

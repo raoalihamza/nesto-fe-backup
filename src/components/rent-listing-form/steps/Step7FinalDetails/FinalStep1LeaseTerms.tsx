@@ -6,6 +6,22 @@ import { setFinalDetails } from "@/store/slices/listingFormSlice";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+
+const LEASE_DURATION_OPTIONS = [
+  "month_to_month",
+  "3_months",
+  "6_months",
+  "1_year",
+  "2_years",
+] as const;
 
 export function FinalStep1LeaseTerms() {
   const t = useTranslations("listing.finalDetails");
@@ -23,6 +39,46 @@ export function FinalStep1LeaseTerms() {
         <p className="mt-2 text-sm text-muted-foreground">
           {t("leaseTermsSubtitle")}
         </p>
+      </div>
+
+      {/* Lease duration */}
+      <div className="space-y-2">
+        <Label className="text-sm font-medium text-foreground">
+          {t("leaseDuration")}
+          <span className="text-brand">*</span>
+        </Label>
+        <Select
+          value={finalDetails.leaseDuration ?? ""}
+          onValueChange={(val) =>
+            dispatch(setFinalDetails({ leaseDuration: val }))
+          }
+        >
+          <SelectTrigger className="h-12! w-full text-base">
+            <SelectValue placeholder={t("selectLeaseDuration")} />
+          </SelectTrigger>
+          <SelectContent>
+            {LEASE_DURATION_OPTIONS.map((opt) => (
+              <SelectItem key={opt} value={opt}>
+                {t(`leaseDurationOptions.${opt}`)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Date available */}
+      <div className="space-y-2">
+        <Label className="text-sm font-medium text-foreground">
+          {t("dateAvailable")}
+        </Label>
+        <Input
+          type="date"
+          value={finalDetails.dateAvailable ?? ""}
+          onChange={(e) =>
+            dispatch(setFinalDetails({ dateAvailable: e.target.value || null }))
+          }
+          className="h-12 text-base"
+        />
       </div>
 
       {/* Lease terms textarea */}

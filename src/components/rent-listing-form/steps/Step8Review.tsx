@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useAppSelector, useAppDispatch } from "@/store";
@@ -8,7 +8,9 @@ import {
   goToStep,
   goToSubStep,
   setCostsAndFees,
+  restoreFromDraft,
 } from "@/store/slices/listingFormSlice";
+import { rentDraftService } from "@/lib/api/rentDraft.service";
 import type { ListingContextData } from "@/store/slices/listingFormSlice";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -25,7 +27,9 @@ import {
   Lightbulb,
   CircleDollarSign,
   MoreHorizontal,
+  AlertCircle,
 } from "lucide-react";
+import type { DraftValidationIssue } from "@/store/slices/listingFormSlice";
 import type { FeeCategory, PropertyFee } from "@/types/property";
 
 // ── Helpers ────────────────────────────────────────────────
@@ -110,13 +114,16 @@ function CompletionPie({ percent }: { percent: number }) {
 function ReviewSection({
   title,
   defaultOpen = false,
+  issues = [],
   children,
 }: {
   title: string;
   defaultOpen?: boolean;
+  issues?: DraftValidationIssue[];
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(defaultOpen);
+  const hasIssues = issues.length > 0;
 
   return (
     <div className="border-b border-border">
@@ -125,7 +132,12 @@ function ReviewSection({
         onClick={() => setOpen(!open)}
         className="flex w-full items-center justify-between py-4 cursor-pointer"
       >
-        <span className="text-base font-semibold text-foreground">{title}</span>
+        <span className="flex items-center gap-2 text-base font-semibold text-foreground">
+          {title}
+          {hasIssues && !open && (
+            <AlertCircle className="h-4 w-4 text-red-500" />
+          )}
+        </span>
         <ChevronDown
           className={`h-5 w-5 text-muted-foreground transition-transform duration-200 ${
             open ? "rotate-180" : ""
@@ -144,17 +156,26 @@ function FieldRow({
   value,
   onEdit,
   editLabel,
+  issue,
 }: {
   label: string;
   value: React.ReactNode;
   onEdit?: () => void;
   editLabel: string;
+  issue?: DraftValidationIssue;
 }) {
   return (
     <div className="flex items-start justify-between py-3 border-b border-border last:border-0">
       <div className="space-y-0.5">
-        <p className="text-sm font-medium text-foreground">{label}</p>
-        <div className="text-sm text-muted-foreground">{value || "None"}</div>
+        <p className="flex items-center gap-1.5 text-sm font-medium text-foreground">
+          {label}
+          {issue && <AlertCircle className="h-3.5 w-3.5 text-red-500" />}
+        </p>
+        {issue ? (
+          <p className="text-xs text-red-500">{issue.message}</p>
+        ) : (
+          <div className="text-sm text-muted-foreground">{value || "None"}</div>
+        )}
       </div>
       {onEdit && (
         <button
@@ -183,7 +204,34 @@ export function Step8Review() {
   const tCommon = useTranslations("common");
 
   const dispatch = useAppDispatch();
+  const draftId = useAppSelector((s) => s.listingForm.draftId);
   const formData = useAppSelector((s) => s.listingForm.formData);
+  const validationIssues = useAppSelector((s) => s.listingForm.draftProgress?.validationIssues ?? []);
+
+  // Group issues by section for ReviewSection icons
+  const issuesBySection = useMemo(() => {
+    const map: Record<string, DraftValidationIssue[]> = {};
+    for (const issue of validationIssues) {
+      if (!map[issue.section]) map[issue.section] = [];
+      map[issue.section].push(issue);
+    }
+    return map;
+  }, [validationIssues]);
+
+  // Find a specific field issue
+  function findIssue(section: string, field: string) {
+    return validationIssues.find((i) => i.section === section && i.field === field);
+  }
+
+  useEffect(() => {
+    if (!draftId) return;
+    rentDraftService
+      .getReview(draftId)
+      .then((response) => dispatch(restoreFromDraft(response)))
+      .catch(() => {
+        // Review fetch failed silently — display existing Redux data
+      });
+  }, [draftId, dispatch]);
   const { listingContext, propertyInfo, rentDetails, media, amenities, screeningCriteria, costsAndFees, finalDetails } =
     formData;
 
@@ -242,17 +290,21 @@ export function Step8Review() {
     );
   }
 
-  function handleSaveFee(fee: PropertyFee) {
-    if (editingFee) {
+  function handleSaveFee(
+    fee: Omit<PropertyFee, "feeId"> & { feeId?: string }
+  ) {
+    if (editingFee && fee.feeId) {
       dispatch(
         setCostsAndFees({
-          fees: costsAndFees.fees.map((f) => (f.feeId === fee.feeId ? fee : f)),
+          fees: costsAndFees.fees.map((f) =>
+            f.feeId === fee.feeId ? (fee as PropertyFee) : f
+          ),
         })
       );
     } else {
       dispatch(
         setCostsAndFees({
-          fees: [...costsAndFees.fees, fee],
+          fees: [...costsAndFees.fees, fee as PropertyFee],
         })
       );
     }
@@ -365,12 +417,13 @@ export function Step8Review() {
       </div>
 
       {/* Section 1 — Property Information */}
-      <ReviewSection title={t("propertyInformation")}>
+      <ReviewSection title={t("propertyInformation")} issues={[...(issuesBySection["propertyInfo"] ?? []), ...(findIssue("finalDetails", "propertyDescription") ? [findIssue("finalDetails", "propertyDescription")!] : [])]}>
         <FieldRow
           label={t("address")}
           value={address}
           onEdit={() => editStep(6, 5)}
           editLabel={editLabel}
+          issue={findIssue("propertyInfo", "address")}
         />
         <FieldRow
           label={t("hidePropertyAddress")}
@@ -387,35 +440,40 @@ export function Step8Review() {
           }
           onEdit={() => editStep(0)}
           editLabel={editLabel}
+          issue={findIssue("propertyInfo", "squareFootage")}
         />
         <FieldRow
           label={tProp("bedrooms")}
           value={propertyInfo.totalBedrooms}
           onEdit={() => editStep(0)}
           editLabel={editLabel}
+          issue={findIssue("propertyInfo", "totalBedrooms")}
         />
         <FieldRow
           label={tProp("bathrooms")}
           value={propertyInfo.totalBathrooms}
           onEdit={() => editStep(0)}
           editLabel={editLabel}
+          issue={findIssue("propertyInfo", "totalBathrooms")}
         />
         <FieldRow
           label={t("propertyType")}
           value={t("house")}
           onEdit={() => editStep(0)}
           editLabel={editLabel}
+          issue={findIssue("propertyInfo", "propertyType")}
         />
         <FieldRow
           label={t("propertyDescription")}
           value={finalDetails.propertyDescription}
           onEdit={() => editStep(6, 4)}
           editLabel={editLabel}
+          issue={findIssue("finalDetails", "propertyDescription")}
         />
       </ReviewSection>
 
       {/* Section 2 — Rent details */}
-      <ReviewSection title={tRent("title")}>
+      <ReviewSection title={tRent("title")} issues={issuesBySection["rentDetails"]}>
         <FieldRow
           label={tRent("monthlyRent")}
           value={
@@ -425,6 +483,7 @@ export function Step8Review() {
           }
           onEdit={() => editStep(1)}
           editLabel={editLabel}
+          issue={findIssue("rentDetails", "monthlyRent")}
         />
         <FieldRow
           label={t("specialOffer")}
@@ -437,17 +496,23 @@ export function Step8Review() {
           value={formatCurrency(rentDetails.securityDeposit)}
           onEdit={() => editStep(1)}
           editLabel={editLabel}
+          issue={findIssue("rentDetails", "securityDeposit")}
         />
       </ReviewSection>
 
       {/* Section 3 — Media */}
-      <ReviewSection title={tMedia("title")}>
+      <ReviewSection title={tMedia("title")} issues={issuesBySection["media"]}>
         {/* Photos */}
         <div className="py-3 border-b border-border">
           <div className="flex items-start justify-between">
             <div className="space-y-2">
-              <p className="text-sm font-medium text-foreground">{t("photos")}</p>
-              {media.photos.length > 0 ? (
+              <p className="flex items-center gap-1.5 text-sm font-medium text-foreground">
+                {t("photos")}
+                {findIssue("media", "photos") && <AlertCircle className="h-3.5 w-3.5 text-red-500" />}
+              </p>
+              {findIssue("media", "photos") ? (
+                <p className="text-xs text-red-500">{findIssue("media", "photos")!.message}</p>
+              ) : media.photos.length > 0 ? (
                 <div className="flex gap-2">
                   {media.photos.slice(0, 3).map((photo) => (
                     <div
@@ -491,7 +556,7 @@ export function Step8Review() {
       </ReviewSection>
 
       {/* Section 4 — Amenities */}
-      <ReviewSection title={tAmen("title")}>
+      <ReviewSection title={tAmen("title")} issues={issuesBySection["amenities"]}>
         <div className="py-3 border-b border-border">
           <div className="flex items-start justify-between">
             <div className="space-y-0.5">
@@ -532,7 +597,7 @@ export function Step8Review() {
       </ReviewSection>
 
       {/* Section 5 — Screening criteria */}
-      <ReviewSection title={tScreen("title")}>
+      <ReviewSection title={tScreen("title")} issues={issuesBySection["screeningCriteria"]}>
         <div className="py-3 border-b border-border">
           <div className="flex items-start justify-between">
             <div className="space-y-0.5">
@@ -559,7 +624,7 @@ export function Step8Review() {
       </ReviewSection>
 
       {/* Section 6 — Cost and fees (partially interactive) */}
-      <ReviewSection title={t("costAndFees")}>
+      <ReviewSection title={t("costAndFees")} issues={issuesBySection["costsAndFees"]}>
         {/* Toggle card */}
         <div className="rounded-xl border border-brand/20 bg-brand/5 p-4 mb-4">
           <div className="flex items-start justify-between gap-4">
@@ -648,18 +713,20 @@ export function Step8Review() {
       </ReviewSection>
 
       {/* Section 7 — Final details */}
-      <ReviewSection title={tFinal("title")}>
+      <ReviewSection title={tFinal("title")} issues={issuesBySection["finalDetails"]}>
         <FieldRow
           label={tFinal("dateAvailable")}
           value={finalDetails.dateAvailable}
           onEdit={() => editStep(6, 0)}
           editLabel={editLabel}
+          issue={findIssue("finalDetails", "dateAvailable")}
         />
         <FieldRow
           label={tFinal("leaseTermsLabel")}
           value={finalDetails.leaseTerms}
           onEdit={() => editStep(6, 0)}
           editLabel={editLabel}
+          issue={findIssue("finalDetails", "leaseTerms")}
         />
         <FieldRow
           label={t("renterInsurance")}
@@ -672,30 +739,35 @@ export function Step8Review() {
           value={finalDetails.leaseDuration}
           onEdit={() => editStep(6, 0)}
           editLabel={editLabel}
+          issue={findIssue("finalDetails", "leaseDuration")}
         />
         <FieldRow
           label={tFinal("listedByLabel")}
           value={listedByDisplay}
           onEdit={() => editStep(6, 1)}
           editLabel={editLabel}
+          issue={findIssue("finalDetails", "listedBy")}
         />
         <FieldRow
           label={tFinal("nameLabel")}
           value={finalDetails.name}
           onEdit={() => editStep(6, 1)}
           editLabel={editLabel}
+          issue={findIssue("finalDetails", "name")}
         />
         <FieldRow
           label={tFinal("emailLabel")}
           value={finalDetails.email}
           onEdit={() => editStep(6, 1)}
           editLabel={editLabel}
+          issue={findIssue("finalDetails", "email")}
         />
         <FieldRow
           label={tFinal("phoneNumberLabel")}
           value={finalDetails.phoneNumber}
           onEdit={() => editStep(6, 2)}
           editLabel={editLabel}
+          issue={findIssue("finalDetails", "phoneNumber")}
         />
         <FieldRow
           label={tFinal("allowPhoneContact")}

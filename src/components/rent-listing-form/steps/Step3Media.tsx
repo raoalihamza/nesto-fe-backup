@@ -4,8 +4,10 @@ import { useCallback, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useDropzone } from "react-dropzone";
 import { useAppSelector, useAppDispatch } from "@/store";
-import { setMedia } from "@/store/slices/listingFormSlice";
+import { setMedia, restoreFromDraft } from "@/store/slices/listingFormSlice";
 import type { DraftMediaItem } from "@/store/slices/listingFormSlice";
+import { rentDraftService } from "@/lib/api/rentDraft.service";
+import { toast } from "sonner";
 import { CloudUpload, X } from "lucide-react";
 import {
   Dialog,
@@ -21,27 +23,56 @@ export function Step3Media() {
   const t = useTranslations("listing.media");
   const dispatch = useAppDispatch();
   const media = useAppSelector((s) => s.listingForm.formData.media);
+  const draftId = useAppSelector((s) => s.listingForm.draftId);
 
   const [tourModalOpen, setTourModalOpen] = useState(false);
   const [tourUrlInput, setTourUrlInput] = useState(media.tours3d[0]?.publicUrl ?? "");
 
   const onDrop = useCallback(
-    (acceptedFiles: File[]) => {
-      // TODO: next prompt replaces this with presign → upload → confirm flow
-      const tempItems: DraftMediaItem[] = acceptedFiles.map((file) => ({
-        mediaId: crypto.randomUUID(),
-        publicUrl: URL.createObjectURL(file),
-        status: "PENDING" as const,
-        mediaType: "PHOTO" as const,
-      }));
-      dispatch(
-        setMedia({
-          photos: [...media.photos, ...tempItems],
-          items: [...media.items, ...tempItems],
-        })
-      );
+    async (acceptedFiles: File[]) => {
+      if (!draftId) {
+        toast.error("Please save Property Info first before uploading photos.");
+        return;
+      }
+
+      for (let i = 0; i < acceptedFiles.length; i++) {
+        const file = acceptedFiles[i];
+        try {
+          // Step 1: Presign
+          const presign = await rentDraftService.presignMedia(draftId, {
+            mediaType: "PHOTO",
+            fileName: file.name,
+            contentType: file.type,
+            fileSizeBytes: file.size,
+            sortOrder: media.photos.length + i,
+          });
+
+          // Step 2: Upload binary directly to S3
+          const uploadResponse = await fetch(presign.uploadUrl, {
+            method: "PUT",
+            body: file,
+            headers: { "Content-Type": file.type },
+          });
+          if (!uploadResponse.ok) throw new Error("Upload to storage failed");
+
+          // Step 3: Confirm
+          const confirmed = await rentDraftService.confirmMedia(
+            draftId,
+            presign.mediaId,
+            {
+              fileSizeBytes: file.size,
+              sortOrder: media.photos.length + i,
+            }
+          );
+
+          // Update Redux with confirmed item
+          dispatch(restoreFromDraft(confirmed));
+        } catch {
+          toast.error(`Failed to upload ${file.name}`);
+        }
+      }
     },
-    [dispatch, media.photos, media.items],
+    [draftId, dispatch, media.photos.length]
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -49,13 +80,19 @@ export function Step3Media() {
     accept: { "image/*": [".jpg", ".jpeg", ".png", ".webp"] },
   });
 
-  function removePhoto(item: DraftMediaItem) {
-    dispatch(
-      setMedia({
-        photos: media.photos.filter((p) => p.mediaId !== item.mediaId),
-        items: media.items.filter((i) => i.mediaId !== item.mediaId),
-      })
-    );
+  async function removePhoto(item: DraftMediaItem) {
+    if (!draftId) return;
+    try {
+      await rentDraftService.deleteMedia(draftId, item.mediaId);
+      dispatch(
+        setMedia({
+          photos: media.photos.filter((p) => p.mediaId !== item.mediaId),
+          items: media.items.filter((i) => i.mediaId !== item.mediaId),
+        })
+      );
+    } catch {
+      toast.error("Failed to delete photo.");
+    }
   }
 
   function handleSaveTourUrl() {

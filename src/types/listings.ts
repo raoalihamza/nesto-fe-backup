@@ -3,15 +3,22 @@
 export interface PropertyCardLocation {
   displayAddress?: string | null;
   street?: string | null;
-  city: string;
-  state: string;
+  city?: string | null;
+  state?: string | null;
   country?: string | null;
+  // API also returns these fields
+  addressLine1?: string | null;
+  stateCode?: string | null;
+  countryCode?: string | null;
+  summary?: string | null;
 }
 
 export interface PropertyCardPricing {
   amount: string;       // decimal string e.g. "5400.00"
-  currency: string;     // e.g. "USD"
+  currency?: string;     // e.g. "USD"
+  currencyCode?: string; // API returns this instead of currency
   suffix?: string | null; // e.g. "/mo" for rent
+  billingPeriod?: string | null; // API returns this e.g. "month"
 }
 
 export interface PropertyCardBasicFacts {

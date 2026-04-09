@@ -101,6 +101,7 @@
   },
   "listing": {
     "saveAndExit": "Сохранить и выйти",
+    "saving": "Сохранение...",
     "back": "Назад",
     "next": "Далее",
     "steps": {
@@ -171,7 +172,7 @@
       "laundryOptions": {
         "washer_dryer_included": "Стиральная и сушильная машина включены",
         "washer_dryer_hookups": "Подключение стиральной/сушильной машины",
-        "shared_or_in_building": "Общая или в здании",
+        "shared_in_building": "Общая или в здании",
         "no_laundry": "Нет прачечной"
       },
       "cooling": "Охлаждение",
@@ -281,8 +282,13 @@
       "fixedAmount": "Фиксированная сумма",
       "percentage": "Процент",
       "monthly": "Ежемесячно",
+      "weekly": "Еженедельно",
       "annually": "Ежегодно",
+      "yearly": "Ежегодно",
       "oneTime": "Разово",
+      "perLease": "За аренду",
+      "perOccurrence": "За каждый случай",
+      "other": "Другое",
       "isRequired": "Этот сбор обязателен?",
       "isRefundable": "Этот сбор возвратный?",
       "description": "Описание",
@@ -333,6 +339,14 @@
       "hidePropertyAddress": "Скрыть адрес недвижимости",
       "dateAvailable": "Дата доступности",
       "leaseDuration": "Срок аренды",
+      "selectLeaseDuration": "Выберите срок аренды",
+      "leaseDurationOptions": {
+        "month_to_month": "Помесячно",
+        "3_months": "3 месяца",
+        "6_months": "6 месяцев",
+        "1_year": "1 год",
+        "2_years": "2 года"
+      },
       "allowPhoneContact": "Разрешить арендаторам связываться по телефону",
       "acceptOnlineApplications": "Принимать онлайн-заявки Nesto",
       "yes": "Да",

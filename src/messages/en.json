@@ -101,6 +101,7 @@
   },
   "listing": {
     "saveAndExit": "Save & exit",
+    "saving": "Saving...",
     "back": "Back",
     "next": "Next",
     "steps": {
@@ -171,7 +172,7 @@
       "laundryOptions": {
         "washer_dryer_included": "Washer-dryer included",
         "washer_dryer_hookups": "Washer-dryer hookups",
-        "shared_or_in_building": "Shared or in building",
+        "shared_in_building": "Shared or in building",
         "no_laundry": "No laundry facilities"
       },
       "cooling": "Cooling",
@@ -281,8 +282,13 @@
       "fixedAmount": "Fixed amount",
       "percentage": "Percentage",
       "monthly": "Monthly",
+      "weekly": "Weekly",
       "annually": "Annually",
+      "yearly": "Yearly",
       "oneTime": "One time",
+      "perLease": "Per lease",
+      "perOccurrence": "Per occurrence",
+      "other": "Other",
       "isRequired": "Is this fee required?",
       "isRefundable": "Is this fee refundable?",
       "description": "Description",
@@ -333,6 +339,14 @@
       "hidePropertyAddress": "Hide property address",
       "dateAvailable": "Date available",
       "leaseDuration": "Lease duration",
+      "selectLeaseDuration": "Select lease duration",
+      "leaseDurationOptions": {
+        "month_to_month": "Month to month",
+        "3_months": "3 months",
+        "6_months": "6 months",
+        "1_year": "1 year",
+        "2_years": "2 years"
+      },
       "allowPhoneContact": "Allow renters to contact you by phone",
       "acceptOnlineApplications": "Accept Nesto online applications",
       "yes": "Yes",
