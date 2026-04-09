@@ -543,7 +543,9 @@ export function SaleListingForm() {
             onValueChange={(v) => update({ homeType: v ?? "" })}
           >
             <SelectTrigger className="h-12! w-full text-base">
-              <SelectValue placeholder={t("homeTypePlaceholder")} />
+              <SelectValue placeholder={t("homeTypePlaceholder")}>
+                {(value: string) => value ? tOpt(`homeType.${value}`) : null}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {HOME_TYPES.map((type) => (
@@ -667,7 +669,9 @@ export function SaleListingForm() {
             onValueChange={(v) => update({ lotSizeUnit: v ?? "" })}
           >
             <SelectTrigger className="h-12! w-28 text-base">
-              <SelectValue />
+              <SelectValue>
+                {(value: string) => value ? tOpt(`lotSizeUnit.${value}`) : null}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {LOT_SIZE_UNITS.map((u) => (

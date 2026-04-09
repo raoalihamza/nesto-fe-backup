@@ -145,6 +145,8 @@
       "offerDescriptionPlaceholder": "Example: Get $500 off your first month's rent when you sign by October 15.",
       "offerWarning": "Your offer won't post if it includes contact info – phone numbers, urls, or email addresses",
       "addOfferButton": "Add Offer",
+      "editSpecialOfferTitle": "Edit special offer",
+      "updateOfferButton": "Update Offer",
       "publish": "Publish"
     },
     "media": {
@@ -160,7 +162,8 @@
       "tourUrlDialogTitle": "Add 3D tour URL",
       "tourUrlPlaceholder": "https://my.matterport.com/show/?m=...",
       "cancel": "Cancel",
-      "saveTour": "Save"
+      "saveTour": "Save",
+      "duplicatePhoto": "\"{name}\" is already uploaded"
     },
     "amenities": {
       "title": "Amenities",

@@ -54,7 +54,9 @@ export function FinalStep1LeaseTerms() {
           }
         >
           <SelectTrigger className="h-12! w-full text-base">
-            <SelectValue placeholder={t("selectLeaseDuration")} />
+            <SelectValue placeholder={t("selectLeaseDuration")}>
+              {(value: string) => value ? t(`leaseDurationOptions.${value}`) : null}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {LEASE_DURATION_OPTIONS.map((opt) => (

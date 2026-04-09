@@ -8,7 +8,7 @@ import { setMedia, restoreFromDraft } from "@/store/slices/listingFormSlice";
 import type { DraftMediaItem } from "@/store/slices/listingFormSlice";
 import { rentDraftService } from "@/lib/api/rentDraft.service";
 import { toast } from "sonner";
-import { CloudUpload, X } from "lucide-react";
+import { CloudUpload, X, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +19,12 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 
+interface UploadingFile {
+  id: string;
+  name: string;
+  previewUrl: string;
+}
+
 export function Step3Media() {
   const t = useTranslations("listing.media");
   const dispatch = useAppDispatch();
@@ -26,7 +32,9 @@ export function Step3Media() {
   const draftId = useAppSelector((s) => s.listingForm.draftId);
 
   const [tourModalOpen, setTourModalOpen] = useState(false);
-  const [tourUrlInput, setTourUrlInput] = useState(media.tours3d[0]?.publicUrl ?? "");
+  const [tourUrlInput, setTourUrlInput] = useState(media.tours3d[0]?.url ?? "");
+  const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
+  const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
 
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
@@ -35,44 +43,90 @@ export function Step3Media() {
         return;
       }
 
-      for (let i = 0; i < acceptedFiles.length; i++) {
-        const file = acceptedFiles[i];
-        try {
-          // Step 1: Presign
-          const presign = await rentDraftService.presignMedia(draftId, {
-            mediaType: "PHOTO",
+      // Filter out duplicates (same name + size as already uploaded photos)
+      const uniqueFiles = acceptedFiles.filter((file) => {
+        const isDuplicate = media.photos.some(
+          (p) => p.fileName === file.name && p.fileSizeBytes === file.size
+        );
+        if (isDuplicate) {
+          toast.error(t("duplicatePhoto", { name: file.name }));
+        }
+        return !isDuplicate;
+      });
+
+      if (uniqueFiles.length === 0) return;
+
+      // Create local previews with loading state
+      const previews: UploadingFile[] = uniqueFiles.map((file) => ({
+        id: crypto.randomUUID(),
+        name: file.name,
+        previewUrl: URL.createObjectURL(file),
+      }));
+      setUploadingFiles((prev) => [...prev, ...previews]);
+
+      try {
+        // Step 1: Batch presign all files
+        const presignResult = await rentDraftService.presignMedia(draftId, {
+          files: uniqueFiles.map((file, i) => ({
+            mediaType: "PHOTO" as const,
             fileName: file.name,
             contentType: file.type,
             fileSizeBytes: file.size,
             sortOrder: media.photos.length + i,
-          });
+          })),
+        });
 
-          // Step 2: Upload binary directly to S3
-          const uploadResponse = await fetch(presign.uploadUrl, {
-            method: "PUT",
-            body: file,
-            headers: { "Content-Type": file.type },
-          });
-          if (!uploadResponse.ok) throw new Error("Upload to storage failed");
+        // Step 2: Upload all files to S3 in parallel
+        const uploadResults = await Promise.allSettled(
+          presignResult.uploads.map(async (upload, i) => {
+            const file = uniqueFiles[i];
+            const response = await fetch(upload.uploadUrl, {
+              method: upload.method,
+              body: file,
+              headers: upload.headers,
+            });
+            if (!response.ok) throw new Error(`Upload failed: ${file.name}`);
+            return { upload, file, index: i };
+          })
+        );
 
-          // Step 3: Confirm
+        // Step 3: Confirm only successfully uploaded files
+        for (const result of uploadResults) {
+          if (result.status === "rejected") {
+            toast.error("Failed to upload a photo.");
+            continue;
+          }
+          const { upload, file, index } = result.value;
+
           const confirmed = await rentDraftService.confirmMedia(
             draftId,
-            presign.mediaId,
+            upload.mediaId,
             {
               fileSizeBytes: file.size,
-              sortOrder: media.photos.length + i,
+              sortOrder: media.photos.length + index,
             }
           );
 
-          // Update Redux with confirmed item
+          // Remove preview BEFORE restoring draft to avoid duplicates
+          setUploadingFiles((prev) =>
+            prev.filter((f) => f.id !== previews[index].id)
+          );
+          URL.revokeObjectURL(previews[index].previewUrl);
+
           dispatch(restoreFromDraft(confirmed));
-        } catch {
-          toast.error(`Failed to upload ${file.name}`);
         }
+      } catch {
+        toast.error("Failed to upload photos.");
+      } finally {
+        // Clean up any remaining previews (e.g. from errors)
+        setUploadingFiles((prev) => {
+          const remaining = prev.filter((f) => previews.some((p) => p.id === f.id));
+          remaining.forEach((f) => URL.revokeObjectURL(f.previewUrl));
+          return prev.filter((f) => !previews.some((p) => p.id === f.id));
+        });
       }
     },
-    [draftId, dispatch, media.photos.length]
+    [draftId, dispatch, media.photos, t]
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -81,27 +135,40 @@ export function Step3Media() {
   });
 
   async function removePhoto(item: DraftMediaItem) {
-    if (!draftId) return;
+    if (!draftId || deletingIds.has(item.id)) return;
+    setDeletingIds((prev) => new Set(prev).add(item.id));
     try {
-      await rentDraftService.deleteMedia(draftId, item.mediaId);
+      await rentDraftService.deleteMedia(draftId, item.id);
       dispatch(
         setMedia({
-          photos: media.photos.filter((p) => p.mediaId !== item.mediaId),
-          items: media.items.filter((i) => i.mediaId !== item.mediaId),
+          photos: media.photos.filter((p) => p.id !== item.id),
+          items: media.items.filter((i) => i.id !== item.id),
         })
       );
     } catch {
       toast.error("Failed to delete photo.");
+    } finally {
+      setDeletingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(item.id);
+        return next;
+      });
     }
   }
 
   function handleSaveTourUrl() {
-    // TODO: next prompt replaces this with presign → upload → confirm flow
     const tempTour: DraftMediaItem = {
-      mediaId: crypto.randomUUID(),
-      publicUrl: tourUrlInput,
+      id: crypto.randomUUID(),
+      url: tourUrlInput,
       status: "PENDING",
       mediaType: "TOUR_3D",
+      fileName: "",
+      contentType: "",
+      fileSizeBytes: 0,
+      sortOrder: 0,
+      objectKey: "",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
     dispatch(setMedia({ tours3d: [tempTour], items: [...media.items.filter((i) => i.mediaType !== "TOUR_3D"), tempTour] }));
     setTourModalOpen(false);
@@ -117,7 +184,7 @@ export function Step3Media() {
     setTourUrlInput("");
   }
 
-  const tourUrl = media.tours3d[0]?.publicUrl ?? "";
+  const tourUrl = media.tours3d[0]?.url ?? "";
 
   return (
     <div className="flex flex-1 flex-col">
@@ -146,22 +213,48 @@ export function Step3Media() {
           </div>
 
           {/* Photo thumbnails */}
-          {media.photos.length > 0 && (
+          {(media.photos.length > 0 || uploadingFiles.length > 0) && (
             <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4">
-              {media.photos.map((item) => (
-                <div key={item.mediaId} className="group relative aspect-square">
+              {media.photos.map((item) => {
+                const isDeleting = deletingIds.has(item.id);
+                return (
+                  <div key={item.id} className="group relative aspect-square">
+                    <div className="size-full overflow-hidden rounded-lg">
+                      <img
+                        src={item.url}
+                        alt={item.fileName}
+                        className={`size-full object-cover${isDeleting ? " opacity-40" : ""}`}
+                      />
+                    </div>
+                    {isDeleting ? (
+                      <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-gray-200/60">
+                        <Loader2 className="size-6 animate-spin text-muted-foreground" />
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => removePhoto(item)}
+                        className="absolute -top-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full bg-destructive text-white opacity-0 transition-opacity group-hover:opacity-100 cursor-pointer"
+                      >
+                        <X className="size-3" />
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+              {uploadingFiles.map((file) => (
+                <div
+                  key={file.id}
+                  className="relative aspect-square overflow-hidden rounded-lg"
+                >
                   <img
-                    src={item.publicUrl}
-                    alt={item.mediaId}
-                    className="size-full rounded-lg object-cover"
+                    src={file.previewUrl}
+                    alt={file.name}
+                    className="size-full object-cover opacity-50"
                   />
-                  <button
-                    type="button"
-                    onClick={() => removePhoto(item)}
-                    className="absolute -top-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full bg-destructive text-white opacity-0 transition-opacity group-hover:opacity-100"
-                  >
-                    <X className="size-3" />
-                  </button>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Loader2 className="size-6 animate-spin text-brand" />
+                  </div>
                 </div>
               ))}
             </div>
@@ -183,7 +276,7 @@ export function Step3Media() {
               <button
                 type="button"
                 onClick={removeTourUrl}
-                className="flex size-5 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:text-destructive"
+                className="flex size-5 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:text-destructive cursor-pointer"
               >
                 <X className="size-3.5" />
               </button>

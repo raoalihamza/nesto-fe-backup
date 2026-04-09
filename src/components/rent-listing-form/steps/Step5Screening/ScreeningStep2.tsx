@@ -53,7 +53,9 @@ export function ScreeningStep2() {
           }
         >
           <SelectTrigger className="h-12! w-full text-base sm:w-80">
-            <SelectValue placeholder={t("notSet")} />
+            <SelectValue placeholder={t("notSet")}>
+              {(value: string) => value === "not_set" ? t("notSet") : value || null}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="not_set">{t("notSet")}</SelectItem>
@@ -111,7 +113,13 @@ export function ScreeningStep2() {
           }
         >
           <SelectTrigger className="h-12! w-full text-base sm:w-80">
-            <SelectValue placeholder={t("notSet")} />
+            <SelectValue placeholder={t("notSet")}>
+              {(value: string) => {
+                if (!value || value === "not_set") return t("notSet");
+                const match = CREDIT_SCORE_OPTIONS.find((o) => o.value === value);
+                return match ? t(match.label) : value;
+              }}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="not_set">{t("notSet")}</SelectItem>

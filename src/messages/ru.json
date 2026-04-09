@@ -145,6 +145,8 @@
       "offerDescriptionPlaceholder": "Пример: Получите скидку $500 на аренду первого месяца при подписании до 15 октября.",
       "offerWarning": "Ваше предложение не будет опубликовано, если содержит контактную информацию – номера телефонов, ссылки или адреса электронной почты",
       "addOfferButton": "Добавить предложение",
+      "editSpecialOfferTitle": "Редактировать спецпредложение",
+      "updateOfferButton": "Обновить предложение",
       "publish": "Опубликовать"
     },
     "media": {
@@ -160,7 +162,8 @@
       "tourUrlDialogTitle": "Добавить ссылку на 3D тур",
       "tourUrlPlaceholder": "https://my.matterport.com/show/?m=...",
       "cancel": "Отмена",
-      "saveTour": "Сохранить"
+      "saveTour": "Сохранить",
+      "duplicatePhoto": "\"{name}\" уже загружено"
     },
     "amenities": {
       "title": "Удобства",

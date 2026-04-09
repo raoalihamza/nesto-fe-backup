@@ -385,7 +385,7 @@ export function Step8Review() {
 
   const editLabel = tCommon("edit");
   const addLabel = tCommon("add");
-  const tourUrl = media.tours3d[0]?.publicUrl ?? null;
+  const tourUrl = media.tours3d[0]?.url ?? null;
 
   return (
     <div className="w-full max-w-lg">
@@ -516,12 +516,12 @@ export function Step8Review() {
                 <div className="flex gap-2">
                   {media.photos.slice(0, 3).map((photo) => (
                     <div
-                      key={photo.mediaId}
+                      key={photo.id}
                       className="relative h-14 w-14 overflow-hidden rounded-md border border-border"
                     >
                       <Image
-                        src={photo.publicUrl}
-                        alt={photo.mediaId}
+                        src={photo.url}
+                        alt={photo.fileName}
                         fill
                         className="object-cover"
                       />

@@ -68,7 +68,7 @@ export function ListingTable({ listings, onArchive, onEditDraft }: ListingTableP
                 <ListingStatusBadge statusLabel={listing.statusLabel} statusTone={listing.statusTone} />
               </td>
               <td className="px-4 py-4">
-                <p className="text-sm text-foreground">{listing.leaseDuration ?? "—"}</p>
+                <p className="text-sm text-foreground">{listing.leaseDuration ? listing.leaseDuration.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) : "—"}</p>
               </td>
               <td className="px-4 py-4">
                 <p className="text-sm text-foreground">

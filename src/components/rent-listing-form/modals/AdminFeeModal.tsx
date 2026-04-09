@@ -139,7 +139,9 @@ export function AdminFeeModal({
               </label>
               <Select value={feeName} onValueChange={(v) => setFeeName(v ?? "")}>
                 <SelectTrigger className="h-12! w-full text-base">
-                  <SelectValue placeholder={t("selectFeeName")} />
+                  <SelectValue placeholder={t("selectFeeName")}>
+                    {(value: string) => value ? t(`feeNames.${value}`) : null}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {feeNameOptions.map((opt) => (
@@ -160,7 +162,20 @@ export function AdminFeeModal({
                 onValueChange={(v) => setPaymentFrequency(v as FeeFrequency)}
               >
                 <SelectTrigger className="h-12! w-full text-base">
-                  <SelectValue placeholder={t("selectFrequency")} />
+                  <SelectValue placeholder={t("selectFrequency")}>
+                    {(value: string) => {
+                      const map: Record<string, string> = {
+                        one_time: t("oneTime"),
+                        monthly: t("monthly"),
+                        weekly: t("weekly"),
+                        yearly: t("yearly"),
+                        per_lease: t("perLease"),
+                        per_occurrence: t("perOccurrence"),
+                        other: t("other"),
+                      };
+                      return map[value] ?? null;
+                    }}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="one_time">{t("oneTime")}</SelectItem>
@@ -187,7 +202,15 @@ export function AdminFeeModal({
                 onValueChange={(v) => setFeeFormat(v as FeeFormat)}
               >
                 <SelectTrigger className="h-12! w-full text-base">
-                  <SelectValue placeholder={t("selectFormat")} />
+                  <SelectValue placeholder={t("selectFormat")}>
+                    {(value: string) => {
+                      const map: Record<string, string> = {
+                        fixed: t("fixedAmount"),
+                        percentage: t("percentage"),
+                      };
+                      return map[value] ?? null;
+                    }}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="fixed">{t("fixedAmount")}</SelectItem>

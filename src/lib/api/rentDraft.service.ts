@@ -13,20 +13,34 @@ import type {
   FeeRefundability,
 } from "@/types/property";
 
-export interface PresignMediaBody {
+export interface PresignMediaFile {
   mediaType: "PHOTO" | "VIDEO" | "TOUR_3D";
   fileName: string;
   contentType: string;
-  fileSizeBytes?: number | null;
-  sortOrder?: number;
+  fileSizeBytes: number;
+  sortOrder: number;
+  metadata?: Record<string, string>;
+}
+
+export interface PresignMediaBody {
+  files: PresignMediaFile[];
+}
+
+export interface PresignUploadItem {
+  listingId: string;
+  mediaId: string;
+  uploadUrl: string;
+  objectKey: string;
+  bucket: string;
+  method: string;
+  headers: Record<string, string>;
+  expiresInSeconds: number;
+  publicUrl: string;
 }
 
 export interface PresignMediaResponse {
-  mediaId: string;
-  uploadUrl: string;
-  publicUrl: string;
-  objectKey: string;
-  bucket: string;
+  listingId: string;
+  uploads: PresignUploadItem[];
 }
 
 export interface ConfirmMediaBody {
@@ -47,7 +61,7 @@ export interface CreateFeeBody {
   sortOrder?: number;
 }
 
-export interface UpdateFeeBody extends Partial<CreateFeeBody> {}
+export type UpdateFeeBody = Partial<CreateFeeBody>;
 
 export const rentDraftService = {
   // Step 0 — first save (creates draft)
@@ -113,7 +127,7 @@ export const rentDraftService = {
     );
   },
 
-  // Step 2 — presign individual file
+  // Step 2 — presign batch of files
   presignMedia(
     draftId: string,
     body: PresignMediaBody

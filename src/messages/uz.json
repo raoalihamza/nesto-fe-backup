@@ -145,6 +145,8 @@
       "offerDescriptionPlaceholder": "Masalan: 15-oktyabrga qadar shartnoma imzolasangiz, birinchi oy ijarasidan $500 chegirma.",
       "offerWarning": "Taklifingiz aloqa ma'lumotlarini o'z ichiga olsa – telefon raqamlar, havolalar yoki elektron pochta – e'lon qilinmaydi",
       "addOfferButton": "Taklif qo'shish",
+      "editSpecialOfferTitle": "Maxsus taklifni tahrirlash",
+      "updateOfferButton": "Taklifni yangilash",
       "publish": "Nashr etish"
     },
     "media": {
@@ -160,7 +162,8 @@
       "tourUrlDialogTitle": "3D tur havolasini qo'shish",
       "tourUrlPlaceholder": "https://my.matterport.com/show/?m=...",
       "cancel": "Bekor qilish",
-      "saveTour": "Saqlash"
+      "saveTour": "Saqlash",
+      "duplicatePhoto": "\"{name}\" allaqachon yuklangan"
     },
     "amenities": {
       "title": "Qulayliklar",

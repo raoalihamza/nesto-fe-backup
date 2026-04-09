@@ -61,11 +61,17 @@ export interface RentDetailsData {
 }
 
 export interface DraftMediaItem {
-  mediaId: string;
-  publicUrl: string;
-  status: "PENDING" | "READY";
+  id: string;
   mediaType: "PHOTO" | "VIDEO" | "TOUR_3D";
-  sortOrder?: number;
+  status: "PENDING" | "READY";
+  fileName: string;
+  contentType: string;
+  fileSizeBytes: number;
+  sortOrder: number;
+  objectKey: string;
+  url: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface MediaData {
