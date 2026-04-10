@@ -84,6 +84,24 @@
     },
     "featuredRentBadge": "{duration} rent"
   },
+  "rentListingModal": {
+    "titlePrefix": "List your rental property for free -",
+    "titleHighlight": "it's quick and easy",
+    "subtitle": "Fill your vacancy on the network with over 1 million daily visitors. Post your rental today.",
+    "streetAddress": "Street address",
+    "addressPlaceholder": "Address",
+    "unit": "Unit",
+    "unitPlaceholder": "Unit",
+    "numberOfUnits": "Number of units",
+    "numberOfUnitsPlaceholder": "0",
+    "propertyType": "Property type",
+    "propertyTypePlaceholder": "Property type",
+    "getStarted": "Get started",
+    "typeHouse": "House",
+    "typeEntireApartmentCommunity": "Entire Apartment Community",
+    "typeCondoApartmentUnit": "Condo / Apartment Unit",
+    "typeTownhome": "Townhome"
+  },
   "dashboard": {
     "welcome": "Welcome back, {name}!",
     "newInquiries": "You have {count} new message inquiries and {homes} homes saved.",

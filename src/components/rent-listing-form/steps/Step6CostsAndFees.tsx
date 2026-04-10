@@ -256,11 +256,12 @@ export function Step6CostsAndFees() {
                         <MoreHorizontal className="h-4 w-4" />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleEditFee(fee)}>
+                        <DropdownMenuItem onClick={() => handleEditFee(fee)} className="cursor-pointer">
                           {tCommon("edit")}
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handleDeleteFee(fee.feeId)}
+                          className="cursor-pointer"
                         >
                           {tCommon("delete")}
                         </DropdownMenuItem>

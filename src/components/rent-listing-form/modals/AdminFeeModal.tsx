@@ -106,7 +106,7 @@ export function AdminFeeModal({
       includedInRent: false,
       feeRequiredType,
       refundability,
-      description: description || null,
+      description: description || (editingFee ? "" : undefined),
     } as Omit<PropertyFee, "feeId"> & { feeId?: string });
     resetForm();
   }

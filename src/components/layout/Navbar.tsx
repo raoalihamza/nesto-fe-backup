@@ -12,6 +12,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import { RentListingModal } from "@/components/common/RentListingModal";
 import { useAppSelector } from "@/store";
 
 const NAV_LINKS = [
@@ -30,6 +31,7 @@ const RIGHT_LINKS = [
 export function Navbar() {
   const t = useTranslations("nav");
   const [open, setOpen] = useState(false);
+  const [rentModalOpen, setRentModalOpen] = useState(false);
   const isAuthenticated = useAppSelector((s) => s.auth.isAuthenticated);
 
   return (
@@ -54,16 +56,29 @@ export function Navbar() {
                   />
                 </div>
                 <nav className="flex flex-col gap-1">
-                  {NAV_LINKS.map((link) => (
-                    <Link
-                      key={link.key}
-                      href={link.href}
-                      onClick={() => setOpen(false)}
-                      className="rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-gray-100"
-                    >
-                      {t(link.key)}
-                    </Link>
-                  ))}
+                  {NAV_LINKS.map((link) =>
+                    link.key === "rent" ? (
+                      <button
+                        key={link.key}
+                        onClick={() => {
+                          setOpen(false);
+                          setRentModalOpen(true);
+                        }}
+                        className="rounded-lg px-3 py-2.5 text-left text-sm font-medium text-foreground hover:bg-gray-100"
+                      >
+                        {t(link.key)}
+                      </button>
+                    ) : (
+                      <Link
+                        key={link.key}
+                        href={link.href}
+                        onClick={() => setOpen(false)}
+                        className="rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-gray-100"
+                      >
+                        {t(link.key)}
+                      </Link>
+                    )
+                  )}
                   <div className="my-2 h-px bg-gray-200" />
                   {RIGHT_LINKS.filter((link) => link.key !== "manageRentals" || isAuthenticated).map((link) => (
                     <Link
@@ -81,15 +96,25 @@ export function Navbar() {
           </div>
 
           <nav className="hidden min-w-0 flex-wrap items-center gap-x-1 gap-y-1 lg:flex">
-            {NAV_LINKS.map((link) => (
-              <Link
-                key={link.key}
-                href={link.href}
-                className="shrink-0 rounded-md px-2 py-2 text-sm text-foreground transition-colors hover:text-brand xl:px-3"
-              >
-                {t(link.key)}
-              </Link>
-            ))}
+            {NAV_LINKS.map((link) =>
+              link.key === "rent" ? (
+                <button
+                  key={link.key}
+                  onClick={() => setRentModalOpen(true)}
+                  className="shrink-0 rounded-md px-2 py-2 text-sm text-foreground transition-colors hover:text-brand xl:px-3"
+                >
+                  {t(link.key)}
+                </button>
+              ) : (
+                <Link
+                  key={link.key}
+                  href={link.href}
+                  className="shrink-0 rounded-md px-2 py-2 text-sm text-foreground transition-colors hover:text-brand xl:px-3"
+                >
+                  {t(link.key)}
+                </Link>
+              )
+            )}
           </nav>
         </div>
 
@@ -133,6 +158,11 @@ export function Navbar() {
           </div>
         </div>
       </div>
+
+      <RentListingModal
+        open={rentModalOpen}
+        onOpenChange={setRentModalOpen}
+      />
     </header>
   );
 }

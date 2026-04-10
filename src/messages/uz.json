@@ -84,6 +84,24 @@
     },
     "featuredRentBadge": "{duration} ijara"
   },
+  "rentListingModal": {
+    "titlePrefix": "Ijaraga mulkingizni bepul joylashtiring -",
+    "titleHighlight": "bu tez va oson",
+    "subtitle": "Bo'sh joyingizni kuniga 1 milliondan ortiq tashrif buyuruvchi tarmoqda to'ldiring. Bugun e'lon bering.",
+    "streetAddress": "Ko'cha manzili",
+    "addressPlaceholder": "Manzil",
+    "unit": "Xonadon",
+    "unitPlaceholder": "Xonadon",
+    "numberOfUnits": "Xonadonlar soni",
+    "numberOfUnitsPlaceholder": "0",
+    "propertyType": "Mulk turi",
+    "propertyTypePlaceholder": "Mulk turi",
+    "getStarted": "Boshlash",
+    "typeHouse": "Uy",
+    "typeEntireApartmentCommunity": "Butun kvartira jamoasi",
+    "typeCondoApartmentUnit": "Kvartira / Kvartira birligi",
+    "typeTownhome": "Taunxaus"
+  },
   "dashboard": {
     "welcome": "Xush kelibsiz, {name}!",
     "newInquiries": "Sizda {count} ta yangi xabar so'rovi va {homes} ta saqlangan uy bor.",

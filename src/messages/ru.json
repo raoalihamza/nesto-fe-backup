@@ -84,6 +84,24 @@
     },
     "featuredRentBadge": "{duration} аренда"
   },
+  "rentListingModal": {
+    "titlePrefix": "Разместите аренду бесплатно -",
+    "titleHighlight": "это быстро и просто",
+    "subtitle": "Заполните вакансию в сети с более чем 1 млн посетителей в день. Разместите объявление сегодня.",
+    "streetAddress": "Адрес улицы",
+    "addressPlaceholder": "Адрес",
+    "unit": "Квартира",
+    "unitPlaceholder": "Квартира",
+    "numberOfUnits": "Количество квартир",
+    "numberOfUnitsPlaceholder": "0",
+    "propertyType": "Тип недвижимости",
+    "propertyTypePlaceholder": "Тип недвижимости",
+    "getStarted": "Начать",
+    "typeHouse": "Дом",
+    "typeEntireApartmentCommunity": "Целый жилой комплекс",
+    "typeCondoApartmentUnit": "Квартира / апартаменты",
+    "typeTownhome": "Таунхаус"
+  },
   "dashboard": {
     "welcome": "С возвращением, {name}!",
     "newInquiries": "У вас {count} новых сообщений и {homes} сохранённых домов.",
