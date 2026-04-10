@@ -90,28 +90,32 @@ export function Step3Media() {
           })
         );
 
-        // Step 3: Confirm only successfully uploaded files
-        for (const result of uploadResults) {
-          if (result.status === "rejected") {
-            toast.error("Failed to upload a photo.");
-            continue;
-          }
-          const { upload, file, index } = result.value;
+        // Step 3: Batch confirm all successfully uploaded files
+        const successfulUploads = uploadResults
+          .filter(
+            (r): r is PromiseFulfilledResult<{ upload: typeof presignResult.uploads[number]; file: File; index: number }> =>
+              r.status === "fulfilled"
+          )
+          .map((r) => r.value);
 
-          const confirmed = await rentDraftService.confirmMedia(
-            draftId,
-            upload.mediaId,
-            {
+        const failedCount = uploadResults.length - successfulUploads.length;
+        if (failedCount > 0) {
+          toast.error(`Failed to upload ${failedCount} photo(s).`);
+        }
+
+        if (successfulUploads.length > 0) {
+          const confirmed = await rentDraftService.confirmMedia(draftId, {
+            uploads: successfulUploads.map(({ upload, file, index }) => ({
+              mediaId: upload.mediaId,
               fileSizeBytes: file.size,
               sortOrder: media.photos.length + index,
-            }
-          );
+            })),
+          });
 
-          // Remove preview BEFORE restoring draft to avoid duplicates
           setUploadingFiles((prev) =>
-            prev.filter((f) => f.id !== previews[index].id)
+            prev.filter((f) => !previews.some((p) => p.id === f.id))
           );
-          URL.revokeObjectURL(previews[index].previewUrl);
+          previews.forEach((p) => URL.revokeObjectURL(p.previewUrl));
 
           dispatch(restoreFromDraft(confirmed));
         }

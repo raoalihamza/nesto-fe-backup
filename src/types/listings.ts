@@ -37,6 +37,8 @@ export interface PropertyCardItem {
   pricing: PropertyCardPricing;
   leaseDuration?: string | null;
   basicFacts?: PropertyCardBasicFacts;
+  /** When omitted, PropertyCard uses a static placeholder (e.g. Condo) until the API sends it. */
+  propertyType?: string | null;
   isSaved?: boolean;
   savedAt?: string | null;
   tag?: string | null;
@@ -61,6 +63,38 @@ export interface SavedHomesResponse {
   items: PropertyCardItem[];
 }
 
+/** Raw item from `GET /listings/feed` (optional `isSaved` when Bearer token is sent). */
+export interface PublicListingFeedApiItem {
+  id: string;
+  listingType: string;
+  status: string;
+  title: string;
+  thumbnailUrl: string | null;
+  location: {
+    summary?: string | null;
+    city?: string | null;
+    stateCode?: string | null;
+    countryCode?: string | null;
+  };
+  pricing: {
+    amount: string;
+    currencyCode: string;
+    billingPeriod?: string | null;
+  };
+  leaseDuration?: string | null;
+  owner: {
+    id: string;
+    fullName: string;
+  };
+  publishedAt?: string;
+  isSaved?: boolean;
+}
+
+export interface PublicListingsFeedResponse {
+  pagination: ListingsPagination;
+  items: PublicListingFeedApiItem[];
+}
+
 export interface MyListingActionFlags {
   canArchive: boolean;
 }
@@ -68,6 +102,8 @@ export interface MyListingActionFlags {
 export interface MyListingsCounts {
   all: number;
   forRent: number;
+  forSale: number;
+  draft: number;
   archived: number;
   sold: number;
 }

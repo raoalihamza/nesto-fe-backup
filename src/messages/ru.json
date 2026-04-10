@@ -71,12 +71,18 @@
     "checkIn": "Заезд",
     "checkOut": "Выезд",
     "selectDate": "Выберите дату",
-    "guests": "Выберите количество членов семьи",
+    "guests": "Количество гостей",
     "selectNumber": "Выберите количество",
     "search": "Поиск",
     "featuredIn": "Рекомендуемые",
     "hotlistForSale": "Лучшие предложения",
-    "continue": "Продолжить"
+    "continue": "Продолжить",
+    "featuredProperty": {
+      "city": "Нью-Йорк",
+      "title": "Дом Northfields",
+      "description": "Прекрасный семейный дом в стиле эдвардианской эпохи, всего в 6 милях от побережья Сассекса, с теннисным кортом на траве и подогреваемым открытым бассейном."
+    },
+    "featuredRentBadge": "{duration} аренда"
   },
   "dashboard": {
     "welcome": "С возвращением, {name}!",
@@ -97,7 +103,19 @@
     "uploadSheet": "Загрузить таблицу",
     "favorites": "Избранное",
     "hiddenHomes": "Скрытые дома",
-    "comingSoon": "Скоро"
+    "comingSoon": "Скоро",
+    "propertyInformation": "Информация о недвижимости",
+    "status": "Статус",
+    "lease": "Аренда",
+    "published": "Опубликовано",
+    "price": "Цена",
+    "action": "Действие",
+    "noListings": "Нет объявлений для показа",
+    "noSavedHomes": "Пока нет сохранённых домов",
+    "listingArchived": "Объявление архивировано",
+    "archiveFailed": "Не удалось архивировать объявление",
+    "saveFailed": "Не удалось сохранить объявление",
+    "unsaveFailed": "Не удалось убрать из сохранённых"
   },
   "listing": {
     "saveAndExit": "Сохранить и выйти",
@@ -262,8 +280,10 @@
       "add": "Добавить",
       "each": "каждый",
       "paidMonthly": "ежемесячно",
+      "paidWeekly": "еженедельно",
       "paidAnnually": "ежегодно",
       "paidOneTime": "разово",
+      "paidPerLease": "за аренду",
       "includedInBase": "Включено в базовую аренду",
       "required": "Обязательно",
       "optional": "По желанию",
@@ -405,12 +425,18 @@
     "beds": "Спален",
     "baths": "Ванных",
     "sqft": "кв.фт",
+    "bdAbbr": "сп",
+    "baAbbr": "с/у",
+    "defaultPropertyType": "Квартира",
+    "forSaleSpecs": "на продажу",
+    "forRentSpecs": "в аренду",
     "perMonth": "/мес",
     "leaseDuration": "Срок аренды",
     "save": "Сохранить",
     "share": "Поделиться",
     "contact": "Связаться",
-    "listingBy": "Размещено {name}"
+    "listingBy": "Размещено {name}",
+    "listingByLabel": "Размещение:"
   },
   "saleListing": {
     "addressSearch": {

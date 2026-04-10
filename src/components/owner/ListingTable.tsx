@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { Pencil, Eye, Archive, Home } from "lucide-react";
+import { useTranslations, useLocale } from "next-intl";
 
 import { ListingStatusBadge } from "@/components/owner/ListingStatusBadge";
 import { formatListingPrice, formatListingLocation } from "@/lib/utils/listingDisplay";
@@ -18,17 +19,20 @@ interface ListingTableProps {
 }
 
 export function ListingTable({ listings, onArchive, onEditDraft }: ListingTableProps) {
+  const t = useTranslations("dashboard");
+  const locale = useLocale();
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full border-separate border-spacing-y-1">
         <thead>
           <tr className="text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-            <th className="bg-muted/50 px-4 py-3 font-semibold">Property Information</th>
-            <th className="bg-muted/50 px-4 py-3 font-semibold">Status</th>
-            <th className="bg-muted/50 px-4 py-3 font-semibold">Lease</th>
-            <th className="bg-muted/50 px-4 py-3 font-semibold">Published</th>
-            <th className="bg-muted/50 px-4 py-3 font-semibold">Price</th>
-            <th className="bg-muted/50 px-4 py-3 font-semibold">Action</th>
+            <th className="bg-muted/50 px-4 py-3 font-semibold">{t("propertyInformation")}</th>
+            <th className="bg-muted/50 px-4 py-3 font-semibold">{t("status")}</th>
+            <th className="bg-muted/50 px-4 py-3 font-semibold">{t("lease")}</th>
+            <th className="bg-muted/50 px-4 py-3 font-semibold">{t("published")}</th>
+            <th className="bg-muted/50 px-4 py-3 font-semibold">{t("price")}</th>
+            <th className="bg-muted/50 px-4 py-3 font-semibold">{t("action")}</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-border">
@@ -37,7 +41,7 @@ export function ListingTable({ listings, onArchive, onEditDraft }: ListingTableP
               <td colSpan={6} className="px-4 py-16 text-center">
                 <div className="flex flex-col items-center gap-3 text-muted-foreground">
                   <Home className="size-10 opacity-30" />
-                  <p className="text-sm font-medium">No listings to show</p>
+                  <p className="text-sm font-medium">{t("noListings")}</p>
                 </div>
               </td>
             </tr>
@@ -73,7 +77,7 @@ export function ListingTable({ listings, onArchive, onEditDraft }: ListingTableP
               <td className="px-4 py-4">
                 <p className="text-sm text-foreground">
                   {listing.publishedAt
-                    ? new Date(listing.publishedAt).toLocaleDateString()
+                    ? new Date(listing.publishedAt).toLocaleDateString(locale)
                     : "—"}
                 </p>
               </td>

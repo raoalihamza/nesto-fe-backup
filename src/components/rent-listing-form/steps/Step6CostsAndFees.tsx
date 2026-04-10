@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { useAppSelector, useAppDispatch } from "@/store";
 import { setCostsAndFees } from "@/store/slices/listingFormSlice";
@@ -22,6 +22,11 @@ import {
   MoreHorizontal,
 } from "lucide-react";
 import type { FeeCategory, PropertyFee } from "@/types/property";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function normalizeFee(f: any): PropertyFee {
+  return { ...f, feeId: f.feeId || f.id };
+}
 
 const FEE_CATEGORIES: {
   key: FeeCategory;
@@ -59,12 +64,12 @@ const REQUIREMENT_LABEL: Record<string, string> = {
 };
 
 const FREQUENCY_LABEL: Record<string, string> = {
-  one_time: "paidOneTime",
-  monthly: "paidMonthly",
-  weekly: "paidWeekly",
-  yearly: "paidYearly",
-  per_lease: "paidPerLease",
-  per_occurrence: "paidPerOccurrence",
+  one_time: "oneTime",
+  monthly: "monthly",
+  weekly: "weekly",
+  yearly: "yearly",
+  per_lease: "perLease",
+  per_occurrence: "perOccurrence",
   other: "other",
 };
 
@@ -72,10 +77,15 @@ export function Step6CostsAndFees() {
   const t = useTranslations("listing.costs");
   const tCommon = useTranslations("common");
   const dispatch = useAppDispatch();
-  const costsAndFees = useAppSelector(
+  const rawCostsAndFees = useAppSelector(
     (s) => s.listingForm.formData.costsAndFees
   );
   const draftId = useAppSelector((s) => s.listingForm.draftId);
+
+  const fees = useMemo(
+    () => rawCostsAndFees.fees.map(normalizeFee),
+    [rawCostsAndFees.fees]
+  );
 
   const [showTotalMonthlyPrice, setShowTotalMonthlyPrice] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -100,7 +110,7 @@ export function Step6CostsAndFees() {
       await rentDraftService.deleteFee(draftId, feeId);
       dispatch(
         setCostsAndFees({
-          fees: costsAndFees.fees.filter((f) => f.feeId !== feeId),
+          fees: fees.filter((f) => f.feeId !== feeId),
         })
       );
     } catch {
@@ -118,29 +128,7 @@ export function Step6CostsAndFees() {
 
     try {
       if (editingFee) {
-        const updated = await rentDraftService.updateFee(
-          draftId,
-          editingFee.feeId,
-          {
-            category: feeData.category,
-            feeName: feeData.feeName,
-            paymentFrequency: feeData.paymentFrequency,
-            feeFormat: feeData.feeFormat,
-            feeAmount: feeData.feeAmount,
-            feeRequiredType: feeData.feeRequiredType,
-            refundability: feeData.refundability,
-            description: feeData.description,
-          }
-        );
-        dispatch(
-          setCostsAndFees({
-            fees: costsAndFees.fees.map((f) =>
-              f.feeId === editingFee.feeId ? updated : f
-            ),
-          })
-        );
-      } else {
-        const created = await rentDraftService.createFee(draftId, {
+        await rentDraftService.updateFee(draftId, editingFee.feeId, {
           category: feeData.category,
           feeName: feeData.feeName,
           paymentFrequency: feeData.paymentFrequency,
@@ -150,12 +138,22 @@ export function Step6CostsAndFees() {
           refundability: feeData.refundability,
           description: feeData.description,
         });
-        dispatch(
-          setCostsAndFees({
-            fees: [...costsAndFees.fees, created],
-          })
-        );
+      } else {
+        await rentDraftService.createFee(draftId, {
+          category: feeData.category,
+          feeName: feeData.feeName,
+          paymentFrequency: feeData.paymentFrequency,
+          feeFormat: feeData.feeFormat,
+          feeAmount: feeData.feeAmount,
+          feeRequiredType: feeData.feeRequiredType,
+          refundability: feeData.refundability,
+          description: feeData.description,
+        });
       }
+      const draft = await rentDraftService.getDraft(draftId);
+      dispatch(setCostsAndFees({
+        fees: draft.costsAndFees.fees.map(normalizeFee),
+      }));
       setModalOpen(false);
       setEditingFee(null);
     } catch {
@@ -164,7 +162,7 @@ export function Step6CostsAndFees() {
   }
 
   function getFeesForCategory(category: FeeCategory) {
-    return costsAndFees.fees.filter((f) => f.category === category);
+    return fees.filter((f) => f.category === category);
   }
 
   return (

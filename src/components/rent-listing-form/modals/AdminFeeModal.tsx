@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import {
   Dialog,
@@ -80,7 +80,7 @@ export function AdminFeeModal({
     setDescription("");
   }
 
-  useCallback(() => {
+  useEffect(() => {
     if (editingFee) {
       setFeeName(editingFee.feeName);
       setPaymentFrequency(editingFee.paymentFrequency);
@@ -92,6 +92,7 @@ export function AdminFeeModal({
     } else {
       resetForm();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editingFee, open]);
 
   function handleSave() {
@@ -105,7 +106,7 @@ export function AdminFeeModal({
       includedInRent: false,
       feeRequiredType,
       refundability,
-      description: description || undefined,
+      description: description || null,
     } as Omit<PropertyFee, "feeId"> & { feeId?: string });
     resetForm();
   }

@@ -40,28 +40,28 @@ export function FeatureCardsSection() {
   return (
     <section className="py-12 md:py-16">
       <div className="mx-auto max-w-7xl px-0">
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-3 sm:items-stretch">
           {FEATURES.map((feature) => {
             const Icon = feature.icon;
             return (
               <div
                 key={feature.titleKey}
-                className="flex flex-col items-center rounded-xl border border-gray-100 bg-white px-6 py-10 text-center shadow-sm"
+                className="flex min-h-0 min-w-0 flex-col items-center rounded-xl border border-gray-100 bg-white px-4 py-10 text-center shadow-sm sm:px-6"
               >
                 <div
-                  className={`mb-5 flex h-16 w-16 items-center justify-center rounded-full ${feature.bgColor}`}
+                  className={`mb-5 flex h-16 w-16 shrink-0 items-center justify-center rounded-full ${feature.bgColor}`}
                 >
                   <Icon className={`h-7 w-7 ${feature.iconColor}`} />
                 </div>
-                <h3 className="mb-2 text-lg font-bold text-foreground">
+                <h3 className="mb-2 w-full max-w-[280px] text-lg font-bold leading-snug text-foreground">
                   {t(feature.titleKey)}
                 </h3>
-                <p className="mb-6 max-w-[260px] text-sm leading-relaxed text-muted-foreground">
+                <p className="mb-6 w-full max-w-[280px] flex-1 text-sm leading-relaxed text-muted-foreground">
                   {t(feature.descKey)}
                 </p>
                 <Link
                   href={feature.href}
-                  className="rounded-lg border border-brand px-5 py-2 text-sm font-medium text-brand transition-colors hover:bg-brand hover:text-white"
+                  className="mt-auto shrink-0 rounded-lg border border-brand px-4 py-2 text-center text-sm font-medium text-brand transition-colors hover:bg-brand hover:text-white sm:px-5"
                 >
                   {t(feature.ctaKey)}
                 </Link>

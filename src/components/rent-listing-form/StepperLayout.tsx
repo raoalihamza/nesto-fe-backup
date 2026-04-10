@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { useAppSelector } from "@/store";
 import { useRestoreDraft } from "@/hooks/rentDraft";
@@ -102,6 +102,12 @@ export function StepperLayout({ draftId: draftIdFromUrl }: StepperLayoutProps) {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [handleBeforeUnload]);
 
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo(0, 0);
+  }, [currentStep, currentSubStep]);
+
   // Build step name + sub-step label
   const stepKey = STEP_KEYS[currentStep];
   const stepName = t(stepKey);
@@ -127,7 +133,7 @@ export function StepperLayout({ draftId: draftIdFromUrl }: StepperLayoutProps) {
       </div>
 
       {/* Scrollable bottom section */}
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+      <div ref={scrollRef} className="flex min-h-0 flex-1 flex-col overflow-y-auto">
         <div className="flex flex-1 flex-col px-4 py-4 sm:px-6 lg:px-8">
           {getStepComponent(currentStep)}
         </div>

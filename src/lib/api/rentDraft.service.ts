@@ -43,9 +43,15 @@ export interface PresignMediaResponse {
   uploads: PresignUploadItem[];
 }
 
+export interface ConfirmMediaUpload {
+  mediaId: string;
+  fileSizeBytes: number;
+  sortOrder: number;
+  metadata?: Record<string, string>;
+}
+
 export interface ConfirmMediaBody {
-  fileSizeBytes?: number | null;
-  sortOrder?: number;
+  uploads: ConfirmMediaUpload[];
 }
 
 export interface CreateFeeBody {
@@ -141,14 +147,13 @@ export const rentDraftService = {
     );
   },
 
-  // Step 2 — confirm after S3 upload
+  // Step 2 — batch confirm after S3 uploads
   confirmMedia(
     draftId: string,
-    mediaId: string,
     body: ConfirmMediaBody
   ): Promise<RentDraftResponse> {
     return apiClient<RentDraftResponse>(
-      `/listings/rent/drafts/${draftId}/media/${mediaId}/confirm`,
+      `/listings/rent/drafts/${draftId}/media/confirm`,
       {
         method: "POST",
         body: JSON.stringify(body),

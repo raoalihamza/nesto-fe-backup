@@ -76,7 +76,13 @@
     "search": "Search",
     "featuredIn": "Featured In",
     "hotlistForSale": "Hotlist for Sale",
-    "continue": "Continue"
+    "continue": "Continue",
+    "featuredProperty": {
+      "city": "New York",
+      "title": "Northfields House",
+      "description": "A beautiful Edwardian family home, barely 6 miles from the Sussex coast, with a grass tennis court and outdoor heated pool."
+    },
+    "featuredRentBadge": "{duration} rent"
   },
   "dashboard": {
     "welcome": "Welcome back, {name}!",
@@ -97,7 +103,19 @@
     "uploadSheet": "Upload Sheet",
     "favorites": "Favorites",
     "hiddenHomes": "Hidden Homes",
-    "comingSoon": "Coming soon"
+    "comingSoon": "Coming soon",
+    "propertyInformation": "Property Information",
+    "status": "Status",
+    "lease": "Lease",
+    "published": "Published",
+    "price": "Price",
+    "action": "Action",
+    "noListings": "No listings to show",
+    "noSavedHomes": "No saved homes yet",
+    "listingArchived": "Listing archived",
+    "archiveFailed": "Failed to archive listing",
+    "saveFailed": "Failed to save listing",
+    "unsaveFailed": "Failed to unsave listing"
   },
   "listing": {
     "saveAndExit": "Save & exit",
@@ -262,8 +280,10 @@
       "add": "Add",
       "each": "each",
       "paidMonthly": "paid monthly",
+      "paidWeekly": "paid weekly",
       "paidAnnually": "paid annually",
       "paidOneTime": "one time",
+      "paidPerLease": "paid per lease",
       "includedInBase": "Included in base rent",
       "required": "Required",
       "optional": "Optional",
@@ -405,12 +425,18 @@
     "beds": "Bed",
     "baths": "Bath",
     "sqft": "sqft",
+    "bdAbbr": "bd",
+    "baAbbr": "ba",
+    "defaultPropertyType": "Condo",
+    "forSaleSpecs": "for sale",
+    "forRentSpecs": "for rent",
     "perMonth": "/mo",
     "leaseDuration": "Lease Duration",
     "save": "Save",
     "share": "Share",
     "contact": "Contact",
-    "listingBy": "Listing by {name}"
+    "listingBy": "Listing by {name}",
+    "listingByLabel": "Listing by:"
   },
   "saleListing": {
     "addressSearch": {

@@ -1,27 +1,31 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { PropertyCard } from "@/components/property/PropertyCard";
-import { DUMMY_PROPERTY_PREVIEWS } from "@/lib/constants/dummyProperties";
+import { mapPublicFeedItemToPropertyCard } from "@/lib/api/listings.service";
+import { usePublicListingFeed } from "@/hooks/listings";
 
 interface PropertyGridSectionProps {
-  startIndex: number;
-  count: number;
+  page: number;
+  limit?: number;
   showHeading?: boolean;
 }
 
 export function PropertyGridSection({
-  startIndex,
-  count,
+  page,
+  limit = 8,
   showHeading = false,
 }: PropertyGridSectionProps) {
   const t = useTranslations("home");
+  const locale = useLocale();
+  const { data, isLoading, isError } = usePublicListingFeed({
+    page,
+    limit,
+    locale,
+  });
 
-  const items = DUMMY_PROPERTY_PREVIEWS.slice(startIndex, startIndex + count);
-  const displayItems =
-    items.length < count
-      ? [...items, ...DUMMY_PROPERTY_PREVIEWS.slice(0, count - items.length)]
-      : items;
+  const items =
+    data?.items.map((raw) => mapPublicFeedItemToPropertyCard(raw)) ?? [];
 
   return (
     <section className="mx-auto max-w-7xl px-0 py-10 md:py-14">
@@ -31,9 +35,25 @@ export function PropertyGridSection({
         </h2>
       )}
       <div className="grid grid-cols-1 gap-x-5 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
-        {displayItems.map((property, i) => (
-          <PropertyCard key={`${property.id}-${i}`} item={property} />
-        ))}
+        {isLoading &&
+          Array.from({ length: limit }).map((_, i) => (
+            <div
+              key={`skeleton-${i}`}
+              className="overflow-hidden rounded-2xl border border-black/10 bg-white shadow-[0_8px_20px_rgba(0,0,0,0.08)]"
+            >
+              <div className="aspect-4/3 animate-pulse bg-muted" />
+              <div className="space-y-2 px-4 pb-4 pt-3">
+                <div className="h-6 w-28 animate-pulse rounded bg-muted" />
+                <div className="h-3 w-full animate-pulse rounded bg-muted" />
+                <div className="h-3 w-4/5 animate-pulse rounded bg-muted" />
+              </div>
+            </div>
+          ))}
+        {!isLoading &&
+          !isError &&
+          items.map((property) => (
+            <PropertyCard key={property.id} item={property} />
+          ))}
       </div>
     </section>
   );

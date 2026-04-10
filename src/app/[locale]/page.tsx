@@ -18,17 +18,9 @@ export default async function HomePage({ params }: Props) {
       <Navbar />
       <main className="flex-1">
         <HeroSection />
-        <PropertyGridSection
-          startIndex={0}
-          count={8}
-          showHeading
-        />
+        <PropertyGridSection page={1} limit={8} showHeading />
         <FeatureCardsSection />
-        <PropertyGridSection
-          startIndex={0}
-          count={8}
-          showHeading={false}
-        />
+        <PropertyGridSection page={2} limit={8} showHeading={false} />
       </main>
       <Footer />
     </div>

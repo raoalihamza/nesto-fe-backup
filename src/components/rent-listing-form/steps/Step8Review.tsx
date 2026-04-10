@@ -77,7 +77,7 @@ const FREQUENCY_LABEL: Record<string, string> = {
   one_time: "paidOneTime",
   monthly: "paidMonthly",
   weekly: "paidWeekly",
-  yearly: "paidYearly",
+  yearly: "paidAnnually",
   per_lease: "paidPerLease",
   per_occurrence: "paidPerOccurrence",
   other: "other",

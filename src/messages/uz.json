@@ -76,7 +76,13 @@
     "search": "Qidirish",
     "featuredIn": "Tavsiya etilgan",
     "hotlistForSale": "Sotuvdagi eng yaxshilar",
-    "continue": "Davom etish"
+    "continue": "Davom etish",
+    "featuredProperty": {
+      "city": "Nyu-York",
+      "title": "Northfields uyi",
+      "description": "Go‘zal Edwardian oila uyi, Sussex qirg‘og‘idan atigi 6 mil uzoqlikda, o‘t chim tennis korti va tashqari isitiladigan basseyn bilan."
+    },
+    "featuredRentBadge": "{duration} ijara"
   },
   "dashboard": {
     "welcome": "Xush kelibsiz, {name}!",
@@ -97,7 +103,19 @@
     "uploadSheet": "Jadval yuklash",
     "favorites": "Sevimlilar",
     "hiddenHomes": "Yashirilgan uylar",
-    "comingSoon": "Tez kunda"
+    "comingSoon": "Tez kunda",
+    "propertyInformation": "Mulk ma'lumotlari",
+    "status": "Holat",
+    "lease": "Ijara",
+    "published": "Chop etilgan",
+    "price": "Narx",
+    "action": "Amal",
+    "noListings": "Ko'rsatiladigan e'lonlar yo'q",
+    "noSavedHomes": "Hali saqlangan uylar yo'q",
+    "listingArchived": "E'lon arxivlandi",
+    "archiveFailed": "E'lonni arxivlashda xatolik",
+    "saveFailed": "E'lonni saqlashda xatolik",
+    "unsaveFailed": "E'lonni saqlashdan chiqarishda xatolik"
   },
   "listing": {
     "saveAndExit": "Saqlash va chiqish",
@@ -262,8 +280,10 @@
       "add": "Qo'shish",
       "each": "har biri",
       "paidMonthly": "oylik to'lov",
+      "paidWeekly": "haftalik to'lov",
       "paidAnnually": "yillik to'lov",
       "paidOneTime": "bir martalik",
+      "paidPerLease": "ijara boshiga",
       "includedInBase": "Asosiy ijaraga kiritilgan",
       "required": "Majburiy",
       "optional": "Ixtiyoriy",
@@ -405,12 +425,18 @@
     "beds": "Xona",
     "baths": "Hammom",
     "sqft": "kv.ft",
+    "bdAbbr": "xon",
+    "baAbbr": "hmm",
+    "defaultPropertyType": "Kvartira",
+    "forSaleSpecs": "sotuvda",
+    "forRentSpecs": "ijaraga",
     "perMonth": "/oy",
     "leaseDuration": "Ijara muddati",
     "save": "Saqlash",
     "share": "Ulashish",
     "contact": "Bog'lanish",
-    "listingBy": "{name} tomonidan"
+    "listingBy": "{name} tomonidan",
+    "listingByLabel": "E'lon:"
   },
   "saleListing": {
     "addressSearch": {

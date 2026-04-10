@@ -1,14 +1,14 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { Plus, Home, Heart } from "lucide-react";
+import { Plus, Home, Heart, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { ListingTypeModal } from "@/components/common/ListingTypeModal";
 import { ListingTable, ListingCard } from "@/components/owner";
 import { PropertyCard } from "@/components/property/PropertyCard";
-import { useSavedHomes, useArchiveListing, useMyListings } from "@/hooks/listings";
+import { useSavedHomes, useArchiveListing, useInfiniteMyListings } from "@/hooks/listings";
 import { useRouter } from "@/i18n/routing";
 import type { MyListingItem } from "@/types/listings";
 
@@ -45,16 +45,69 @@ export default function DashboardPage() {
     { enabled: activeTab === "savedHomes" }
   );
 
-  const { data: overviewData, isLoading: overviewLoading } = useMyListings({
+  const {
+    data: overviewInfinite,
+    isLoading: overviewLoading,
+    fetchNextPage: fetchNextOverview,
+    hasNextPage: hasNextOverview,
+    isFetchingNextPage: isFetchingNextOverview,
+  } = useInfiniteMyListings({
     tab: overviewTabMap[overviewFilter],
     locale,
   });
 
   const myListingsApiTab = myListingsTabMap[myListingsFilter];
-  const { data: myListingsData, isLoading: myListingsLoading } = useMyListings({
+  const {
+    data: myListingsInfinite,
+    isLoading: myListingsLoading,
+    fetchNextPage: fetchNextMyListings,
+    hasNextPage: hasNextMyListings,
+    isFetchingNextPage: isFetchingNextMyListings,
+  } = useInfiniteMyListings({
     tab: myListingsApiTab,
     locale,
   });
+
+  // Flatten paginated pages into single arrays + extract first-page metadata
+  const overviewData = overviewInfinite?.pages[0] ?? null;
+  const overviewAllItems = overviewInfinite?.pages.flatMap((p) => p.items) ?? [];
+
+  const myListingsData = myListingsInfinite?.pages[0] ?? null;
+  const myListingsAllItems = myListingsInfinite?.pages.flatMap((p) => p.items) ?? [];
+
+  // Intersection observer for infinite scroll
+  const overviewSentinelRef = useRef<HTMLDivElement>(null);
+  const myListingsSentinelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const sentinel = overviewSentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextOverview && !isFetchingNextOverview) {
+          fetchNextOverview();
+        }
+      },
+      { rootMargin: "200px" }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasNextOverview, isFetchingNextOverview, fetchNextOverview]);
+
+  useEffect(() => {
+    const sentinel = myListingsSentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextMyListings && !isFetchingNextMyListings) {
+          fetchNextMyListings();
+        }
+      },
+      { rootMargin: "200px" }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasNextMyListings, isFetchingNextMyListings, fetchNextMyListings]);
 
   const router = useRouter();
   const archiveMutation = useArchiveListing();
@@ -72,21 +125,21 @@ export default function DashboardPage() {
 
   const overviewItems =
     shouldFilterDrafts(overviewTabMap[overviewFilter])
-      ? (overviewData?.items ?? []).filter((item) => item.status.toLowerCase() !== "draft")
-      : (overviewData?.items ?? []);
+      ? overviewAllItems.filter((item) => item.status.toLowerCase() !== "draft")
+      : overviewAllItems;
 
   const myListingsItems =
     shouldFilterDrafts(myListingsApiTab)
-      ? (myListingsData?.items ?? []).filter((item) => item.status.toLowerCase() !== "draft")
-      : (myListingsData?.items ?? []);
+      ? myListingsAllItems.filter((item) => item.status.toLowerCase() !== "draft")
+      : myListingsAllItems;
 
   // Count drafts so we can subtract from "For Rent" display count
-  const overviewDraftCount = overviewData
-    ? (overviewData.items ?? []).filter((i) => i.status.toLowerCase() === "draft").length
-    : 0;
-  const myListingsDraftCount = myListingsData
-    ? (myListingsData.items ?? []).filter((i) => i.status.toLowerCase() === "draft").length
-    : 0;
+  const overviewDraftCount = overviewAllItems.filter(
+    (i) => i.status.toLowerCase() === "draft"
+  ).length;
+  const myListingsDraftCount = myListingsAllItems.filter(
+    (i) => i.status.toLowerCase() === "draft"
+  ).length;
 
   const overviewFilters: { key: OverviewFilter; label: string }[] = [
     { key: "all",      label: `${t("all")}${overviewData ? ` (${overviewData.counts.all})` : ""}` },
@@ -203,7 +256,7 @@ export default function DashboardPage() {
               {overviewLoading ? skeletonRows : overviewItems.length === 0 ? (
                 <div className="flex flex-col items-center gap-3 py-16 text-muted-foreground">
                   <Home className="size-10 opacity-30" />
-                  <p className="text-sm font-medium">No listings to show</p>
+                  <p className="text-sm font-medium">{t("noListings")}</p>
                 </div>
               ) : (
                 overviewItems.map((listing) => (
@@ -216,6 +269,14 @@ export default function DashboardPage() {
                 ))
               )}
             </div>
+
+            {/* Infinite scroll sentinel */}
+            <div ref={overviewSentinelRef} className="h-1" />
+            {isFetchingNextOverview && (
+              <div className="flex justify-center py-4">
+                <Loader2 className="size-5 animate-spin text-muted-foreground" />
+              </div>
+            )}
           </div>
 
           {/* Messages Panel — Right Column (Desktop Only) */}
@@ -264,7 +325,7 @@ export default function DashboardPage() {
               ) : savedHomesData?.items.length === 0 || !savedHomesData ? (
                 <div className="flex flex-col items-center gap-3 py-20 text-muted-foreground">
                   <Heart className="size-10 opacity-30" />
-                  <p className="text-sm font-medium">No saved homes yet</p>
+                  <p className="text-sm font-medium">{t("noSavedHomes")}</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -343,7 +404,7 @@ export default function DashboardPage() {
             {myListingsLoading ? skeletonRows : myListingsItems.length === 0 ? (
               <div className="flex flex-col items-center gap-3 py-16 text-muted-foreground">
                 <Home className="size-10 opacity-30" />
-                <p className="text-sm font-medium">No listings to show</p>
+                <p className="text-sm font-medium">{t("noListings")}</p>
               </div>
             ) : (
               myListingsItems.map((listing) => (
@@ -356,6 +417,14 @@ export default function DashboardPage() {
               ))
             )}
           </div>
+
+          {/* Infinite scroll sentinel */}
+          <div ref={myListingsSentinelRef} className="h-1" />
+          {isFetchingNextMyListings && (
+            <div className="flex justify-center py-4">
+              <Loader2 className="size-5 animate-spin text-muted-foreground" />
+            </div>
+          )}
         </div>
       )}
 

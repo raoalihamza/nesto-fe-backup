@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Heart } from "lucide-react";
 import { toast } from "sonner";
-import { Link } from "@/i18n/routing";
+// import { Link } from "@/i18n/routing";
 import type { PropertyCardItem } from "@/types/listings";
 import { cn } from "@/lib/utils";
 import {
@@ -29,9 +29,27 @@ function formatPrice(price: number): string {
   }).format(price);
 }
 
+/** Static fallbacks when the feed omits facts — keeps the specs row visually complete. */
+const FALLBACK_BEDS = "1";
+const FALLBACK_BATHS = "1";
+
+function formatBathDisplay(raw: string | undefined | null): string {
+  if (raw == null || raw === "") return FALLBACK_BATHS;
+  const n = Number.parseFloat(raw);
+  if (!Number.isNaN(n) && Number.isInteger(n)) return String(n);
+  return raw;
+}
+
 export function PropertyCard({ item, className }: PropertyCardProps) {
   const t = useTranslations("property");
   const [isSaved, setIsSaved] = useState(item.isSaved ?? false);
+  const [prevId, setPrevId] = useState(item.id);
+  const [prevIsSaved, setPrevIsSaved] = useState(item.isSaved);
+  if (prevId !== item.id || prevIsSaved !== item.isSaved) {
+    setPrevId(item.id);
+    setPrevIsSaved(item.isSaved);
+    setIsSaved(item.isSaved ?? false);
+  }
   const isAuthenticated = useAppSelector((s) => s.auth.isAuthenticated);
   const saveMutation = useSaveListing();
   const unsaveMutation = useUnsaveListing();
@@ -41,22 +59,43 @@ export function PropertyCard({ item, className }: PropertyCardProps) {
     ? "—"
     : `${formatPrice(priceNum)}${item.pricing.suffix ?? ""}`;
 
+  const cityState = [
+    item.location.city,
+    item.location.stateCode ?? item.location.state,
+  ]
+    .filter((x) => x != null && String(x).trim() !== "")
+    .join(", ");
   const addressLine =
-    item.location.displayAddress ??
-    `${item.location.city}, ${item.location.state}`;
+    item.location.displayAddress?.trim() ||
+    cityState ||
+    "245 E 90th St APT 4D, New York, NY 10128";
 
-  const statusLabel =
-    item.listingType === "rent" ? t("forRent") : t("forSale");
+  const statusForSpecs =
+    item.listingType === "rent" ? t("forRentSpecs") : t("forSaleSpecs");
 
-  const beds = item.basicFacts?.bedrooms ?? "--";
-  const baths = item.basicFacts?.bathrooms ?? "--";
-  const sqft = item.basicFacts?.squareFootage;
+  const bedsDisplay =
+    item.basicFacts?.bedrooms != null
+      ? String(item.basicFacts.bedrooms)
+      : FALLBACK_BEDS;
+
+  const bathsDisplay = formatBathDisplay(item.basicFacts?.bathrooms);
+
+  const sqftDisplay =
+    item.basicFacts?.squareFootage != null
+      ? item.basicFacts.squareFootage.toLocaleString()
+      : "--";
+
+  const propertyTypeDisplay =
+    item.propertyType?.trim() || t("defaultPropertyType");
+
+  const specsLine = `${bedsDisplay} ${t("bdAbbr")} | ${bathsDisplay} ${t("baAbbr")} | ${sqftDisplay} ${t("sqft")} | ${propertyTypeDisplay} ${statusForSpecs}`;
+
+  const ownerName = item.owner?.name?.trim() ?? "";
 
   return (
-    <Link
-      href={`/property/${item.id}`}
-      className={cn("group block", className)}
-    >
+    // TODO: uncomment <Link> and remove <div> wrapper when property detail page is ready
+    // <Link href={`/property/${item.id}`} className={cn("group block", className)}>
+    <div className={cn("group block", className)}>
       <div className="overflow-hidden rounded-2xl border border-black/10 bg-white shadow-[0_8px_20px_rgba(0,0,0,0.08)]">
         {/* Image */}
         <div className="relative aspect-4/3 overflow-hidden rounded-t-2xl bg-gray-200">
@@ -77,6 +116,7 @@ export function PropertyCard({ item, className }: PropertyCardProps) {
 
           {/* Heart — top right */}
           <button
+            type="button"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -96,7 +136,7 @@ export function PropertyCard({ item, className }: PropertyCardProps) {
                 });
               }
             }}
-            className="absolute right-2.5 top-2.5 flex h-8 w-8 items-center justify-center"
+            className="absolute right-2.5 top-2.5 flex h-8 w-8 items-center justify-center rounded-md outline-none focus-visible:ring-2 focus-visible:ring-white/80 cursor-pointer"
           >
             <Heart
               className={cn(
@@ -108,60 +148,41 @@ export function PropertyCard({ item, className }: PropertyCardProps) {
             />
           </button>
 
-          {/* Image pager dots */}
-          <div className="absolute bottom-2.5 left-1/2 flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-black/35 px-2 py-1">
-            {[0, 1, 2, 3].map((i) => (
-              <span
-                key={i}
-                className={`h-2 w-2 rounded-full ${
-                  i === 0 ? "bg-white" : "bg-white/60"
-                }`}
-              />
-            ))}
-          </div>
         </div>
 
         {/* Details */}
-        <div className="space-y-1 px-4 pb-4 pt-3">
+        <div className="px-4 pb-4 pt-3">
           {/* Price */}
-          <p className="text-xl leading-none font-bold text-[#2d2d3a]">
+          <p className="text-lg font-bold leading-tight text-[#1a1a2e]">
             {priceDisplay}
           </p>
 
-          {/* Beds · Baths · Sqft */}
+          {/* Specs + Address with tooltip */}
           <Tooltip>
-            <TooltipTrigger>
-              <p className="truncate text-xs text-[#2d2d3a]/90 cursor-pointer">
-                {beds} {t("beds").toLowerCase()} |{" "}
-                {baths} {t("baths").toLowerCase()} |{" "}
-                {sqft
-                  ? `${sqft.toLocaleString()} ${t("sqft")}`
-                  : `-- ${t("sqft")}`}{" "}
-                | {statusLabel.toLowerCase()}
+            <TooltipTrigger className="mt-1.5 block w-full text-left">
+              <p className="truncate text-[13px] leading-normal text-[#6b7280]">
+                {specsLine}
+              </p>
+              <p className="mt-0.5 truncate text-[13px] leading-normal text-[#374151]">
+                {addressLine}
               </p>
             </TooltipTrigger>
             <TooltipContent side="bottom" className="text-xs">
-              <p>
-                {beds} {t("beds").toLowerCase()} |{" "}
-                {baths} {t("baths").toLowerCase()} |{" "}
-                {sqft
-                  ? `${sqft.toLocaleString()} ${t("sqft")}`
-                  : `-- ${t("sqft")}`}{" "}
-                | {statusLabel.toLowerCase()}
-              </p>
+              <p>{specsLine}</p>
               <p>{addressLine}</p>
             </TooltipContent>
           </Tooltip>
 
-          {/* Address */}
-          <p className="truncate text-xs text-[#2d2d3a]/90">{addressLine}</p>
-
-          {/* Listing by */}
-          <p className="pt-0.5 text-[11px] font-medium tracking-wide text-[#5f6d87] uppercase">
-            {t("listingBy", { name: item.owner?.name ?? "" })}
+          {/* LISTING BY: Name */}
+          <p className="mt-2 text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">
+            {t("listingByLabel")}
+            {ownerName ? (
+              <span> {ownerName}</span>
+            ) : null}
           </p>
         </div>
       </div>
-    </Link>
+    </div>
+    // </Link>
   );
 }

@@ -21,6 +21,7 @@ const HERO_IMAGES = [
 
 export function HeroSection() {
   const t = useTranslations("home");
+  const tLease = useTranslations("listing.finalDetails");
   const [activeSlide, setActiveSlide] = useState(0);
   const featured = DUMMY_PROPERTIES.find((p) => p.featured);
 
@@ -92,20 +93,26 @@ export function HeroSection() {
                 {/* Layer 4: Text content */}
                 <div className="absolute left-[13%] top-[15%] right-[20%] z-[5]">
                   <p className="text-[10px] font-normal text-white/85 md:text-sm">
-                    {featured.address.city}
+                    {t("featuredProperty.city")}
                   </p>
                   <h3 className="mt-1 text-base font-medium leading-tight text-white underline underline-offset-4 md:text-2xl">
-                    {featured.title}
+                    {t("featuredProperty.title")}
                   </h3>
                   <p className="mt-2 max-w-[290px] text-[10px] font-medium leading-relaxed text-white/90 md:mt-4 md:text-sm md:leading-[24px]">
-                    {featured.featuredDescription}
+                    {t("featuredProperty.description")}
                   </p>
                 </div>
 
                 {/* Layer 5: Price badge — inside card, bottom-right */}
                 <div className="absolute bottom-[5%] right-[6%] z-10 rounded-lg bg-brand px-2 py-1 shadow-[0px_10px_15px_-3px_rgba(192,33,33,0.2),0px_4px_6px_-4px_rgba(192,33,33,0.2)]">
-                  <p className="text-[12px]! font-medium text-white">
-                    {featured.leaseDuration?.toLowerCase()} rent
+                  <p className="text-[12px] font-medium text-white md:text-xs">
+                    {featured.leaseDuration
+                      ? t("featuredRentBadge", {
+                          duration: tLease(
+                            `leaseDurationOptions.${featured.leaseDuration}` as never,
+                          ),
+                        })
+                      : null}
                   </p>
                   <p className="text-sm font-semibold text-white">
                     £{featured.monthlyRent?.toLocaleString()}
