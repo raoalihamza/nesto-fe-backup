@@ -15,12 +15,20 @@ export interface OpenHouseEntry {
   endTime: string;
 }
 
+/** Confirmed sale listing photo from presign → S3 → confirm (used for display + DELETE). */
+export interface SaleListingPhoto {
+  id: string;
+  url: string;
+  fileName: string;
+  fileSizeBytes?: number;
+}
+
 export interface SaleFormData {
   // Pricing
   price: number | null;
 
   // Media
-  photos: string[];
+  photos: SaleListingPhoto[];
   virtualTourUrl: string;
   tourUrl3D: string;
 

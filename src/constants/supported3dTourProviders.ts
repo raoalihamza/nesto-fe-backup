@@ -29,7 +29,6 @@ export const SUPPORTED_3D_TOUR_PROVIDERS: readonly string[] = [
   "LCP Media",
   "Listing 3D",
   "Momento360",
-  "Momentum Virtual Tours",
   "My Palisade Park",
   "Nodalview",
   "Nucleus 4D",

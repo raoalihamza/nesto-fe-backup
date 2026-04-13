@@ -10,7 +10,9 @@ import {
   setIsDirty,
   resetSaleForm,
   type SaleFormData,
+  type SaleListingPhoto,
 } from "@/store/slices/saleListingSlice";
+import { saleListingMediaService } from "@/lib/api/saleListingMedia.service";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,7 +25,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CloudUpload, ChevronDown, ChevronUp, Plus, X } from "lucide-react";
+import {
+  CloudUpload,
+  ChevronDown,
+  ChevronUp,
+  Loader2,
+  Plus,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 import { ROUTES } from "@/lib/constants/routes";
 
@@ -321,6 +330,12 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
   );
 }
 
+interface SalePhotoUploadPreview {
+  id: string;
+  name: string;
+  previewUrl: string;
+}
+
 // ─── Main component ─────────────────────────────────────────────────
 export function SaleListingForm() {
   const t = useTranslations("saleListing.form");
@@ -336,6 +351,10 @@ export function SaleListingForm() {
   const [utilityDetailsOpen, setUtilityDetailsOpen] = useState(true);
   const [buildingDetailsOpen, setBuildingDetailsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadingFiles, setUploadingFiles] = useState<SalePhotoUploadPreview[]>(
+    []
+  );
+  const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
 
   // beforeunload guard
   useEffect(() => {
@@ -357,13 +376,113 @@ export function SaleListingForm() {
     [dispatch]
   );
 
-  // Photo upload
+  // Photo upload: presign → PUT to S3 → confirm (sale listing media API)
   const onDrop = useCallback(
-    (files: File[]) => {
-      const urls = files.map((f) => URL.createObjectURL(f));
-      update({ photos: [...formData.photos, ...urls] });
+    async (acceptedFiles: File[]) => {
+      const uniqueFiles = acceptedFiles.filter((file) => {
+        const isDuplicate = formData.photos.some(
+          (p) =>
+            p.fileName === file.name && p.fileSizeBytes === file.size
+        );
+        if (isDuplicate) {
+          toast.error(t("duplicatePhoto", { name: file.name }));
+        }
+        return !isDuplicate;
+      });
+
+      if (uniqueFiles.length === 0) return;
+
+      const previews: SalePhotoUploadPreview[] = uniqueFiles.map((file) => ({
+        id: crypto.randomUUID(),
+        name: file.name,
+        previewUrl: URL.createObjectURL(file),
+      }));
+      setUploadingFiles((prev) => [...prev, ...previews]);
+
+      try {
+        const presignResult = await saleListingMediaService.presignMedia({
+          files: uniqueFiles.map((file, i) => ({
+            listingType: "SALE" as const,
+            mediaType: "PHOTO" as const,
+            fileName: file.name,
+            contentType: file.type || "application/octet-stream",
+            fileSizeBytes: file.size,
+            sortOrder: formData.photos.length + i,
+            metadata: { source: "sale-listing-form" },
+          })),
+        });
+
+        const uploadResults = await Promise.allSettled(
+          presignResult.uploads.map(async (upload, i) => {
+            const file = uniqueFiles[i];
+            const response = await fetch(upload.uploadUrl, {
+              method: upload.method,
+              body: file,
+              headers: upload.headers,
+            });
+            if (!response.ok) throw new Error(`Upload failed: ${file.name}`);
+            return { upload, file, index: i };
+          })
+        );
+
+        const successfulUploads = uploadResults
+          .filter(
+            (
+              r
+            ): r is PromiseFulfilledResult<{
+              upload: (typeof presignResult.uploads)[number];
+              file: File;
+              index: number;
+            }> => r.status === "fulfilled"
+          )
+          .map((r) => r.value);
+
+        const failedCount = uploadResults.length - successfulUploads.length;
+        if (failedCount > 0) {
+          toast.error(t("photoPartialFailure", { count: failedCount }));
+        }
+
+        if (successfulUploads.length > 0) {
+          const confirmed = await saleListingMediaService.confirmMedia({
+            uploads: successfulUploads.map(({ upload, file, index }) => ({
+              uploadId: upload.uploadId,
+              fileSizeBytes: file.size,
+              sortOrder: formData.photos.length + index,
+              metadata: { confirmedBy: "sale-listing-form" },
+            })),
+          });
+
+          const byId = new Map(
+            confirmed.photos.map((item) => [item.id, item] as [string, typeof item])
+          );
+          for (const item of confirmed.items) {
+            if (!byId.has(item.id)) {
+              byId.set(item.id, item);
+            }
+          }
+
+          const newPhotos: SaleListingPhoto[] = successfulUploads
+            .map(({ upload }) => byId.get(upload.uploadId))
+            .filter((item): item is NonNullable<typeof item> => Boolean(item))
+            .map((item) => ({
+              id: item.id,
+              url: item.url,
+              fileName: item.fileName,
+              fileSizeBytes: item.fileSizeBytes,
+            }));
+
+          update({ photos: [...formData.photos, ...newPhotos] });
+        }
+      } catch {
+        toast.error(t("photoUploadError"));
+      } finally {
+        setUploadingFiles((prev) => {
+          previews.forEach((p) => URL.revokeObjectURL(p.previewUrl));
+          return prev.filter((f) => !previews.some((pr) => pr.id === f.id));
+        });
+      }
     },
-    [formData.photos, update]
+    [formData.photos, t, update]
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -371,8 +490,22 @@ export function SaleListingForm() {
     accept: { "image/*": [".jpg", ".jpeg", ".png", ".webp"] },
   });
 
-  const removePhoto = (index: number) => {
-    update({ photos: formData.photos.filter((_, i) => i !== index) });
+  const removePhoto = async (index: number) => {
+    const photo = formData.photos[index];
+    if (!photo || deletingIds.has(photo.id)) return;
+    setDeletingIds((prev) => new Set(prev).add(photo.id));
+    try {
+      await saleListingMediaService.deleteMedia(photo.id);
+      update({ photos: formData.photos.filter((_, i) => i !== index) });
+    } catch {
+      toast.error(t("photoDeleteError"));
+    } finally {
+      setDeletingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(photo.id);
+        return next;
+      });
+    }
   };
 
   // Open house management
@@ -497,22 +630,46 @@ export function SaleListingForm() {
           <span className="font-medium text-brand">{t("browse")}</span>
         </p>
       </div>
-      {formData.photos.length > 0 && (
+      {(formData.photos.length > 0 || uploadingFiles.length > 0) && (
         <div className="mt-4 grid max-w-lg grid-cols-3 gap-3 sm:grid-cols-4">
-          {formData.photos.map((url, i) => (
-            <div key={i} className="group relative aspect-square">
+          {formData.photos.map((photo, i) => {
+            const isDeleting = deletingIds.has(photo.id);
+            return (
+              <div key={photo.id} className="group relative aspect-square">
+                <img
+                  src={photo.url}
+                  alt={photo.fileName}
+                  className={`size-full rounded-lg object-cover${isDeleting ? " opacity-40" : ""}`}
+                />
+                {isDeleting ? (
+                  <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-muted/60">
+                    <Loader2 className="size-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => void removePhoto(i)}
+                    className="absolute -top-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full bg-destructive text-white opacity-0 transition-opacity group-hover:opacity-100"
+                  >
+                    <X className="size-3" />
+                  </button>
+                )}
+              </div>
+            );
+          })}
+          {uploadingFiles.map((file) => (
+            <div
+              key={file.id}
+              className="relative aspect-square overflow-hidden rounded-lg"
+            >
               <img
-                src={url}
-                alt={`Photo ${i + 1}`}
-                className="size-full rounded-lg object-cover"
+                src={file.previewUrl}
+                alt={file.name}
+                className="size-full object-cover opacity-50"
               />
-              <button
-                type="button"
-                onClick={() => removePhoto(i)}
-                className="absolute -top-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full bg-destructive text-white opacity-0 transition-opacity group-hover:opacity-100"
-              >
-                <X className="size-3" />
-              </button>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Loader2 className="size-6 animate-spin text-brand" />
+              </div>
             </div>
           ))}
         </div>

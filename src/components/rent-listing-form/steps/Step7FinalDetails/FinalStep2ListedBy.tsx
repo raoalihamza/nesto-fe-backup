@@ -21,7 +21,7 @@ export function FinalStep2ListedBy() {
   const tCommon = useTranslations("common");
   const dispatch = useAppDispatch();
   const finalDetails = useAppSelector(
-    (s) => s.listingForm.formData.finalDetails
+    (s) => s.listingForm.formData.finalDetails,
   );
 
   // Persist default value to Redux on mount so it gets saved to the API
@@ -69,7 +69,7 @@ export function FinalStep2ListedBy() {
                     ? "propertyOwner"
                     : opt === "management_company"
                       ? "managementCompany"
-                      : "tenant"
+                      : "tenant",
                 )}
               </Label>
             </div>
@@ -85,10 +85,9 @@ export function FinalStep2ListedBy() {
         </Label>
         <Input
           value={finalDetails.name || "Kurtesan"}
-          onChange={(e) =>
-            dispatch(setFinalDetails({ name: e.target.value }))
-          }
-          className="h-12 text-base"
+          // onChange={(e) => dispatch(setFinalDetails({ name: e.target.value }))}
+          className="h-12 text-base read-only:cursor-not-allowed"
+          readOnly
         />
       </div>
 
@@ -101,15 +100,12 @@ export function FinalStep2ListedBy() {
         <div className="flex items-center gap-3">
           <Input
             value={finalDetails.email || "hey@kurtesan.com"}
-            onChange={(e) =>
-              dispatch(setFinalDetails({ email: e.target.value }))
-            }
-            className="h-12 text-base bg-brand/5 border-brand/30"
+            // onChange={(e) =>
+            //   dispatch(setFinalDetails({ email: e.target.value }))
+            // }
+            className="h-12 text-base bg-brand/5 border-brand/30 read-only:cursor-not-allowed"
             readOnly
           />
-          <Button variant="outline" size="sm" className="shrink-0 !h-12 px-6 cursor-pointer">
-            {tCommon("edit")}
-          </Button>
         </div>
         <p className="text-xs text-muted-foreground">
           {t("verifiedOn", { date: "March 6, 2026" })}

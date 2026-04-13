@@ -447,7 +447,7 @@ export function Step3Media() {
                   }}
                   placeholder={t("tourNamePlaceholder")}
                   className={cn(
-                    "rounded-lg border-border",
+                    "rounded-lg border-border h-12!",
                     tourFieldErrors.name && "border-destructive ring-destructive/20"
                   )}
                   aria-invalid={tourFieldErrors.name}
@@ -475,7 +475,7 @@ export function Step3Media() {
                   inputMode="url"
                   autoComplete="url"
                   className={cn(
-                    "rounded-lg border-border",
+                    "rounded-lg border-border h-12!",
                     tourFieldErrors.url && "border-destructive ring-destructive/20"
                   )}
                   aria-invalid={tourFieldErrors.url}
