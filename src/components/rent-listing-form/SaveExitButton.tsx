@@ -11,6 +11,8 @@ export function SaveExitButton() {
   const t = useTranslations("listing");
   const router = useRouter();
   const isSaving = useAppSelector((s) => s.listingForm.isSaving);
+  const mediaUploadBusy =
+    useAppSelector((s) => s.listingForm.mediaUploadInFlight) > 0;
   const currentStep = useAppSelector((s) => s.listingForm.currentStep);
 
   const { saveStep } = useSaveStep();
@@ -34,10 +36,14 @@ export function SaveExitButton() {
       variant="outline"
       size="sm"
       onClick={handleSaveAndExit}
-      disabled={isSaving}
+      disabled={isSaving || mediaUploadBusy}
       className="h-9 rounded-lg px-4 text-sm font-medium"
     >
-      {isSaving ? t("saving") : t("saveAndExit")}
+      {isSaving
+        ? t("saving")
+        : mediaUploadBusy
+          ? t("uploadingMedia")
+          : t("saveAndExit")}
     </Button>
   );
 }

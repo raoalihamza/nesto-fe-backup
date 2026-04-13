@@ -1,0 +1,128 @@
+"use client";
+
+import { useMemo, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { useTranslations } from "next-intl";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  forgotPasswordSchema,
+  type ForgotPasswordFormValues,
+} from "@/lib/validations/auth";
+import { useSearchParams } from "next/navigation";
+import { useResendVerification } from "@/hooks/auth/useResendVerification";
+import { Link } from "@/i18n/routing";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { NestoLogo } from "@/components/auth/NestoLogo";
+import { CheckCircle2, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { buildLoginHrefWithReturnContext } from "@/lib/utils/pendingRentListingStorage";
+
+export function RequestVerificationEmailForm() {
+  const t = useTranslations("auth");
+  const searchParams = useSearchParams();
+  const mutation = useResendVerification();
+
+  const loginHref = useMemo(
+    () => buildLoginHrefWithReturnContext(searchParams.get("returnUrl")),
+    [searchParams]
+  );
+  const emailFromQuery = searchParams.get("email") ?? "";
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setValue,
+    getValues,
+  } = useForm<ForgotPasswordFormValues>({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: { email: emailFromQuery },
+  });
+
+  useEffect(() => {
+    if (emailFromQuery) setValue("email", emailFromQuery);
+  }, [emailFromQuery, setValue]);
+
+  const onSubmit = (data: ForgotPasswordFormValues) => {
+    mutation.mutate(
+      { email: data.email },
+      {
+        onSuccess: () => toast.success(t("verificationResent")),
+        onError: (err) => toast.error(err.message),
+      }
+    );
+  };
+
+  if (mutation.isSuccess) {
+    return (
+      <div className="w-full max-w-[400px] space-y-6">
+        <div className="flex justify-center pb-2">
+          <NestoLogo size="lg" />
+        </div>
+        <div className="flex flex-col items-center space-y-4 text-center">
+          <CheckCircle2 className="h-12 w-12 text-green-500" />
+          <h2 className="text-xl font-bold text-foreground">
+            {t("verificationResent")}
+          </h2>
+          <p className="text-sm text-muted-foreground">{getValues("email")}</p>
+          <Link
+            href={loginHref}
+            className="text-sm font-medium text-brand hover:text-brand-dark underline"
+          >
+            {t("backToLogin")}
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full max-w-[400px] space-y-6">
+      <div className="flex justify-center pb-2">
+        <NestoLogo size="lg" />
+      </div>
+      <h1 className="text-2xl font-bold text-foreground md:text-3xl">
+        {t("verifyEmailRequestTitle")}
+      </h1>
+      <p className="text-sm text-muted-foreground">{t("verifyEmailRequestSubtitle")}</p>
+
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="verify-email" className="text-sm font-medium">
+            {t("emailAddress")} <span className="text-brand">*</span>
+          </Label>
+          <Input
+            id="verify-email"
+            type="email"
+            placeholder={t("enterEmail")}
+            className="h-12 rounded-lg"
+            {...register("email")}
+          />
+          {errors.email && (
+            <p className="text-sm text-destructive">{errors.email.message}</p>
+          )}
+        </div>
+        <Button
+          type="submit"
+          disabled={mutation.isPending}
+          className="btn-brand-shadow h-12 w-full rounded-lg bg-brand text-white hover:opacity-90"
+        >
+          {mutation.isPending ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : (
+            t("sendVerificationEmail")
+          )}
+        </Button>
+      </form>
+
+      <Link
+        href={loginHref}
+        className="block text-center text-sm font-medium text-brand hover:text-brand-dark underline"
+      >
+        {t("backToLogin")}
+      </Link>
+    </div>
+  );
+}

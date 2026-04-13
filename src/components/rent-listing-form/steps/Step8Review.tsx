@@ -35,6 +35,7 @@ import type { FeeCategory, PropertyFee } from "@/types/property";
 // ── Helpers ────────────────────────────────────────────────
 
 function buildAddress(ctx: ListingContextData): string | null {
+  if (ctx.formattedAddress?.trim()) return ctx.formattedAddress.trim();
   if (!ctx.city && !ctx.stateCode) return null;
   const parts = [ctx.addressLine1, ctx.city, ctx.stateCode, ctx.postalCode].filter(Boolean);
   return parts.join(", ") || null;
@@ -243,6 +244,10 @@ export function Step8Review() {
   // Compute required completion
   const completionInfo = useMemo(() => {
     const checks = [
+      {
+        key: "address",
+        ok: Boolean(propertyInfo.address?.placeId),
+      },
       { key: "totalBedrooms", ok: propertyInfo.totalBedrooms !== null },
       { key: "totalBathrooms", ok: propertyInfo.totalBathrooms !== null },
       { key: "monthlyRent", ok: rentDetails.monthlyRent !== null },
@@ -385,7 +390,10 @@ export function Step8Review() {
 
   const editLabel = tCommon("edit");
   const addLabel = tCommon("add");
-  const tourUrl = media.tours3d[0]?.url ?? null;
+  const tour3d = media.tours3d[0];
+  const tourDisplay = tour3d
+    ? `${tour3d.tourName}\n${tour3d.tourUrl}`
+    : null;
 
   return (
     <div className="w-full max-w-lg">
@@ -421,7 +429,7 @@ export function Step8Review() {
         <FieldRow
           label={t("address")}
           value={address}
-          onEdit={() => editStep(6, 5)}
+          onEdit={() => editStep(0)}
           editLabel={editLabel}
           issue={findIssue("propertyInfo", "address")}
         />
@@ -458,7 +466,17 @@ export function Step8Review() {
         />
         <FieldRow
           label={t("propertyType")}
-          value={t("house")}
+          value={
+            propertyInfo.listingEntry.propertyType
+              ? t(
+                  `propertyTypes.${propertyInfo.listingEntry.propertyType}` as
+                    | "propertyTypes.house"
+                    | "propertyTypes.townhome"
+                    | "propertyTypes.condo_apartment_unit"
+                    | "propertyTypes.entire_apartment_community"
+                )
+              : null
+          }
           onEdit={() => editStep(0)}
           editLabel={editLabel}
           issue={findIssue("propertyInfo", "propertyType")}
@@ -549,9 +567,13 @@ export function Step8Review() {
         {/* 3D Tour */}
         <FieldRow
           label={tMedia("tourHeading")}
-          value={tourUrl}
+          value={
+            tourDisplay ? (
+              <span className="whitespace-pre-line break-all">{tourDisplay}</span>
+            ) : null
+          }
           onEdit={() => editStep(2)}
-          editLabel={tourUrl ? editLabel : tMedia("addTour")}
+          editLabel={tourDisplay ? editLabel : tMedia("addTour")}
         />
       </ReviewSection>
 

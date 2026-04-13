@@ -51,7 +51,10 @@
     "loginSuccess": "Signed in successfully!",
     "registrationSuccess": "Check your email",
     "registrationSuccessSubtitle": "We've sent a verification link to {email}. Please verify your email to continue.",
-    "socialLoginError": "Social login failed. Please try again."
+    "socialLoginError": "Social login failed. Please try again.",
+    "verifyEmailRequestTitle": "Подтвердите email",
+    "verifyEmailRequestSubtitle": "Мы отправим ссылку для подтверждения на указанный адрес.",
+    "sendVerificationEmail": "Отправить письмо"
   },
   "home": {
     "seeCoolPlaces": "Посмотрите классные места вокруг вас",
@@ -100,7 +103,14 @@
     "typeHouse": "Дом",
     "typeEntireApartmentCommunity": "Целый жилой комплекс",
     "typeCondoApartmentUnit": "Квартира / апартаменты",
-    "typeTownhome": "Таунхаус"
+    "typeTownhome": "Таунхаус",
+    "sharedLivingSpace": "Это комната в аренду с общими зонами",
+    "searching": "Поиск адресов…",
+    "loadingAddress": "Загрузка адреса…",
+    "noSuggestions": "Ничего не найдено. Попробуйте другой запрос.",
+    "searchFailed": "Поиск адреса не удался. Попробуйте снова.",
+    "addressDetailsFailed": "Не удалось загрузить адрес. Выберите другой.",
+    "getStartedLoading": "Переходим…"
   },
   "dashboard": {
     "welcome": "С возвращением, {name}!",
@@ -138,6 +148,8 @@
   "listing": {
     "saveAndExit": "Сохранить и выйти",
     "saving": "Сохранение...",
+    "uploadingMedia": "Загрузка фото...",
+    "addressSearchBusy": "Дождитесь окончания поиска адреса",
     "back": "Назад",
     "next": "Далее",
     "steps": {
@@ -193,10 +205,21 @@
       "browse": "выберите",
       "browsePhotos": "выберите фотографии",
       "tourHeading": "3D Тур",
-      "tourSubtitle": "Фотографии помогут арендаторам представить жизнь в вашем жилье.",
+      "tourSubtitle": "Добавьте ссылку на виртуальный тур от поддерживаемого провайдера, чтобы арендаторы могли осмотреть объект онлайн.",
       "addTour": "Добавить тур",
-      "tourUrlDialogTitle": "Добавить ссылку на 3D тур",
-      "tourUrlPlaceholder": "https://my.matterport.com/show/?m=...",
+      "tourModalTitle": "3D тур",
+      "tourModalLeadHeading": "Укажите ссылку на тур",
+      "tourModalLeadSubtitle": "Добавьте ссылку на тур из поддерживаемых источников ниже. Тур необязателен; если вы его добавляете, обязательны и название, и ссылка.",
+      "tourSupportedSourcesIntro": "Поддерживаемые источники туров:",
+      "tourNameLabel": "Название тура",
+      "tourNamePlaceholder": "Тур",
+      "tourNameHelper": "Используйте конкретное название (например: «Большая 1-комнатная»).",
+      "tourLinkLabel": "Ссылка на тур",
+      "tourLinkPlaceholder": "https://app.cloudpano.com/tours/",
+      "tourBothFieldsRequired": "Введите название и ссылку на тур или оставьте оба поля пустыми.",
+      "tourInvalidUrl": "Введите корректную ссылку, начинающуюся с http:// или https://.",
+      "editTour": "Изменить тур",
+      "removeTour": "Удалить 3D тур",
       "cancel": "Отмена",
       "saveTour": "Сохранить",
       "duplicatePhoto": "\"{name}\" уже загружено"
@@ -413,6 +436,12 @@
       "hidePropertyAddress": "Скрыть адрес",
       "propertyType": "Тип недвижимости",
       "house": "Дом",
+      "propertyTypes": {
+        "house": "Дом",
+        "townhome": "Таунхаус",
+        "condo_apartment_unit": "Квартира / апартаменты",
+        "entire_apartment_community": "Целый жилой комплекс"
+      },
       "propertyDescription": "Описание недвижимости",
       "specialOffer": "Специальное предложение",
       "photos": "Фотографии",

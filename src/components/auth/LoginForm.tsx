@@ -1,12 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
 import { loginSchema, type LoginFormValues } from "@/lib/validations/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { Link } from "@/i18n/routing";
+import { getSafeReturnUrl } from "@/lib/auth/safeReturnUrl";
+import { ROUTES } from "@/lib/constants/routes";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -17,8 +20,20 @@ import { toast } from "sonner";
 
 export function LoginForm() {
   const t = useTranslations("auth");
+  const searchParams = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
   const loginMutation = useLogin();
+
+  const returnUrl = useMemo(
+    () => getSafeReturnUrl(searchParams.get("returnUrl")),
+    [searchParams]
+  );
+
+  const registerHref = useMemo(() => {
+    if (!returnUrl) return ROUTES.REGISTER;
+    const q = new URLSearchParams({ returnUrl });
+    return `${ROUTES.REGISTER}?${q.toString()}`;
+  }, [returnUrl]);
 
   const {
     register,
@@ -30,7 +45,11 @@ export function LoginForm() {
 
   const onSubmit = (data: LoginFormValues) => {
     loginMutation.mutate(
-      { email: data.email, password: data.password },
+      {
+        email: data.email,
+        password: data.password,
+        returnUrl,
+      },
       {
         onSuccess: () => toast.success(t("loginSuccess")),
         onError: (err) => toast.error(err.message),
@@ -119,7 +138,7 @@ export function LoginForm() {
       <p className="text-left text-sm text-accent-foreground">
         {t("newToNesto")}{" "}
         <Link
-          href="/register"
+          href={registerHref}
           className="font-medium text-brand hover:text-brand-dark underline"
         >
           {t("createAccountLink")}
@@ -132,7 +151,10 @@ export function LoginForm() {
         <div className="h-px flex-1 bg-gray-400" />
       </div>
 
-      <SocialLoginButtons isLoading={loginMutation.isPending} />
+      <SocialLoginButtons
+        isLoading={loginMutation.isPending}
+        returnUrl={returnUrl}
+      />
     </div>
   );
 }

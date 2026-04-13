@@ -1,4 +1,5 @@
 import { setRequestLocale } from "next-intl/server";
+import { Suspense } from "react";
 import { RegisterForm } from "@/components/auth/RegisterForm";
 
 type Props = {
@@ -9,5 +10,9 @@ export default async function RegisterPage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
 
-  return <RegisterForm />;
+  return (
+    <Suspense fallback={null}>
+      <RegisterForm />
+    </Suspense>
+  );
 }

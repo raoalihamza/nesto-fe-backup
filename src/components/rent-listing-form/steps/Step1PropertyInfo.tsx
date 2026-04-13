@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useAppSelector, useAppDispatch } from "@/store";
 import { setPropertyInfo } from "@/store/slices/listingFormSlice";
+import { RentAddressAndListingEntryFields } from "@/components/rent-listing-form/shared/RentAddressAndListingEntryFields";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -28,6 +29,8 @@ export function Step1PropertyInfo() {
       <p className="mt-2 text-sm text-muted-foreground">{t("subtitle")}</p>
 
       <div className="mt-8 space-y-6">
+        <RentAddressAndListingEntryFields variant="step" enabled />
+
         {/* Square footage */}
         <div>
           <label className="mb-2 block text-sm font-medium text-foreground">

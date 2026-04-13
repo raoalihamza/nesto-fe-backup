@@ -1,14 +1,19 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useDropzone } from "react-dropzone";
 import { useAppSelector, useAppDispatch } from "@/store";
-import { setMedia, restoreFromDraft } from "@/store/slices/listingFormSlice";
+import {
+  setMedia,
+  restoreFromDraft,
+  beginMediaUpload,
+  endMediaUpload,
+} from "@/store/slices/listingFormSlice";
 import type { DraftMediaItem } from "@/store/slices/listingFormSlice";
 import { rentDraftService } from "@/lib/api/rentDraft.service";
 import { toast } from "sonner";
-import { CloudUpload, X, Loader2 } from "lucide-react";
+import { CloudUpload, X, Loader2, DoorOpen } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -17,12 +22,32 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import Image from "next/image";
+import { SUPPORTED_3D_TOUR_PROVIDERS } from "@/constants/supported3dTourProviders";
+import { cn } from "@/lib/utils";
 
 interface UploadingFile {
   id: string;
   name: string;
   previewUrl: string;
+}
+
+function chunkIntoColumns<T>(items: readonly T[], columnCount: number): T[][] {
+  if (items.length === 0) return Array.from({ length: columnCount }, () => []);
+  const perCol = Math.ceil(items.length / columnCount);
+  return Array.from({ length: columnCount }, (_, i) =>
+    items.slice(i * perCol, (i + 1) * perCol)
+  );
+}
+
+function isValidHttpUrl(value: string): boolean {
+  try {
+    const u = new URL(value.trim());
+    return u.protocol === "http:" || u.protocol === "https:";
+  } catch {
+    return false;
+  }
 }
 
 export function Step3Media() {
@@ -32,9 +57,27 @@ export function Step3Media() {
   const draftId = useAppSelector((s) => s.listingForm.draftId);
 
   const [tourModalOpen, setTourModalOpen] = useState(false);
-  const [tourUrlInput, setTourUrlInput] = useState(media.tours3d[0]?.url ?? "");
+  const [tourNameInput, setTourNameInput] = useState("");
+  const [tourUrlInput, setTourUrlInput] = useState("");
+  const [tourFieldErrors, setTourFieldErrors] = useState<{
+    name?: boolean;
+    url?: boolean;
+  }>({});
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
+
+  const providerColumns = useMemo(
+    () => chunkIntoColumns(SUPPORTED_3D_TOUR_PROVIDERS, 4),
+    []
+  );
+
+  useEffect(() => {
+    if (!tourModalOpen) return;
+    const existing = media.tours3d[0];
+    setTourNameInput(existing?.tourName ?? "");
+    setTourUrlInput(existing?.tourUrl ?? "");
+    setTourFieldErrors({});
+  }, [tourModalOpen, media.tours3d]);
 
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
@@ -43,7 +86,6 @@ export function Step3Media() {
         return;
       }
 
-      // Filter out duplicates (same name + size as already uploaded photos)
       const uniqueFiles = acceptedFiles.filter((file) => {
         const isDuplicate = media.photos.some(
           (p) => p.fileName === file.name && p.fileSizeBytes === file.size
@@ -56,16 +98,15 @@ export function Step3Media() {
 
       if (uniqueFiles.length === 0) return;
 
-      // Create local previews with loading state
       const previews: UploadingFile[] = uniqueFiles.map((file) => ({
         id: crypto.randomUUID(),
         name: file.name,
         previewUrl: URL.createObjectURL(file),
       }));
       setUploadingFiles((prev) => [...prev, ...previews]);
+      dispatch(beginMediaUpload());
 
       try {
-        // Step 1: Batch presign all files
         const presignResult = await rentDraftService.presignMedia(draftId, {
           files: uniqueFiles.map((file, i) => ({
             mediaType: "PHOTO" as const,
@@ -76,7 +117,6 @@ export function Step3Media() {
           })),
         });
 
-        // Step 2: Upload all files to S3 in parallel
         const uploadResults = await Promise.allSettled(
           presignResult.uploads.map(async (upload, i) => {
             const file = uniqueFiles[i];
@@ -90,11 +130,15 @@ export function Step3Media() {
           })
         );
 
-        // Step 3: Batch confirm all successfully uploaded files
         const successfulUploads = uploadResults
           .filter(
-            (r): r is PromiseFulfilledResult<{ upload: typeof presignResult.uploads[number]; file: File; index: number }> =>
-              r.status === "fulfilled"
+            (
+              r
+            ): r is PromiseFulfilledResult<{
+              upload: (typeof presignResult.uploads)[number];
+              file: File;
+              index: number;
+            }> => r.status === "fulfilled"
           )
           .map((r) => r.value);
 
@@ -122,9 +166,11 @@ export function Step3Media() {
       } catch {
         toast.error("Failed to upload photos.");
       } finally {
-        // Clean up any remaining previews (e.g. from errors)
+        dispatch(endMediaUpload());
         setUploadingFiles((prev) => {
-          const remaining = prev.filter((f) => previews.some((p) => p.id === f.id));
+          const remaining = prev.filter((f) =>
+            previews.some((p) => p.id === f.id)
+          );
           remaining.forEach((f) => URL.revokeObjectURL(f.previewUrl));
           return prev.filter((f) => !previews.some((p) => p.id === f.id));
         });
@@ -160,40 +206,57 @@ export function Step3Media() {
     }
   }
 
-  function handleSaveTourUrl() {
-    const tempTour: DraftMediaItem = {
-      id: crypto.randomUUID(),
-      url: tourUrlInput,
-      status: "PENDING",
-      mediaType: "TOUR_3D",
-      fileName: "",
-      contentType: "",
-      fileSizeBytes: 0,
-      sortOrder: 0,
-      objectKey: "",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    dispatch(setMedia({ tours3d: [tempTour], items: [...media.items.filter((i) => i.mediaType !== "TOUR_3D"), tempTour] }));
+  function handleSaveTour() {
+    const name = tourNameInput.trim();
+    const url = tourUrlInput.trim();
+    const hasAny = name.length > 0 || url.length > 0;
+    const bothComplete = name.length > 0 && url.length > 0;
+
+    if (hasAny && !bothComplete) {
+      setTourFieldErrors({
+        name: !name,
+        url: !url,
+      });
+      toast.error(t("tourBothFieldsRequired"));
+      return;
+    }
+
+    if (bothComplete && !isValidHttpUrl(url)) {
+      setTourFieldErrors({ url: true });
+      toast.error(t("tourInvalidUrl"));
+      return;
+    }
+
+    setTourFieldErrors({});
+
+    if (!bothComplete) {
+      dispatch(setMedia({ tours3d: [] }));
+      setTourModalOpen(false);
+      return;
+    }
+
+    dispatch(
+      setMedia({
+        tours3d: [{ tourName: name, tourUrl: url, sortOrder: 0 }],
+      })
+    );
     setTourModalOpen(false);
   }
 
-  function removeTourUrl() {
-    dispatch(
-      setMedia({
-        tours3d: [],
-        items: media.items.filter((i) => i.mediaType !== "TOUR_3D"),
-      })
-    );
+  function removeTour() {
+    dispatch(setMedia({ tours3d: [] }));
+    setTourNameInput("");
     setTourUrlInput("");
   }
 
-  const tourUrl = media.tours3d[0]?.url ?? "";
+  const savedTour = media.tours3d[0];
+  const canSaveTour =
+    (tourNameInput.trim() && tourUrlInput.trim()) ||
+    (!tourNameInput.trim() && !tourUrlInput.trim());
 
   return (
     <div className="flex flex-1 flex-col">
       <div className="max-w-lg space-y-8">
-        {/* Section 1 — Add photos */}
         <div>
           <h2 className="text-2xl font-bold text-foreground">
             {t("addPhotosHeading")}
@@ -216,7 +279,6 @@ export function Step3Media() {
             </p>
           </div>
 
-          {/* Photo thumbnails */}
           {(media.photos.length > 0 || uploadingFiles.length > 0) && (
             <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4">
               {media.photos.map((item) => {
@@ -265,7 +327,6 @@ export function Step3Media() {
           )}
         </div>
 
-        {/* Section 2 — 3D Tour */}
         <div>
           <h2 className="text-2xl font-bold text-foreground">
             {t("tourHeading")}
@@ -274,15 +335,32 @@ export function Step3Media() {
             {t("tourSubtitle")}
           </p>
 
-          {tourUrl ? (
-            <div className="mt-4 flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-3 py-2">
-              <span className="flex-1 truncate text-sm">{tourUrl}</span>
+          {savedTour ? (
+            <div className="mt-4 rounded-lg border border-border bg-muted/40 px-4 py-3">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-foreground">
+                    {savedTour.tourName}
+                  </p>
+                  <p className="mt-1 truncate text-sm text-muted-foreground">
+                    {savedTour.tourUrl}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={removeTour}
+                  className="flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive cursor-pointer"
+                  aria-label={t("removeTour")}
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
               <button
                 type="button"
-                onClick={removeTourUrl}
-                className="flex size-5 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:text-destructive cursor-pointer"
+                onClick={() => setTourModalOpen(true)}
+                className="mt-3 text-sm font-medium text-brand hover:underline cursor-pointer"
               >
-                <X className="size-3.5" />
+                {t("editTour")}
               </button>
             </div>
           ) : (
@@ -292,7 +370,7 @@ export function Step3Media() {
             >
               <Image
                 src="/icons/video-frame.svg"
-                alt="Video Frame"
+                alt=""
                 width={32}
                 height={32}
               />
@@ -304,30 +382,124 @@ export function Step3Media() {
         </div>
       </div>
 
-      {/* Tour URL Dialog */}
       <Dialog open={tourModalOpen} onOpenChange={setTourModalOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{t("tourUrlDialogTitle")}</DialogTitle>
+        <DialogContent className="flex max-h-[min(90vh,720px)] w-[calc(100vw-1.5rem)] max-w-3xl flex-col gap-0 overflow-hidden p-0 sm:max-w-3xl">
+          <DialogHeader className="shrink-0 border-b border-border px-6 py-4 text-left">
+            <DialogTitle className="text-xl font-bold">
+              {t("tourModalTitle")}
+            </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-2">
-            <Input
-              value={tourUrlInput}
-              onChange={(e) => setTourUrlInput(e.target.value)}
-              placeholder={t("tourUrlPlaceholder")}
-            />
-            <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setTourModalOpen(false)}>
-                {t("cancel")}
-              </Button>
-              <Button
-                onClick={handleSaveTourUrl}
-                disabled={!tourUrlInput.trim()}
-                className="bg-brand text-white hover:bg-brand-dark"
-              >
-                {t("saveTour")}
-              </Button>
+
+          <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
+            <div className="flex gap-4">
+              <div className="hidden shrink-0 sm:block">
+                <div className="flex size-14 items-center justify-center rounded-xl bg-brand/10 text-brand">
+                  <DoorOpen className="size-8 stroke-[1.5]" aria-hidden />
+                </div>
+              </div>
+              <div className="min-w-0 flex-1 space-y-1">
+                <h3 className="text-lg font-semibold text-foreground sm:text-xl">
+                  {t("tourModalLeadHeading")}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {t("tourModalLeadSubtitle")}
+                </p>
+              </div>
             </div>
+
+            <p className="mt-6 text-sm font-medium text-foreground">
+              {t("tourSupportedSourcesIntro")}
+            </p>
+            <div className="mt-3 max-h-52 overflow-y-auto rounded-lg border border-border bg-muted/20 px-4 py-3 sm:max-h-60">
+              <div className="grid grid-cols-1 gap-x-8 gap-y-0.5 sm:grid-cols-2 lg:grid-cols-4">
+                {providerColumns.map((col, ci) => (
+                  <ul
+                    key={ci}
+                    className="list-inside list-disc space-y-0.5 text-sm text-muted-foreground"
+                  >
+                    {col.map((name) => (
+                      <li key={name} className="pl-0.5 marker:text-brand/70">
+                        {name}
+                      </li>
+                    ))}
+                  </ul>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-8 space-y-6">
+              <div className="space-y-2">
+                <Label
+                  htmlFor="nesto-tour-name"
+                  className="text-foreground"
+                >
+                  {t("tourNameLabel")}
+                  <span className="text-destructive"> *</span>
+                </Label>
+                <Input
+                  id="nesto-tour-name"
+                  value={tourNameInput}
+                  onChange={(e) => {
+                    setTourNameInput(e.target.value);
+                    if (tourFieldErrors.name) {
+                      setTourFieldErrors((prev) => ({ ...prev, name: false }));
+                    }
+                  }}
+                  placeholder={t("tourNamePlaceholder")}
+                  className={cn(
+                    "rounded-lg border-border",
+                    tourFieldErrors.name && "border-destructive ring-destructive/20"
+                  )}
+                  aria-invalid={tourFieldErrors.name}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {t("tourNameHelper")}
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="nesto-tour-url" className="text-foreground">
+                  {t("tourLinkLabel")}
+                  <span className="text-destructive"> *</span>
+                </Label>
+                <Input
+                  id="nesto-tour-url"
+                  value={tourUrlInput}
+                  onChange={(e) => {
+                    setTourUrlInput(e.target.value);
+                    if (tourFieldErrors.url) {
+                      setTourFieldErrors((prev) => ({ ...prev, url: false }));
+                    }
+                  }}
+                  placeholder={t("tourLinkPlaceholder")}
+                  inputMode="url"
+                  autoComplete="url"
+                  className={cn(
+                    "rounded-lg border-border",
+                    tourFieldErrors.url && "border-destructive ring-destructive/20"
+                  )}
+                  aria-invalid={tourFieldErrors.url}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex shrink-0 justify-end gap-3 border-t border-border bg-background px-6 py-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setTourModalOpen(false)}
+            >
+              {t("cancel")}
+            </Button>
+            <Button
+              type="button"
+              onClick={handleSaveTour}
+              disabled={!canSaveTour}
+              className="bg-brand text-white hover:bg-brand-dark"
+            >
+              {t("saveTour")}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

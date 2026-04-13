@@ -32,6 +32,8 @@ export type {
 export interface ListingContextData {
   title: string | null;
   propertyType: string | null;
+  placeId: string | null;
+  formattedAddress: string | null;
   addressLine1: string | null;
   addressLine2: string | null;
   city: string | null;
@@ -42,7 +44,30 @@ export interface ListingContextData {
   longitude: number | null;
 }
 
+/** Address block sent with rent draft property-info APIs */
+export interface RentDraftAddress {
+  placeId: string | null;
+  formattedAddress: string | null;
+  addressLine1: string | null;
+  addressLine2: string | null;
+  city: string | null;
+  stateCode: string | null;
+  postalCode: string | null;
+  countryCode: string | null;
+  latitude: number | null;
+  longitude: number | null;
+}
+
+export interface ListingEntryFormData {
+  propertyType: string | null;
+  unitNumber: string | null;
+  numberOfUnits: number | null;
+  isSharedLivingSpace: boolean;
+}
+
 export interface PropertyInfoData {
+  address: RentDraftAddress;
+  listingEntry: ListingEntryFormData;
   squareFootage: number | null;
   totalBedrooms: number | null;
   totalBathrooms: string | null;
@@ -74,10 +99,47 @@ export interface DraftMediaItem {
   updatedAt: string;
 }
 
+/** 3D / virtual tour link saved with the listing (API: tours3d). */
+export interface Tour3dEntry {
+  tourName: string;
+  tourUrl: string;
+  sortOrder: number;
+}
+
 export interface MediaData {
   items: DraftMediaItem[];
   photos: DraftMediaItem[];
-  tours3d: DraftMediaItem[];
+  tours3d: Tour3dEntry[];
+}
+
+/** Normalize tours from API (new shape or legacy TOUR_3D media items). */
+export function normalizeTours3d(raw: unknown): Tour3dEntry[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((item, index): Tour3dEntry | null => {
+      if (!item || typeof item !== "object") return null;
+      const o = item as Record<string, unknown>;
+      if (typeof o.tourUrl === "string" && typeof o.tourName === "string") {
+        return {
+          tourName: o.tourName,
+          tourUrl: o.tourUrl,
+          sortOrder: typeof o.sortOrder === "number" ? o.sortOrder : index,
+        };
+      }
+      if (typeof o.url === "string" && o.url.trim()) {
+        const name =
+          typeof o.fileName === "string" && o.fileName.trim()
+            ? o.fileName.trim()
+            : "3D tour";
+        return {
+          tourName: name,
+          tourUrl: o.url,
+          sortOrder: typeof o.sortOrder === "number" ? o.sortOrder : index,
+        };
+      }
+      return null;
+    })
+    .filter((x): x is Tour3dEntry => x !== null);
 }
 
 export interface AmenitiesData {
@@ -172,6 +234,8 @@ export interface RentDraftResponse {
 const initialListingContext: ListingContextData = {
   title: null,
   propertyType: null,
+  placeId: null,
+  formattedAddress: null,
   addressLine1: null,
   addressLine2: null,
   city: null,
@@ -182,11 +246,61 @@ const initialListingContext: ListingContextData = {
   longitude: null,
 };
 
+export const emptyRentDraftAddress: RentDraftAddress = {
+  placeId: null,
+  formattedAddress: null,
+  addressLine1: null,
+  addressLine2: null,
+  city: null,
+  stateCode: null,
+  postalCode: null,
+  countryCode: null,
+  latitude: null,
+  longitude: null,
+};
+
+export const initialListingEntryForm: ListingEntryFormData = {
+  propertyType: null,
+  unitNumber: null,
+  numberOfUnits: null,
+  isSharedLivingSpace: false,
+};
+
 const initialPropertyInfo: PropertyInfoData = {
+  address: { ...emptyRentDraftAddress },
+  listingEntry: { ...initialListingEntryForm },
   squareFootage: null,
   totalBedrooms: null,
   totalBathrooms: null,
 };
+
+/** Merge API / partial propertyInfo into full shape (supports older drafts). */
+export function normalizePropertyInfo(
+  pi: Partial<PropertyInfoData> | undefined
+): PropertyInfoData {
+  if (!pi) {
+    return {
+      address: { ...emptyRentDraftAddress },
+      listingEntry: { ...initialListingEntryForm },
+      squareFootage: null,
+      totalBedrooms: null,
+      totalBathrooms: null,
+    };
+  }
+  const address = pi.address
+    ? { ...emptyRentDraftAddress, ...pi.address }
+    : { ...emptyRentDraftAddress };
+  const listingEntry = pi.listingEntry
+    ? { ...initialListingEntryForm, ...pi.listingEntry }
+    : { ...initialListingEntryForm };
+  return {
+    address,
+    listingEntry,
+    squareFootage: pi.squareFootage ?? null,
+    totalBedrooms: pi.totalBedrooms ?? null,
+    totalBathrooms: pi.totalBathrooms ?? null,
+  };
+}
 
 const initialRentDetails: RentDetailsData = {
   monthlyRent: null,
@@ -263,6 +377,10 @@ interface ListingFormState {
   formData: ListingFormData;
   draftId: string | null;
   isSaving: boolean;
+  /** Incremented during rent photo flow: presign → PUT → confirmMedia (Step 3). */
+  mediaUploadInFlight: number;
+  /** True while rent address-search or address-details requests are in flight (modal or step 0). */
+  addressLookupBusy: boolean;
   lastSavedAt: string | null;
   draftProgress: DraftProgressData | null;
 }
@@ -274,6 +392,8 @@ const initialState: ListingFormState = {
   formData: initialFormData,
   draftId: null,
   isSaving: false,
+  mediaUploadInFlight: 0,
+  addressLookupBusy: false,
   lastSavedAt: null,
   draftProgress: null,
 };
@@ -331,17 +451,40 @@ const listingFormSlice = createSlice({
     setIsSaving(state, action: PayloadAction<boolean>) {
       state.isSaving = action.payload;
     },
+    beginMediaUpload(state) {
+      state.mediaUploadInFlight += 1;
+    },
+    endMediaUpload(state) {
+      state.mediaUploadInFlight = Math.max(0, state.mediaUploadInFlight - 1);
+    },
+    setAddressLookupBusy(state, action: PayloadAction<boolean>) {
+      state.addressLookupBusy = action.payload;
+    },
     setLastSavedAt(state, action: PayloadAction<string | null>) {
       state.lastSavedAt = action.payload;
     },
 
     // Hydrates full Redux state from API response
     restoreFromDraft(state, action: PayloadAction<RentDraftResponse>) {
+      state.addressLookupBusy = false;
+      state.mediaUploadInFlight = 0;
       state.draftId = action.payload.id;
-      state.formData.listingContext = action.payload.listingContext;
-      state.formData.propertyInfo = action.payload.propertyInfo;
+      state.formData.listingContext = {
+        ...initialListingContext,
+        ...action.payload.listingContext,
+      };
+      state.formData.propertyInfo = normalizePropertyInfo(
+        action.payload.propertyInfo
+      );
       state.formData.rentDetails = action.payload.rentDetails;
-      state.formData.media = action.payload.media;
+      {
+        const m = action.payload.media;
+        state.formData.media = {
+          items: m?.items ?? [],
+          photos: m?.photos ?? [],
+          tours3d: normalizeTours3d(m?.tours3d),
+        };
+      }
       state.formData.amenities = action.payload.amenities;
       state.formData.screeningCriteria = action.payload.screeningCriteria;
       state.formData.costsAndFees = action.payload.costsAndFees;
@@ -370,6 +513,9 @@ export const {
   setFinalDetails,
   setDraftId,
   setIsSaving,
+  beginMediaUpload,
+  endMediaUpload,
+  setAddressLookupBusy,
   setLastSavedAt,
   restoreFromDraft,
   resetListingForm,

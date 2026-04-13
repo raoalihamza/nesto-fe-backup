@@ -24,6 +24,13 @@ export function StepNavButtons() {
   const currentStep = useAppSelector((s) => s.listingForm.currentStep);
   const currentSubStep = useAppSelector((s) => s.listingForm.currentSubStep);
   const isSaving = useAppSelector((s) => s.listingForm.isSaving);
+  const mediaUploadInFlight = useAppSelector(
+    (s) => s.listingForm.mediaUploadInFlight
+  );
+  const addressLookupBusy = useAppSelector(
+    (s) => s.listingForm.addressLookupBusy
+  );
+  const mediaUploadBusy = mediaUploadInFlight > 0;
 
   const { saveStep } = useSaveStep();
   const { publish } = usePublishDraft();
@@ -31,6 +38,10 @@ export function StepNavButtons() {
   const isFirstStep = currentStep === 0;
   const isLastStep = currentStep === TOTAL_STEPS - 1;
   const totalSubSteps = SUB_STEP_COUNTS[currentStep] ?? 1;
+  const nextDisabled =
+    isSaving ||
+    mediaUploadBusy ||
+    (isFirstStep && addressLookupBusy);
 
   function handleBack() {
     if (currentSubStep > 0) {
@@ -77,7 +88,7 @@ export function StepNavButtons() {
         <Button
           variant="outline"
           onClick={handleBack}
-          disabled={isSaving}
+          disabled={isSaving || mediaUploadBusy}
           className="h-10 rounded-lg px-6 text-sm font-medium"
         >
           {t("back")}
@@ -88,14 +99,23 @@ export function StepNavButtons() {
 
       <Button
         onClick={handleNext}
-        disabled={isSaving}
+        disabled={nextDisabled}
+        title={
+          isFirstStep && addressLookupBusy && !isSaving && !mediaUploadBusy
+            ? t("addressSearchBusy")
+            : mediaUploadBusy && !isSaving
+              ? t("uploadingMedia")
+              : undefined
+        }
         className="h-10 rounded-lg bg-brand px-6 text-sm font-medium text-white btn-brand-shadow hover:bg-brand-dark"
       >
         {isSaving
           ? t("saving")
-          : isLastStep
-            ? t("publish.publishListing")
-            : t("next")}
+          : mediaUploadBusy
+            ? t("uploadingMedia")
+            : isLastStep
+              ? t("publish.publishListing")
+              : t("next")}
       </Button>
     </div>
   );

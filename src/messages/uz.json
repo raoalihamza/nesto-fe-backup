@@ -51,7 +51,10 @@
     "loginSuccess": "Signed in successfully!",
     "registrationSuccess": "Check your email",
     "registrationSuccessSubtitle": "We've sent a verification link to {email}. Please verify your email to continue.",
-    "socialLoginError": "Social login failed. Please try again."
+    "socialLoginError": "Social login failed. Please try again.",
+    "verifyEmailRequestTitle": "Emailni tasdiqlang",
+    "verifyEmailRequestSubtitle": "Quyidagi manzilga tasdiqlash havolasini yuboramiz.",
+    "sendVerificationEmail": "Tasdiqlash xatini yuborish"
   },
   "home": {
     "seeCoolPlaces": "Atrofingizdagi ajoyib joylarni ko'ring",
@@ -100,7 +103,14 @@
     "typeHouse": "Uy",
     "typeEntireApartmentCommunity": "Butun kvartira jamoasi",
     "typeCondoApartmentUnit": "Kvartira / Kvartira birligi",
-    "typeTownhome": "Taunxaus"
+    "typeTownhome": "Taunxaus",
+    "sharedLivingSpace": "Bu umumiy yashash maydoni bilan ijaraga beriladigan xona",
+    "searching": "Manzillar qidirilmoqda…",
+    "loadingAddress": "Manzil yuklanmoqda…",
+    "noSuggestions": "Hech narsa topilmadi. Boshqa so'rovni sinab ko'ring.",
+    "searchFailed": "Manzil qidiruvi muvaffaqiyatsiz. Qayta urinib ko'ring.",
+    "addressDetailsFailed": "Bu manzilni yuklab bo'lmadi. Boshqasini tanlang.",
+    "getStartedLoading": "O'tkazilmoqda…"
   },
   "dashboard": {
     "welcome": "Xush kelibsiz, {name}!",
@@ -138,6 +148,8 @@
   "listing": {
     "saveAndExit": "Saqlash va chiqish",
     "saving": "Saqlanmoqda...",
+    "uploadingMedia": "Suratlar yuklanmoqda...",
+    "addressSearchBusy": "Manzil qidiruvi tugashini kuting",
     "back": "Orqaga",
     "next": "Keyingi",
     "steps": {
@@ -193,10 +205,21 @@
       "browse": "ko'rish",
       "browsePhotos": "Rasmlarni ko'rish",
       "tourHeading": "3D Tur",
-      "tourSubtitle": "Rasmlar ijarachilarga uyingizda yashashni tasavvur qilishga yordam beradi.",
+      "tourSubtitle": "Qo'llab-quvvatlanuvchi provayderdan virtual tur havolasini qo'shing — ijarachilar onlayn ko'rib chiqa olsin.",
       "addTour": "Tur qo'shish",
-      "tourUrlDialogTitle": "3D tur havolasini qo'shish",
-      "tourUrlPlaceholder": "https://my.matterport.com/show/?m=...",
+      "tourModalTitle": "3D tur",
+      "tourModalLeadHeading": "Turingiz havolasini kiriting",
+      "tourModalLeadSubtitle": "Quyidagi qo'llab-quvvatlanuvchi manbalardan tur havolasini qo'shing. Tur ixtiyoriy; agar qo'shsangiz, nom va havola ikkalasi ham majburiy.",
+      "tourSupportedSourcesIntro": "Qo'llab-quvvatlanuvchi tur manbalari:",
+      "tourNameLabel": "Tur nomi",
+      "tourNamePlaceholder": "Tur",
+      "tourNameHelper": "Aniq nom ishlating (masalan: \"Katta 1 yotoqxona\").",
+      "tourLinkLabel": "Tur havolasi",
+      "tourLinkPlaceholder": "https://app.cloudpano.com/tours/",
+      "tourBothFieldsRequired": "Tur nomi va havolasini ikkalasini ham kiriting yoki ikkalasini ham bo'sh qoldiring.",
+      "tourInvalidUrl": "http:// yoki https:// bilan boshlanadigan to'g'ri havolani kiriting.",
+      "editTour": "Turni tahrirlash",
+      "removeTour": "3D turni olib tashlash",
       "cancel": "Bekor qilish",
       "saveTour": "Saqlash",
       "duplicatePhoto": "\"{name}\" allaqachon yuklangan"
@@ -413,6 +436,12 @@
       "hidePropertyAddress": "Mulk manzilini yashirish",
       "propertyType": "Mulk turi",
       "house": "Uy",
+      "propertyTypes": {
+        "house": "Uy",
+        "townhome": "Taunxaus",
+        "condo_apartment_unit": "Kvartira / Kvartira birligi",
+        "entire_apartment_community": "Butun kvartira jamoasi"
+      },
       "propertyDescription": "Mulk tavsifi",
       "specialOffer": "Maxsus taklif",
       "photos": "Rasmlar",

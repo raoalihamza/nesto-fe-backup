@@ -51,13 +51,18 @@ function AppleIcon() {
 
 interface SocialLoginButtonsProps {
   isLoading?: boolean;
+  /** Allowlisted post-auth path (e.g. `/listings/create`) from login/register query. */
+  returnUrl?: string | null;
 }
 
-export function SocialLoginButtons({ isLoading }: SocialLoginButtonsProps) {
+export function SocialLoginButtons({
+  isLoading,
+  returnUrl,
+}: SocialLoginButtonsProps) {
   const t = useTranslations("auth");
-  const googleMutation = useGoogleSocialLogin();
-  const facebookMutation = useFacebookSocialLogin();
-  const appleMutation = useAppleSocialLogin();
+  const googleMutation = useGoogleSocialLogin(returnUrl);
+  const facebookMutation = useFacebookSocialLogin(returnUrl);
+  const appleMutation = useAppleSocialLogin(returnUrl);
 
   return (
     <div className="flex flex-col gap-3">

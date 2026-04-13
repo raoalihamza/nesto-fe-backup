@@ -1,18 +1,18 @@
 import { setRequestLocale } from "next-intl/server";
 import { Suspense } from "react";
-import { LoginForm } from "@/components/auth/LoginForm";
+import { RequestVerificationEmailForm } from "@/components/auth/RequestVerificationEmailForm";
 
 type Props = {
   params: Promise<{ locale: string }>;
 };
 
-export default async function LoginPage({ params }: Props) {
+export default async function VerifyEmailRequestPage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
 
   return (
     <Suspense fallback={null}>
-      <LoginForm />
+      <RequestVerificationEmailForm />
     </Suspense>
   );
 }

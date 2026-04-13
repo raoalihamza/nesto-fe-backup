@@ -1,5 +1,8 @@
 import { useAppSelector, useAppDispatch } from "@/store";
-import { rentDraftService } from "@/lib/api/rentDraft.service";
+import {
+  rentDraftService,
+  type RentPropertyInfoBody,
+} from "@/lib/api/rentDraft.service";
 import {
   restoreFromDraft,
   setIsSaving,
@@ -39,8 +42,40 @@ function buildScreeningBody(s: ScreeningCriteriaData) {
   };
 }
 
-function buildPropertyInfoBody(p: PropertyInfoData) {
+function buildPropertyInfoBody(
+  p: PropertyInfoData
+): RentPropertyInfoBody | null {
+  const { address, listingEntry } = p;
+  if (
+    !address.placeId ||
+    !address.formattedAddress ||
+    !listingEntry.propertyType
+  ) {
+    return null;
+  }
+  if (address.latitude === null || address.longitude === null) {
+    return null;
+  }
+
   return {
+    address: {
+      placeId: address.placeId,
+      formattedAddress: address.formattedAddress,
+      addressLine1: address.addressLine1,
+      addressLine2: address.addressLine2,
+      city: address.city,
+      stateCode: address.stateCode,
+      postalCode: address.postalCode,
+      countryCode: address.countryCode ?? "US",
+      latitude: address.latitude,
+      longitude: address.longitude,
+    },
+    listingEntry: {
+      propertyType: listingEntry.propertyType,
+      unitNumber: listingEntry.unitNumber,
+      numberOfUnits: listingEntry.numberOfUnits,
+      isSharedLivingSpace: listingEntry.isSharedLivingSpace,
+    },
     squareFootage: p.squareFootage,
     totalBedrooms: p.totalBedrooms,
     totalBathrooms:
@@ -62,6 +97,12 @@ export function useSaveStep() {
       switch (stepIndex) {
         case 0: {
           const body = buildPropertyInfoBody(formData.propertyInfo);
+          if (!body) {
+            toast.error(
+              "Please complete address and property type from the Rent listing flow."
+            );
+            return false;
+          }
           response =
             draftId === null
               ? await rentDraftService.createDraft(body)
@@ -79,7 +120,14 @@ export function useSaveStep() {
         }
         case 2: {
           if (!draftId) throw new Error("No draft ID");
-          response = await rentDraftService.saveMediaStep(draftId);
+          const tours3d = formData.media.tours3d.map((t, i) => ({
+            tourName: t.tourName,
+            tourUrl: t.tourUrl,
+            sortOrder: typeof t.sortOrder === "number" ? t.sortOrder : i,
+          }));
+          response = await rentDraftService.saveMediaStep(draftId, {
+            tours3d,
+          });
           break;
         }
         case 3: {

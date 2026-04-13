@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useVerifyEmail } from "@/hooks/auth/useVerifyEmail";
@@ -10,10 +10,15 @@ import { Button } from "@/components/ui/button";
 import { NestoLogo } from "@/components/auth/NestoLogo";
 import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { buildLoginHrefWithReturnContext } from "@/lib/utils/pendingRentListingStorage";
 
 export function VerifyEmailScreen() {
   const t = useTranslations("auth");
   const searchParams = useSearchParams();
+  const loginHref = useMemo(
+    () => buildLoginHrefWithReturnContext(searchParams.get("returnUrl")),
+    [searchParams]
+  );
   const token = searchParams.get("token");
   const email = searchParams.get("email");
   const verifyMutation = useVerifyEmail();
@@ -48,7 +53,7 @@ export function VerifyEmailScreen() {
           <p className="text-sm text-muted-foreground">
             {t("emailVerifiedSubtitle")}
           </p>
-          <Link href="/login">
+          <Link href={loginHref}>
             <Button className="btn-brand-shadow bg-brand text-white hover:opacity-90">
               {t("goToLogin")}
             </Button>
@@ -124,7 +129,7 @@ export function VerifyEmailScreen() {
           )}
 
           <Link
-            href="/login"
+            href={loginHref}
             className="text-sm font-medium text-brand hover:text-brand-dark underline"
           >
             {t("backToLogin")}

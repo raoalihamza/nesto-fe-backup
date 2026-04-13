@@ -51,7 +51,10 @@
     "loginSuccess": "Signed in successfully!",
     "registrationSuccess": "Check your email",
     "registrationSuccessSubtitle": "We've sent a verification link to {email}. Please verify your email to continue.",
-    "socialLoginError": "Social login failed. Please try again."
+    "socialLoginError": "Social login failed. Please try again.",
+    "verifyEmailRequestTitle": "Verify your email",
+    "verifyEmailRequestSubtitle": "We'll send a verification link to the address below.",
+    "sendVerificationEmail": "Send verification email"
   },
   "home": {
     "seeCoolPlaces": "See Cool Places around you",
@@ -100,7 +103,14 @@
     "typeHouse": "House",
     "typeEntireApartmentCommunity": "Entire Apartment Community",
     "typeCondoApartmentUnit": "Condo / Apartment Unit",
-    "typeTownhome": "Townhome"
+    "typeTownhome": "Townhome",
+    "sharedLivingSpace": "This is a room for rent with shared living space",
+    "searching": "Searching addresses…",
+    "loadingAddress": "Loading address…",
+    "noSuggestions": "No matches found. Try a different search.",
+    "searchFailed": "Address search failed. Please try again.",
+    "addressDetailsFailed": "Could not load that address. Please try another.",
+    "getStartedLoading": "Taking you there…"
   },
   "dashboard": {
     "welcome": "Welcome back, {name}!",
@@ -138,6 +148,8 @@
   "listing": {
     "saveAndExit": "Save & exit",
     "saving": "Saving...",
+    "uploadingMedia": "Uploading photos...",
+    "addressSearchBusy": "Wait for address search to finish",
     "back": "Back",
     "next": "Next",
     "steps": {
@@ -193,10 +205,21 @@
       "browse": "browse",
       "browsePhotos": "browse Photos",
       "tourHeading": "3D Tour",
-      "tourSubtitle": "Photos help renters imagine living in your place.",
+      "tourSubtitle": "Add a virtual tour link from a supported provider so renters can explore your space online.",
       "addTour": "Add tour",
-      "tourUrlDialogTitle": "Add 3D tour URL",
-      "tourUrlPlaceholder": "https://my.matterport.com/show/?m=...",
+      "tourModalTitle": "3D tour",
+      "tourModalLeadHeading": "Provide the link to your tour",
+      "tourModalLeadSubtitle": "Add a tour link from one of the supported sources below. Adding a tour is optional; if you add one, both the tour name and link are required.",
+      "tourSupportedSourcesIntro": "Supported tour sources:",
+      "tourNameLabel": "Tour name",
+      "tourNamePlaceholder": "Tour",
+      "tourNameHelper": "Use a specific name (for example: \"Large 1 bedroom\").",
+      "tourLinkLabel": "Tour link",
+      "tourLinkPlaceholder": "https://app.cloudpano.com/tours/",
+      "tourBothFieldsRequired": "Please enter both a tour name and a tour link, or leave both blank.",
+      "tourInvalidUrl": "Please enter a valid tour link starting with http:// or https://.",
+      "editTour": "Edit tour",
+      "removeTour": "Remove 3D tour",
       "cancel": "Cancel",
       "saveTour": "Save",
       "duplicatePhoto": "\"{name}\" is already uploaded"
@@ -413,6 +436,12 @@
       "hidePropertyAddress": "Hide property address",
       "propertyType": "Property type",
       "house": "House",
+      "propertyTypes": {
+        "house": "House",
+        "townhome": "Townhome",
+        "condo_apartment_unit": "Condo / Apartment Unit",
+        "entire_apartment_community": "Entire Apartment Community"
+      },
       "propertyDescription": "Property description",
       "specialOffer": "Special offer",
       "photos": "Photos",

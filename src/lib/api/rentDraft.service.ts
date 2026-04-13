@@ -3,6 +3,7 @@ import type {
   RentDraftResponse,
   AmenitiesData,
   FinalDetailsData,
+  Tour3dEntry,
 } from "@/store/slices/listingFormSlice";
 import type {
   PropertyFee,
@@ -69,13 +70,38 @@ export interface CreateFeeBody {
 
 export type UpdateFeeBody = Partial<CreateFeeBody>;
 
+/** Payload for POST/PUT rent draft property-info (includes address + listing entry). */
+export interface RentPropertyInfoAddressPayload {
+  placeId: string;
+  formattedAddress: string;
+  addressLine1: string | null;
+  addressLine2: string | null;
+  city: string | null;
+  stateCode: string | null;
+  postalCode: string | null;
+  countryCode: string;
+  latitude: number;
+  longitude: number;
+}
+
+export interface RentPropertyInfoListingEntryPayload {
+  propertyType: string;
+  unitNumber: string | null;
+  numberOfUnits: number | null;
+  isSharedLivingSpace: boolean;
+}
+
+export interface RentPropertyInfoBody {
+  address: RentPropertyInfoAddressPayload;
+  listingEntry: RentPropertyInfoListingEntryPayload;
+  squareFootage: number | null;
+  totalBedrooms: number | null;
+  totalBathrooms: number | null;
+}
+
 export const rentDraftService = {
   // Step 0 — first save (creates draft)
-  createDraft(body: {
-    squareFootage: number | null;
-    totalBedrooms: number | null;
-    totalBathrooms: number | null;
-  }): Promise<RentDraftResponse> {
+  createDraft(body: RentPropertyInfoBody): Promise<RentDraftResponse> {
     return apiClient<RentDraftResponse>("/listings/rent/drafts/property-info", {
       method: "POST",
       body: JSON.stringify(body),
@@ -85,11 +111,7 @@ export const rentDraftService = {
   // Step 0 — update existing draft
   savePropertyInfo(
     draftId: string,
-    body: {
-      squareFootage: number | null;
-      totalBedrooms: number | null;
-      totalBathrooms: number | null;
-    }
+    body: RentPropertyInfoBody
   ): Promise<RentDraftResponse> {
     return apiClient<RentDraftResponse>(
       `/listings/rent/drafts/${draftId}/property-info`,
@@ -122,13 +144,16 @@ export const rentDraftService = {
     );
   },
 
-  // Step 2 — mark media step complete (empty body)
-  saveMediaStep(draftId: string): Promise<RentDraftResponse> {
+  // Step 2 — mark media step complete (optional 3D tours)
+  saveMediaStep(
+    draftId: string,
+    body: { tours3d: Tour3dEntry[] }
+  ): Promise<RentDraftResponse> {
     return apiClient<RentDraftResponse>(
       `/listings/rent/drafts/${draftId}/media`,
       {
         method: "PUT",
-        body: JSON.stringify({}),
+        body: JSON.stringify(body),
       }
     );
   },

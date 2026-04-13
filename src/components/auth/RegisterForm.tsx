@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
 import { registerSchema, type RegisterFormValues } from "@/lib/validations/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, Loader2, Mail } from "lucide-react";
@@ -14,12 +15,26 @@ import { NestoLogo } from "@/components/auth/NestoLogo";
 import { SocialLoginButtons } from "@/components/auth/SocialLoginButtons";
 import { useRegister } from "@/hooks/auth/useRegister";
 import { toast } from "sonner";
+import { getSafeReturnUrl } from "@/lib/auth/safeReturnUrl";
+import { ROUTES } from "@/lib/constants/routes";
 
 export function RegisterForm() {
   const t = useTranslations("auth");
+  const searchParams = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const registerMutation = useRegister();
+
+  const returnUrl = useMemo(
+    () => getSafeReturnUrl(searchParams.get("returnUrl")),
+    [searchParams]
+  );
+
+  const loginHref = useMemo(() => {
+    if (!returnUrl) return ROUTES.LOGIN;
+    const q = new URLSearchParams({ returnUrl });
+    return `${ROUTES.LOGIN}?${q.toString()}`;
+  }, [returnUrl]);
 
   const {
     register,
@@ -58,7 +73,7 @@ export function RegisterForm() {
           <p className="text-sm text-muted-foreground">
             {t("registrationSuccessSubtitle", { email: getValues("email") })}
           </p>
-          <Link href="/login">
+          <Link href={loginHref}>
             <Button className="btn-brand-shadow bg-brand text-white hover:opacity-90">
               {t("goToLogin")}
             </Button>
@@ -209,7 +224,7 @@ export function RegisterForm() {
       <p className="text-left text-sm text-accent-foreground">
         {t("alreadyHaveAccount")}{" "}
         <Link
-          href="/login"
+          href={loginHref}
           className="font-medium text-brand hover:text-brand-dark underline"
         >
           {t("signInLink")}
@@ -222,7 +237,10 @@ export function RegisterForm() {
         <div className="h-px flex-1 bg-gray-400" />
       </div>
 
-      <SocialLoginButtons isLoading={registerMutation.isPending} />
+      <SocialLoginButtons
+        isLoading={registerMutation.isPending}
+        returnUrl={returnUrl}
+      />
     </div>
   );
 }
