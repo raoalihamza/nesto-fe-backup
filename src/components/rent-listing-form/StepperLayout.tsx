@@ -4,6 +4,9 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { useAppSelector } from "@/store";
 import { useRestoreDraft } from "@/hooks/rentDraft";
+import { useRouter } from "@/i18n/routing";
+import { ROUTES } from "@/lib/constants/routes";
+import { clearRentCreateIntent } from "@/lib/utils/rentCreateSession";
 import { Loader2 } from "lucide-react";
 import { StepSubHeader } from "@/components/rent-listing-form/StepSubHeader";
 import { StepProgressBar } from "@/components/rent-listing-form/StepProgressBar";
@@ -17,6 +20,7 @@ import { Step6CostsAndFees } from "@/components/rent-listing-form/steps/Step6Cos
 import { Step7FinalDetails } from "@/components/rent-listing-form/steps/Step7FinalDetails";
 import { Step8Review } from "@/components/rent-listing-form/steps/Step8Review";
 import { Step9PayPublish } from "@/components/rent-listing-form/steps/Step9PayPublish";
+import { RentStepperUiProvider } from "@/components/rent-listing-form/RentStepperUiContext";
 
 const STEP_KEYS = [
   "propertyInfo",
@@ -72,9 +76,13 @@ interface StepperLayoutProps {
 
 export function StepperLayout({ draftId: draftIdFromUrl }: StepperLayoutProps) {
   const t = useTranslations("listing.steps");
+  const router = useRouter();
   const currentStep = useAppSelector((s) => s.listingForm.currentStep);
   const currentSubStep = useAppSelector((s) => s.listingForm.currentSubStep);
   const draftId = useAppSelector((s) => s.listingForm.draftId);
+  const placeId = useAppSelector(
+    (s) => s.listingForm.formData.propertyInfo.address.placeId
+  );
   const { restoreDraft } = useRestoreDraft();
   const [isRestoring, setIsRestoring] = useState(false);
 
@@ -86,6 +94,15 @@ export function StepperLayout({ draftId: draftIdFromUrl }: StepperLayoutProps) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Plain /listings/create: allow only with prefilled address (modal), saved draft in Redux, or [draftId] URL
+  useEffect(() => {
+    if (draftIdFromUrl) return;
+    if (draftId !== null) return;
+    if (placeId) return;
+    clearRentCreateIntent();
+    router.replace(ROUTES.HOME);
+  }, [draftIdFromUrl, draftId, placeId, router]);
 
   // beforeunload guard — warn if active draft exists
   const handleBeforeUnload = useCallback(
@@ -125,20 +142,25 @@ export function StepperLayout({ draftId: draftIdFromUrl }: StepperLayoutProps) {
   }
 
   return (
-    <div className="flex h-screen flex-col bg-white">
-      {/* Fixed top section */}
-      <div className="shrink-0">
-        <StepSubHeader stepName={stepName} subStepLabel={subStepLabel} />
-        <StepProgressBar />
-      </div>
-
-      {/* Scrollable bottom section */}
-      <div ref={scrollRef} className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-        <div className="flex flex-1 flex-col px-4 py-4 sm:px-6 lg:px-8">
-          {getStepComponent(currentStep)}
+    <RentStepperUiProvider>
+      <div className="flex h-screen flex-col bg-white">
+        {/* Fixed top section */}
+        <div className="shrink-0">
+          <StepSubHeader stepName={stepName} subStepLabel={subStepLabel} />
+          <StepProgressBar />
         </div>
-        <StepNavButtons />
+
+        {/* Scrollable bottom section */}
+        <div
+          ref={scrollRef}
+          className="flex min-h-0 flex-1 flex-col overflow-y-auto"
+        >
+          <div className="flex flex-1 flex-col px-4 py-4 sm:px-6 lg:px-8">
+            {getStepComponent(currentStep)}
+          </div>
+          <StepNavButtons />
+        </div>
       </div>
-    </div>
+    </RentStepperUiProvider>
   );
 }

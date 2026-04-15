@@ -2,43 +2,66 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { Plus, Home, Heart, Loader2 } from "lucide-react";
+import { Plus, Home, Heart, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { ListingTypeModal } from "@/components/common/ListingTypeModal";
+import { RentListingModal } from "@/components/common/RentListingModal";
 import { ListingTable, ListingCard } from "@/components/owner";
 import { PropertyCard } from "@/components/property/PropertyCard";
-import { useSavedHomes, useArchiveListing, useInfiniteMyListings } from "@/hooks/listings";
+import {
+  useSavedHomes,
+  useArchiveListing,
+  useInfiniteMyListings,
+  useDeleteRentDraftListing,
+} from "@/hooks/listings";
 import { useRouter } from "@/i18n/routing";
 import type { MyListingItem } from "@/types/listings";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
-type OverviewFilter = "all" | "forRent" | "archived" | "sold";
-type MyListingsFilter = "all" | "forRent" | "forSale" | "drafted";
+type OverviewFilter = "all" | "forRent" | "forSale";
+type MyListingsFilter = "all" | "forRent" | "forSale" | "drafted" | "archived" | "sold";
 type MainTab = "overview" | "savedHomes" | "myListings" | "messages" | "settings";
 type FavoritesSubTab = "favorites" | "hiddenHomes";
 
-const overviewTabMap: Record<OverviewFilter, "all" | "for-rent" | "archived" | "sold"> = {
-  all: "all",
+const overviewTabMap: Record<OverviewFilter, "overview" | "for-rent" | "for-sale"> = {
+  /** Active rent + sale only; excludes draft/archived/rented/sold */
+  all: "overview",
   forRent: "for-rent",
+  forSale: "for-sale",
+};
+
+const myListingsTabMap: Record<
+  MyListingsFilter,
+  "my-listing" | "for-rent" | "for-sale" | "draft" | "archived" | "sold"
+> = {
+  /** Full list (all statuses); distinct from Overview `tab=overview` */
+  all: "my-listing",
+  forRent: "for-rent",
+  forSale: "for-sale",
+  drafted: "draft",
   archived: "archived",
   sold: "sold",
 };
 
-const myListingsTabMap: Record<MyListingsFilter, "all" | "for-rent" | "for-sale" | "draft" | "archived" | "sold"> = {
-  all: "all",
-  forRent: "for-rent",
-  forSale: "for-sale",
-  drafted: "draft",
-};
-
 export default function DashboardPage() {
   const t = useTranslations("dashboard");
+  const tCommon = useTranslations("common");
   const locale = useLocale();
   const [listingModalOpen, setListingModalOpen] = useState(false);
+  const [rentModalOpen, setRentModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<MainTab>("overview");
   const [overviewFilter, setOverviewFilter] = useState<OverviewFilter>("all");
   const [myListingsFilter, setMyListingsFilter] = useState<MyListingsFilter>("all");
   const [favSubTab, setFavSubTab] = useState<FavoritesSubTab>("favorites");
+  const [draftToDelete, setDraftToDelete] = useState<MyListingItem | null>(null);
+  const [listingToArchive, setListingToArchive] = useState<MyListingItem | null>(null);
 
   const { data: savedHomesData, isLoading: savedHomesLoading } = useSavedHomes(
     { locale },
@@ -69,15 +92,16 @@ export default function DashboardPage() {
   });
 
   // Flatten paginated pages into single arrays + extract first-page metadata
-  const overviewData = overviewInfinite?.pages[0] ?? null;
   const overviewAllItems = overviewInfinite?.pages.flatMap((p) => p.items) ?? [];
 
-  const myListingsData = myListingsInfinite?.pages[0] ?? null;
   const myListingsAllItems = myListingsInfinite?.pages.flatMap((p) => p.items) ?? [];
 
   // Intersection observer for infinite scroll
   const overviewSentinelRef = useRef<HTMLDivElement>(null);
   const myListingsSentinelRef = useRef<HTMLDivElement>(null);
+  const myListingsTabsRef = useRef<HTMLDivElement>(null);
+  const [canScrollTabsLeft, setCanScrollTabsLeft] = useState(false);
+  const [canScrollTabsRight, setCanScrollTabsRight] = useState(false);
 
   useEffect(() => {
     const sentinel = overviewSentinelRef.current;
@@ -109,8 +133,42 @@ export default function DashboardPage() {
     return () => observer.disconnect();
   }, [hasNextMyListings, isFetchingNextMyListings, fetchNextMyListings]);
 
+  useEffect(() => {
+    const el = myListingsTabsRef.current;
+    if (!el || activeTab !== "myListings") return;
+
+    const updateScrollButtons = () => {
+      const maxScrollLeft = el.scrollWidth - el.clientWidth;
+      setCanScrollTabsLeft(el.scrollLeft > 4);
+      setCanScrollTabsRight(el.scrollLeft < maxScrollLeft - 4);
+    };
+
+    updateScrollButtons();
+    el.addEventListener("scroll", updateScrollButtons, { passive: true });
+    window.addEventListener("resize", updateScrollButtons);
+
+    return () => {
+      el.removeEventListener("scroll", updateScrollButtons);
+      window.removeEventListener("resize", updateScrollButtons);
+    };
+  }, [activeTab, myListingsFilter]);
+
+  useEffect(() => {
+    const el = myListingsTabsRef.current;
+    if (!el || activeTab !== "myListings") return;
+    const activeButton = el.querySelector<HTMLButtonElement>(
+      `button[data-tab="${myListingsFilter}"]`
+    );
+    activeButton?.scrollIntoView({
+      behavior: "smooth",
+      inline: "nearest",
+      block: "nearest",
+    });
+  }, [activeTab, myListingsFilter]);
+
   const router = useRouter();
   const archiveMutation = useArchiveListing();
+  const deleteDraftMutation = useDeleteRentDraftListing();
 
   const handleEditDraft = useCallback(
     (listing: MyListingItem) => {
@@ -118,6 +176,59 @@ export default function DashboardPage() {
     },
     [router]
   );
+
+  const deletingDraftId =
+    deleteDraftMutation.isPending && draftToDelete ? draftToDelete.id : null;
+  const archivingListingId =
+    archiveMutation.isPending && listingToArchive ? listingToArchive.id : null;
+
+  const handleOpenDeleteDraft = useCallback((listing: MyListingItem) => {
+    if (listing.status.toLowerCase() !== "draft") return;
+    setDraftToDelete(listing);
+  }, []);
+
+  const handleDeleteDraftConfirm = useCallback(async () => {
+    if (!draftToDelete) return;
+    await deleteDraftMutation.mutateAsync({ listingId: draftToDelete.id });
+    setDraftToDelete(null);
+  }, [deleteDraftMutation, draftToDelete]);
+
+  const handleDeleteDialogOpenChange = useCallback(
+    (nextOpen: boolean) => {
+      if (deleteDraftMutation.isPending) return;
+      if (!nextOpen) setDraftToDelete(null);
+    },
+    [deleteDraftMutation.isPending]
+  );
+
+  const handleOpenArchive = useCallback((listing: MyListingItem) => {
+    if (!listing.actionFlags.canArchive || listing.status.toLowerCase() === "draft") return;
+    setListingToArchive(listing);
+  }, []);
+
+  const handleArchiveConfirm = useCallback(async () => {
+    if (!listingToArchive) return;
+    await archiveMutation.mutateAsync({ listingId: listingToArchive.id, locale });
+    setListingToArchive(null);
+  }, [archiveMutation, listingToArchive, locale]);
+
+  const handleArchiveDialogOpenChange = useCallback(
+    (nextOpen: boolean) => {
+      if (archiveMutation.isPending) return;
+      if (!nextOpen) setListingToArchive(null);
+    },
+    [archiveMutation.isPending]
+  );
+
+  const scrollMyListingTabs = useCallback((direction: "left" | "right") => {
+    const el = myListingsTabsRef.current;
+    if (!el) return;
+    const amount = Math.max(140, Math.floor(el.clientWidth * 0.7));
+    el.scrollBy({
+      left: direction === "right" ? amount : -amount,
+      behavior: "smooth",
+    });
+  }, []);
 
   // Filter drafts out of "For Rent" / "For Sale" sub-tabs (not "All" or "Drafted")
   const shouldFilterDrafts = (tab: string) =>
@@ -133,26 +244,19 @@ export default function DashboardPage() {
       ? myListingsAllItems.filter((item) => item.status.toLowerCase() !== "draft")
       : myListingsAllItems;
 
-  // Count drafts so we can subtract from "For Rent" display count
-  const overviewDraftCount = overviewAllItems.filter(
-    (i) => i.status.toLowerCase() === "draft"
-  ).length;
-  const myListingsDraftCount = myListingsAllItems.filter(
-    (i) => i.status.toLowerCase() === "draft"
-  ).length;
-
   const overviewFilters: { key: OverviewFilter; label: string }[] = [
-    { key: "all",      label: `${t("all")}${overviewData ? ` (${overviewData.counts.all})` : ""}` },
-    { key: "forRent",  label: `${t("forRent")}${overviewData ? ` (${Math.max(0, overviewData.counts.forRent - overviewDraftCount)})` : ""}` },
-    { key: "archived", label: `${t("archived")}${overviewData ? ` (${overviewData.counts.archived})` : ""}` },
-    { key: "sold",     label: `${t("sold")}${overviewData ? ` (${overviewData.counts.sold})` : ""}` },
+    { key: "all", label: t("all") },
+    { key: "forRent", label: t("forRent") },
+    { key: "forSale", label: t("forSale") },
   ];
 
   const myListingsFilters: { key: MyListingsFilter; label: string }[] = [
-    { key: "all",     label: `${t("all")}${myListingsData ? ` (${myListingsData.counts.all})` : ""}` },
-    { key: "forRent", label: `${t("forRent")}${myListingsData ? ` (${Math.max(0, myListingsData.counts.forRent - myListingsDraftCount)})` : ""}` },
+    { key: "all", label: t("all") },
+    { key: "forRent", label: t("forRent") },
     { key: "forSale", label: t("forSale") },
     { key: "drafted", label: t("drafted") },
+    { key: "archived", label: t("archived") },
+    { key: "sold", label: t("sold") },
   ];
 
   const mainTabs: { key: MainTab; label: string }[] = [
@@ -245,8 +349,11 @@ export default function DashboardPage() {
               {overviewLoading ? skeletonRows : (
                 <ListingTable
                   listings={overviewItems}
-                  onArchive={(id) => archiveMutation.mutate({ listingId: id, locale })}
+                  onArchive={handleOpenArchive}
                   onEditDraft={handleEditDraft}
+                  onDeleteDraft={handleOpenDeleteDraft}
+                  deletingDraftId={deletingDraftId}
+                  archivingListingId={archivingListingId}
                 />
               )}
             </div>
@@ -263,8 +370,11 @@ export default function DashboardPage() {
                   <ListingCard
                     key={listing.id}
                     listing={listing}
-                    onArchive={(id) => archiveMutation.mutate({ listingId: id, locale })}
+                    onArchive={handleOpenArchive}
                     onEditDraft={handleEditDraft}
+                    onDeleteDraft={handleOpenDeleteDraft}
+                    deletingDraftId={deletingDraftId}
+                    archivingListingId={archivingListingId}
                   />
                 ))
               )}
@@ -354,34 +464,97 @@ export default function DashboardPage() {
           {/* Header: filter tabs + action buttons */}
           <div className="mb-4 p-4 sm:p-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             {/* Filter Tabs */}
-            <div className="flex items-center gap-1 rounded-[12px] border border-border bg-[#E8F0F7] p-1 self-start">
-              {myListingsFilters.map((f) => (
-                <button
-                  key={f.key}
-                  onClick={() => setMyListingsFilter(f.key)}
-                  className={`rounded-[8px] px-3 py-1 text-xs font-medium transition-colors cursor-pointer ${
-                    myListingsFilter === f.key
-                      ? "text-brand bg-white"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
+            <div className="w-full sm:w-auto">
+              <div className="relative sm:hidden">
+                <div
+                  ref={myListingsTabsRef}
+                  className="overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                 >
-                  {f.label}
-                </button>
-              ))}
+                  <div className="inline-flex min-w-max items-center gap-1">
+                    {myListingsFilters.map((f) => (
+                      <button
+                        key={f.key}
+                        data-tab={f.key}
+                        onClick={() => setMyListingsFilter(f.key)}
+                        className={`rounded-full border px-3 py-1 text-[11px] font-medium whitespace-nowrap transition-colors cursor-pointer ${
+                          myListingsFilter === f.key
+                            ? "border-brand bg-brand/10 text-brand"
+                            : "border-border bg-background text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        {f.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="pointer-events-none absolute inset-y-0 left-0 right-0 flex items-center justify-between sm:hidden">
+                  <Button
+                    type="button"
+                    size="icon-sm"
+                    variant="outline"
+                    onClick={() => scrollMyListingTabs("left")}
+                    disabled={!canScrollTabsLeft}
+                    className="pointer-events-auto h-6 w-6 rounded-full bg-background/95 backdrop-blur cursor-pointer disabled:opacity-40"
+                  >
+                    <ChevronLeft className="size-3.5" />
+                  </Button>
+                  <Button
+                    type="button"
+                    size="icon-sm"
+                    variant="outline"
+                    onClick={() => scrollMyListingTabs("right")}
+                    disabled={!canScrollTabsRight}
+                    className="pointer-events-auto h-6 w-6 rounded-full bg-background/95 backdrop-blur cursor-pointer disabled:opacity-40"
+                  >
+                    <ChevronRight className="size-3.5" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="hidden sm:flex items-center gap-1 rounded-[12px] border border-border bg-[#E8F0F7] p-1 self-start">
+                {myListingsFilters.map((f) => (
+                  <button
+                    key={f.key}
+                    onClick={() => setMyListingsFilter(f.key)}
+                    className={`rounded-[8px] px-3 py-1 text-xs font-medium transition-colors cursor-pointer ${
+                      myListingsFilter === f.key
+                        ? "text-brand bg-white"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex items-center gap-2">
+            {/* Action buttons */}
+            <div className="grid w-full grid-cols-2 gap-2 sm:hidden">
               <Button
                 onClick={() => setListingModalOpen(true)}
-                className="py-1 bg-brand text-white hover:bg-brand-dark cursor-pointer"
+                className="h-8 w-full py-2 bg-brand text-white hover:bg-brand-dark cursor-pointer"
               >
                 <Plus className="size-4" />
                 {t("postListing")}
               </Button>
               <Button
                 variant="outline"
-                className="border-brand text-brand hover:bg-brand/5 cursor-pointer"
+                className="h-8 w-full border-brand text-brand hover:bg-brand/5 cursor-pointer"
+              >
+                {t("uploadSheet")}
+              </Button>
+            </div>
+            <div className="hidden sm:flex items-center gap-2">
+              <Button
+                onClick={() => setListingModalOpen(true)}
+                className="h-10 gap-1.5 px-2.5 bg-brand text-white hover:bg-brand-dark cursor-pointer"
+              >
+                <Plus className="size-4" />
+                {t("postListing")}
+              </Button>
+              <Button
+                variant="outline"
+                className="h-10 gap-1.5 px-2.5 border-brand text-brand hover:bg-brand/5 cursor-pointer"
               >
                 {t("uploadSheet")}
               </Button>
@@ -393,8 +566,11 @@ export default function DashboardPage() {
             {myListingsLoading ? skeletonRows : (
               <ListingTable
                 listings={myListingsItems}
-                onArchive={(id) => archiveMutation.mutate({ listingId: id, locale })}
+                onArchive={handleOpenArchive}
                 onEditDraft={handleEditDraft}
+                onDeleteDraft={handleOpenDeleteDraft}
+                deletingDraftId={deletingDraftId}
+                archivingListingId={archivingListingId}
               />
             )}
           </div>
@@ -411,8 +587,11 @@ export default function DashboardPage() {
                 <ListingCard
                   key={listing.id}
                   listing={listing}
-                  onArchive={(id) => archiveMutation.mutate({ listingId: id, locale })}
+                  onArchive={handleOpenArchive}
                   onEditDraft={handleEditDraft}
+                  onDeleteDraft={handleOpenDeleteDraft}
+                  deletingDraftId={deletingDraftId}
+                  archivingListingId={archivingListingId}
                 />
               ))
             )}
@@ -443,7 +622,86 @@ export default function DashboardPage() {
       <ListingTypeModal
         open={listingModalOpen}
         onOpenChange={setListingModalOpen}
+        onRentChosen={() => setRentModalOpen(true)}
       />
+
+      <RentListingModal open={rentModalOpen} onOpenChange={setRentModalOpen} />
+
+      <Dialog
+        open={Boolean(draftToDelete)}
+        onOpenChange={handleDeleteDialogOpenChange}
+      >
+        <DialogContent showCloseButton={false} className="md:min-w-lg">
+          <DialogHeader>
+            <DialogTitle>{t("deleteDraftTitle")}</DialogTitle>
+            <DialogDescription>
+              {t("deleteDraftDescription")}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-2 flex items-center justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setDraftToDelete(null)}
+              disabled={deleteDraftMutation.isPending}
+              className="cursor-pointer"
+            >
+              {tCommon("cancel")}
+            </Button>
+            <Button
+              onClick={handleDeleteDraftConfirm}
+              disabled={deleteDraftMutation.isPending}
+              className="bg-brand text-white hover:bg-brand-dark cursor-pointer"
+            >
+              {deleteDraftMutation.isPending ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  {t("deletingDraft")}
+                </>
+              ) : (
+                tCommon("delete")
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(listingToArchive)}
+        onOpenChange={handleArchiveDialogOpenChange}
+      >
+        <DialogContent showCloseButton={false} className="md:min-w-lg">
+          <DialogHeader>
+            <DialogTitle>{t("archiveListingTitle")}</DialogTitle>
+            <DialogDescription>
+              {t("archiveListingDescription")}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-2 flex items-center justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setListingToArchive(null)}
+              disabled={archiveMutation.isPending}
+              className="cursor-pointer"
+            >
+              {tCommon("cancel")}
+            </Button>
+            <Button
+              onClick={handleArchiveConfirm}
+              disabled={archiveMutation.isPending}
+              className="bg-brand text-white hover:bg-brand-dark cursor-pointer"
+            >
+              {archiveMutation.isPending ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  {t("archiving")}
+                </>
+              ) : (
+                t("archive")
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -40,9 +40,12 @@ import { toast } from "sonner";
 import { useRouter } from "@/i18n/routing";
 import { ROUTES } from "@/lib/constants/routes";
 import { savePendingRentListing } from "@/lib/utils/pendingRentListingStorage";
+import { clearAllDraftData } from "@/lib/utils/clearDraft";
 
 const MIN_QUERY_LEN = 2;
 const DEBOUNCE_MS = 400;
+const PARTIAL_UNIT_REGEX = /^\d*(\.\d?)?$/;
+const VALID_UNIT_REGEX = /^\d+(\.\d)?$/;
 
 function detailsToDraftAddress(d: RentAddressDetailsResponse): RentDraftAddress {
   return {
@@ -98,6 +101,14 @@ function buildListingEntryPayload(
   };
 }
 
+function isValidUnitDraft(value: string): boolean {
+  return PARTIAL_UNIT_REGEX.test(value.trim());
+}
+
+function isValidUnitForSubmit(value: string): boolean {
+  return VALID_UNIT_REGEX.test(value.trim());
+}
+
 export type RentAddressFieldsVariant = "modal" | "step";
 
 export interface RentAddressAndListingEntryFieldsProps {
@@ -113,8 +124,7 @@ export interface RentAddressAndListingEntryFieldsProps {
 /**
  * Address search (debounced + abort), place details, property type, unit/number-of-units, shared living.
  * - **modal**: local state until "Get started" dispatches once.
- * - **step**: hidden when `draftId == null` and Redux already has `address.placeId` (fresh from modal).
- *   After first save / edit draft / review → edit, fields show and sync to Redux immediately.
+ * - **step**: shown only when `draftId !== null` (after first property-info API); edit flow on Property Info.
  */
 export function RentAddressAndListingEntryFields({
   variant,
@@ -129,11 +139,9 @@ export function RentAddressAndListingEntryFields({
   const isAuthenticated = useAppSelector((s) => s.auth.isAuthenticated);
 
   const draftId = useAppSelector((s) => s.listingForm.draftId);
-  const propertyInfo = useAppSelector((s) => s.listingForm.formData.propertyInfo);
-  const placeIdInStore = propertyInfo.address?.placeId;
 
   const showOnStep =
-    draftId !== null || placeIdInStore === null || placeIdInStore === "";
+    variant === "modal" ? true : draftId !== null;
 
   const searchActive =
     variant === "modal"
@@ -180,11 +188,13 @@ export function RentAddressAndListingEntryFields({
   const showUnitField = propertyType === "condo_apartment_unit";
   const showNumberOfUnitsField =
     propertyType === "entire_apartment_community";
+  const selectedPropertyTypeLabel =
+    propertyTypes.find((type) => type.value === propertyType)?.label ?? "";
 
   const hasValidPlace = Boolean(resolvedAddress?.placeId);
   const canSubmit = (() => {
     if (!hasValidPlace || !propertyType) return false;
-    if (showUnitField && !unit.trim()) return false;
+    if (showUnitField && !isValidUnitForSubmit(unit)) return false;
     if (showNumberOfUnitsField) {
       const n = Number(numberOfUnits.trim());
       if (!numberOfUnits.trim() || Number.isNaN(n) || n < 1) return false;
@@ -408,6 +418,8 @@ export function RentAddressAndListingEntryFields({
     if (!canSubmit || !resolvedAddress?.placeId) return;
     setModalNavigating(true);
     try {
+      // Opening rent creation from modal should not inherit previous draft step/session.
+      clearAllDraftData();
       const unitTrim = unit.trim();
       const numUnitsParsed = showNumberOfUnitsField
         ? Number(numberOfUnits.trim())
@@ -487,10 +499,13 @@ export function RentAddressAndListingEntryFields({
                   {t("unit")} <span className="text-brand">*</span>
                 </label>
                 <Input
+                  inputMode="decimal"
+                  pattern="^\d+(\.\d)?$"
                   placeholder={t("unitPlaceholder")}
                   value={unit}
                   onChange={(e) => {
-                    const v = e.target.value;
+                    const v = e.target.value.trim();
+                    if (!isValidUnitDraft(v)) return;
                     setUnit(v);
                     if (variant === "step") {
                       const pi = store.getState().listingForm.formData.propertyInfo;
@@ -577,7 +592,7 @@ export function RentAddressAndListingEntryFields({
                   type="button"
                   role="option"
                   aria-selected={false}
-                  className="flex w-full flex-col items-start gap-0.5 px-3 py-2.5 text-left hover:bg-accent"
+                  className="flex w-full flex-col items-start gap-0.5 px-3 py-2.5 text-left hover:bg-accent cursor-pointer"
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => pickSuggestion(s)}
                 >
@@ -636,11 +651,13 @@ export function RentAddressAndListingEntryFields({
           }}
         >
           <SelectTrigger className="h-12! w-full rounded-lg text-base">
-            <SelectValue placeholder={t("propertyTypePlaceholder")} />
+            <SelectValue placeholder={t("propertyTypePlaceholder")}>
+              {selectedPropertyTypeLabel}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {propertyTypes.map((type) => (
-              <SelectItem key={type.value} value={type.value}>
+              <SelectItem key={type.value} value={type.value} className="cursor-pointer">
                 {type.label}
               </SelectItem>
             ))}

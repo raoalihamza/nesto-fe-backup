@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { useAppSelector, useAppDispatch } from "@/store";
 import { setPropertyInfo } from "@/store/slices/listingFormSlice";
 import { RentAddressAndListingEntryFields } from "@/components/rent-listing-form/shared/RentAddressAndListingEntryFields";
+import { useRentStepperUiOptional } from "@/components/rent-listing-form/RentStepperUiContext";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -19,7 +20,11 @@ const BATHROOM_OPTIONS = ["1", "1.5", "2", "2.5", "3", "3.5", "4+"];
 export function Step1PropertyInfo() {
   const t = useTranslations("listing.propertyInfo");
   const dispatch = useAppDispatch();
+  const stepperUi = useRentStepperUiOptional();
+  const draftId = useAppSelector((s) => s.listingForm.draftId);
   const data = useAppSelector((s) => s.listingForm.formData.propertyInfo);
+  const showAddressEditor =
+    draftId !== null && !stepperUi?.suppressPropertyInfoAddress;
 
   return (
     <div className="w-full max-w-md">
@@ -29,7 +34,9 @@ export function Step1PropertyInfo() {
       <p className="mt-2 text-sm text-muted-foreground">{t("subtitle")}</p>
 
       <div className="mt-8 space-y-6">
-        <RentAddressAndListingEntryFields variant="step" enabled />
+        {showAddressEditor && (
+          <RentAddressAndListingEntryFields variant="step" enabled />
+        )}
 
         {/* Square footage */}
         <div>

@@ -24,13 +24,23 @@ export function mapPublicFeedItemToPropertyCard(
   const suffix =
     item.pricing.billingPeriod === "month" ? "/mo" : undefined;
 
+  const basicFacts = item.basicFacts
+    ? {
+        bedrooms: item.basicFacts.bedrooms ?? undefined,
+        bathrooms: item.basicFacts.bathrooms ?? undefined,
+        squareFootage: item.basicFacts.areaSqft ?? undefined,
+      }
+    : undefined;
+
   return {
     id: item.id,
     listingType,
     status: item.status,
     title: item.title,
     thumbnailUrl: item.thumbnailUrl,
+    propertyType: item.propertyType?.trim() || null,
     location: {
+      formattedAddress: item.location.formattedAddress?.trim() || null,
       city: city || null,
       state: state || null,
       displayAddress,
@@ -44,6 +54,7 @@ export function mapPublicFeedItemToPropertyCard(
       suffix: suffix ?? null,
       billingPeriod: item.pricing.billingPeriod,
     },
+    basicFacts,
     leaseDuration: item.leaseDuration ?? null,
     isSaved: item.isSaved,
     owner: {
@@ -99,8 +110,27 @@ export const listingsService = {
     });
   },
 
+  async deleteRentDraft(
+    rentListingId: string
+  ): Promise<{ deleted: boolean }> {
+    return apiClient<{ deleted: boolean }>(
+      `/listings/rent/drafts/${rentListingId}`,
+      {
+        method: "DELETE",
+      }
+    );
+  },
+
   async getMyListings(params?: {
-    tab?: "all" | "for-rent" | "for-sale" | "draft" | "archived" | "sold";
+    tab?:
+      | "overview"
+      | "my-listing"
+      | "all"
+      | "for-rent"
+      | "for-sale"
+      | "draft"
+      | "archived"
+      | "sold";
     page?: number;
     limit?: number;
     locale?: string;

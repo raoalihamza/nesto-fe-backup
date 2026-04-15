@@ -3,34 +3,140 @@
 import { useState, useRef, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { useAppSelector, useAppDispatch } from "@/store";
-import { setFinalDetails } from "@/store/slices/listingFormSlice";
+import {
+  restoreFromDraft,
+  setFinalDetails,
+} from "@/store/slices/listingFormSlice";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { CheckCircle } from "lucide-react";
+import { useRentPhoneVerification } from "@/hooks/useRentPhoneVerification";
+import { parsePhoneNumberFromString, type CountryCode } from "libphonenumber-js";
 
-type PhoneStep = "idle" | "input" | "otp" | "verified";
+type PhoneCountry = {
+  code: CountryCode;
+  dialCode: string;
+};
+
+const PHONE_COUNTRIES: PhoneCountry[] = [
+  { code: "US", dialCode: "+1" },
+  { code: "PK", dialCode: "+92" },
+  { code: "UZ", dialCode: "+998" },
+  { code: "RU", dialCode: "+7" },
+];
+
+function deriveInitialPhoneParts(phoneE164: string | null | undefined): {
+  countryCode: CountryCode;
+  nationalNumber: string;
+} {
+  if (!phoneE164) {
+    return { countryCode: "US", nationalNumber: "" };
+  }
+
+  const parsed = parsePhoneNumberFromString(phoneE164);
+  if (!parsed || !parsed.country) {
+    return { countryCode: "US", nationalNumber: "" };
+  }
+
+  const supported = PHONE_COUNTRIES.some((c) => c.code === parsed.country);
+  if (!supported) {
+    return { countryCode: "US", nationalNumber: "" };
+  }
+
+  return {
+    countryCode: parsed.country,
+    nationalNumber: parsed.nationalNumber,
+  };
+}
 
 export function FinalStep3PhoneVerify() {
   const t = useTranslations("listing.finalDetails");
   const dispatch = useAppDispatch();
+  const draftId = useAppSelector((s) => s.listingForm.draftId);
   const finalDetails = useAppSelector(
     (s) => s.listingForm.formData.finalDetails
   );
 
-  const [phoneStep, setPhoneStep] = useState<PhoneStep>(
-    finalDetails.phoneNumber ? "verified" : "idle"
+  const initialPhoneParts = deriveInitialPhoneParts(finalDetails.phoneNumber);
+  const [countryCode, setCountryCode] = useState<CountryCode>(
+    initialPhoneParts.countryCode
   );
-  const [phoneInput, setPhoneInput] = useState(finalDetails.phoneNumber ?? "");
+  const [nationalNumberInput, setNationalNumberInput] = useState(
+    initialPhoneParts.nationalNumber
+  );
   const [otpValues, setOtpValues] = useState<string[]>(Array(6).fill(""));
+  const [localPhoneError, setLocalPhoneError] = useState<string | null>(null);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  const handleSendOtp = useCallback(() => {
-    if (!phoneInput.trim()) return;
-    dispatch(setFinalDetails({ phoneNumber: phoneInput.trim() }));
+  const {
+    phase,
+    phone,
+    errorKey,
+    isBusy,
+    sendCode,
+    resendCode,
+    verifyCode,
+    changePhoneNumber,
+  } = useRentPhoneVerification({
+    draftId,
+    recaptchaContainerId: "rent-phone-recaptcha",
+    initialPhone: finalDetails.phoneNumber,
+    initialVerified: Boolean(finalDetails.phoneVerified && finalDetails.phoneNumber),
+  });
+
+  const isOtpPhase =
+    phase === "otpSent" ||
+    phase === "verifyingOtp" ||
+    phase === "submittingBackend";
+
+  const errorMessageMap = {
+    missing_draft_id: t("phoneVerifyErrorMissingDraft"),
+    invalid_phone_number: t("phoneVerifyErrorInvalidPhone"),
+    missing_otp: t("phoneVerifyErrorMissingOtp"),
+    invalid_otp: t("phoneVerifyErrorInvalidOtp"),
+    otp_expired: t("phoneVerifyErrorCodeExpired"),
+    too_many_requests: t("phoneVerifyErrorTooManyRequests"),
+    captcha_failed: t("phoneVerifyErrorCaptchaFailed"),
+    network_error: t("phoneVerifyErrorNetwork"),
+    unexpected_error: t("phoneVerifyErrorUnexpected"),
+  } as const;
+
+  const selectedCountry =
+    PHONE_COUNTRIES.find((country) => country.code === countryCode) ??
+    PHONE_COUNTRIES[0];
+
+  const buildE164FromCurrentInput = useCallback(() => {
+    const parsed = parsePhoneNumberFromString(nationalNumberInput, countryCode);
+    if (!parsed || !parsed.isValid()) {
+      return null;
+    }
+    return parsed.number;
+  }, [countryCode, nationalNumberInput]);
+
+  const handleSendOtp = useCallback(async () => {
+    const e164Phone = buildE164FromCurrentInput();
+    if (!e164Phone) {
+      setLocalPhoneError(
+        t("phoneVerifyErrorInvalidPhoneForCountry", {
+          country: selectedCountry.code,
+        })
+      );
+      return;
+    }
+
+    setLocalPhoneError(null);
+    const ok = await sendCode(e164Phone);
+    if (!ok) return;
+
     setOtpValues(Array(6).fill(""));
-    setPhoneStep("otp");
-  }, [phoneInput, dispatch]);
+    dispatch(
+      setFinalDetails({
+        phoneNumber: e164Phone,
+        phoneVerified: false,
+      })
+    );
+  }, [buildE164FromCurrentInput, dispatch, selectedCountry.code, sendCode, t]);
 
   const handleOtpChange = useCallback(
     (index: number, value: string) => {
@@ -43,11 +149,6 @@ export function FinalStep3PhoneVerify() {
 
       if (digit && index < 5) {
         inputRefs.current[index + 1]?.focus();
-      }
-
-      // Auto-verify when all 6 digits entered
-      if (next.every((d) => d !== "")) {
-        setPhoneStep("verified");
       }
     },
     [otpValues]
@@ -67,25 +168,54 @@ export function FinalStep3PhoneVerify() {
       e.preventDefault();
       const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
       if (!pasted) return;
+
       const next = Array(6).fill("");
       for (let i = 0; i < pasted.length; i++) {
         next[i] = pasted[i];
       }
+
       setOtpValues(next);
       const focusIdx = Math.min(pasted.length, 5);
       inputRefs.current[focusIdx]?.focus();
-
-      if (next.every((d) => d !== "")) {
-        setPhoneStep("verified");
-      }
     },
     []
   );
 
-  const handleChangeNumber = useCallback(() => {
-    setPhoneStep("input");
+  const handleVerifyOtp = useCallback(async () => {
+    if (otpValues.some((digit) => !digit)) return;
+    const response = await verifyCode(otpValues.join(""));
+    if (!response) return;
+
+    const verifiedPhoneFromResponse = response.finalDetails?.phoneNumber ?? null;
+    const fallbackVerifiedPhone = phone || finalDetails.phoneNumber || null;
+
+    dispatch(restoreFromDraft(response));
+
+    // Defensive fallback: some verify-phone responses may not include finalDetails.phoneNumber.
+    // Keep the just-verified phone in Redux for UI; final-details PUT omits phone (backend-owned).
+    if (!verifiedPhoneFromResponse && fallbackVerifiedPhone) {
+      dispatch(
+        setFinalDetails({
+          phoneNumber: fallbackVerifiedPhone,
+          phoneVerified: true,
+        })
+      );
+    }
+  }, [dispatch, finalDetails.phoneNumber, otpValues, phone, verifyCode]);
+
+  const handleResendCode = useCallback(async () => {
+    const ok = await resendCode();
+    if (!ok) return;
     setOtpValues(Array(6).fill(""));
-  }, []);
+    inputRefs.current[0]?.focus();
+  }, [resendCode]);
+
+  const handleChangeNumber = useCallback(() => {
+    changePhoneNumber();
+    setOtpValues(Array(6).fill(""));
+    setLocalPhoneError(null);
+    dispatch(setFinalDetails({ phoneVerified: false }));
+  }, [changePhoneNumber, dispatch]);
 
   return (
     <div className="w-full max-w-md space-y-6">
@@ -98,52 +228,73 @@ export function FinalStep3PhoneVerify() {
         </p>
       </div>
 
-      {/* Phone number */}
       <div className="space-y-3">
         <Label className="text-sm font-semibold text-foreground">
           {t("phoneNumberLabel")}
           <span className="text-brand">*</span>
         </Label>
 
-        {/* Idle — show "Add phone number" button */}
-        {phoneStep === "idle" && (
-          <Button
-            variant="outline"
-            onClick={() => setPhoneStep("input")}
-            className="text-sm font-medium cursor-pointer"
-          >
-            {t("addPhoneNumber")}
-          </Button>
-        )}
-
-        {/* Input — phone field + Send OTP button */}
-        {phoneStep === "input" && (
+        {!isOtpPhase && phase !== "verified" && (
           <div className="space-y-3">
             <div className="flex items-center gap-3">
+              <div className="w-[200px]">
+                <label className="sr-only" htmlFor="rent-phone-country">
+                  {t("phoneCountryLabel")}
+                </label>
+                <select
+                  id="rent-phone-country"
+                  value={countryCode}
+                  onChange={(e) => {
+                    setCountryCode(e.target.value as CountryCode);
+                    setLocalPhoneError(null);
+                  }}
+                  disabled={isBusy}
+                  className="h-12 w-full rounded-md border border-input bg-transparent px-3 text-sm text-foreground shadow-xs outline-none transition-[color,box-shadow] disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+                >
+                  {PHONE_COUNTRIES.map((country) => (
+                    <option key={country.code} value={country.code} className="cursor-pointer">
+                      ({country.dialCode}) {country.code}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <Input
                 type="tel"
-                value={phoneInput}
-                onChange={(e) => setPhoneInput(e.target.value)}
-                placeholder="+998 90 123 4567"
+                value={nationalNumberInput}
+                onChange={(e) => {
+                  setNationalNumberInput(e.target.value);
+                  setLocalPhoneError(null);
+                }}
+                placeholder={t("phoneNationalPlaceholder")}
                 className="h-12 text-base"
-                autoFocus
+                autoFocus={Boolean(!finalDetails.phoneVerified)}
+                disabled={isBusy}
               />
               <Button
                 onClick={handleSendOtp}
-                disabled={!phoneInput.trim()}
+                disabled={!nationalNumberInput.trim() || isBusy || !draftId}
                 className="h-12! shrink-0 bg-brand px-6 text-sm font-medium text-white btn-brand-shadow hover:bg-brand-dark cursor-pointer"
               >
-                {t("sendOtp")}
+                {phase === "sendingOtp" ? t("sendingCode") : t("sendOtp")}
               </Button>
             </div>
+            {!draftId ? (
+              <p className="text-sm text-destructive">
+                {t("phoneVerifyErrorMissingDraft")}
+              </p>
+            ) : null}
+            {localPhoneError ? (
+              <p className="text-sm text-destructive">{localPhoneError}</p>
+            ) : null}
           </div>
         )}
 
-        {/* OTP — 6 digit boxes */}
-        {phoneStep === "otp" && (
+        {isOtpPhase && (
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              {t("verifyCode", { phone: finalDetails.phoneNumber ?? "" })}
+              {t("verifyCode", {
+                phone: phone || finalDetails.phoneNumber || "",
+              })}
             </p>
 
             <div className="flex gap-2">
@@ -162,27 +313,50 @@ export function FinalStep3PhoneVerify() {
                   onPaste={i === 0 ? handleOtpPaste : undefined}
                   className="h-12 w-12 rounded-lg border border-border text-center text-lg font-semibold text-foreground outline-none transition-colors focus:border-brand focus:ring-1 focus:ring-brand"
                   autoFocus={i === 0}
+                  disabled={isBusy}
                 />
               ))}
             </div>
 
-            <button
-              type="button"
-              onClick={handleSendOtp}
-              className="text-sm font-medium text-brand hover:underline"
-            >
-              {t("resendCode")}
-            </button>
+            <div className="flex items-center gap-3">
+              <Button
+                type="button"
+                onClick={handleVerifyOtp}
+                disabled={otpValues.some((digit) => !digit) || isBusy}
+                className="h-11 bg-brand px-5 text-sm font-medium text-white btn-brand-shadow hover:bg-brand-dark cursor-pointer"
+              >
+                {phase === "verifyingOtp"
+                  ? t("verifyingCode")
+                  : phase === "submittingBackend"
+                    ? t("submittingPhoneVerification")
+                    : t("verifyOtp")}
+              </Button>
+              <button
+                type="button"
+                onClick={handleResendCode}
+                disabled={isBusy}
+                className="text-sm font-medium text-brand hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {t("resendCode")}
+              </button>
+              <button
+                type="button"
+                onClick={handleChangeNumber}
+                disabled={isBusy}
+                className="text-sm font-medium text-brand hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {t("changeNumber")}
+              </button>
+            </div>
           </div>
         )}
 
-        {/* Verified — show number with checkmark and change option */}
-        {phoneStep === "verified" && (
+        {phase === "verified" && (
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <CheckCircle className="h-4.5 w-4.5 text-green-600" />
               <span className="text-sm font-medium text-foreground">
-                {finalDetails.phoneNumber}
+                {finalDetails.phoneNumber ?? phone}
               </span>
               <span className="text-xs font-medium text-green-600">
                 {t("verified")}
@@ -197,6 +371,14 @@ export function FinalStep3PhoneVerify() {
             </button>
           </div>
         )}
+
+        {errorKey ? (
+          <p className="text-sm text-destructive">
+            {errorMessageMap[errorKey] ?? t("phoneVerifyErrorUnexpected")}
+          </p>
+        ) : null}
+
+        <div id="rent-phone-recaptcha" className="hidden" />
       </div>
     </div>
   );

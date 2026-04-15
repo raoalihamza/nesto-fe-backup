@@ -9,6 +9,7 @@ import {
 } from "@/store/slices/listingFormSlice";
 import { getSafeReturnUrl } from "@/lib/auth/safeReturnUrl";
 import { ROUTES } from "@/lib/constants/routes";
+import { clearAllDraftData } from "@/lib/utils/clearDraft";
 
 const STORAGE_KEY = "nesto_pending_rent_listing";
 
@@ -149,6 +150,8 @@ export function hydratePendingRentListingFromStorage(
 ): boolean {
   const pending = readPendingRentListing();
   if (!pending) return false;
+  // Starting from modal intent should always create a fresh draft context.
+  clearAllDraftData();
   dispatch(
     setPropertyInfo({
       address: pending.address,

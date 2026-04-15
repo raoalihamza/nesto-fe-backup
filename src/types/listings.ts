@@ -1,6 +1,8 @@
 // Display-time interfaces — matches backend feed/card API response shape
 
 export interface PropertyCardLocation {
+  /** Full single-line address from API when available (preferred for display). */
+  formattedAddress?: string | null;
   displayAddress?: string | null;
   street?: string | null;
   city?: string | null;
@@ -63,14 +65,23 @@ export interface SavedHomesResponse {
   items: PropertyCardItem[];
 }
 
+/** Feed `basicFacts` shape (API uses `areaSqft`; we map to `PropertyCardBasicFacts.squareFootage`). */
+export interface PublicListingFeedBasicFacts {
+  bedrooms?: number | null;
+  bathrooms?: string | null;
+  areaSqft?: number | null;
+}
+
 /** Raw item from `GET /listings/feed` (optional `isSaved` when Bearer token is sent). */
 export interface PublicListingFeedApiItem {
   id: string;
   listingType: string;
   status: string;
+  propertyType?: string | null;
   title: string;
   thumbnailUrl: string | null;
   location: {
+    formattedAddress?: string | null;
     summary?: string | null;
     city?: string | null;
     stateCode?: string | null;
@@ -81,6 +92,7 @@ export interface PublicListingFeedApiItem {
     currencyCode: string;
     billingPeriod?: string | null;
   };
+  basicFacts?: PublicListingFeedBasicFacts | null;
   leaseDuration?: string | null;
   owner: {
     id: string;

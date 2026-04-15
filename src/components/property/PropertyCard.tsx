@@ -40,6 +40,16 @@ function formatBathDisplay(raw: string | undefined | null): string {
   return raw;
 }
 
+/** API values like `house`, `town_house` → display label. */
+function formatPropertyTypeLabel(raw: string): string {
+  const s = raw.trim();
+  if (!s) return "";
+  return s
+    .split(/[\s_]+/)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(" ");
+}
+
 export function PropertyCard({ item, className }: PropertyCardProps) {
   const t = useTranslations("property");
   const [isSaved, setIsSaved] = useState(item.isSaved ?? false);
@@ -66,6 +76,7 @@ export function PropertyCard({ item, className }: PropertyCardProps) {
     .filter((x) => x != null && String(x).trim() !== "")
     .join(", ");
   const addressLine =
+    item.location.formattedAddress?.trim() ||
     item.location.displayAddress?.trim() ||
     cityState ||
     "245 E 90th St APT 4D, New York, NY 10128";
@@ -85,8 +96,9 @@ export function PropertyCard({ item, className }: PropertyCardProps) {
       ? item.basicFacts.squareFootage.toLocaleString()
       : "--";
 
-  const propertyTypeDisplay =
-    item.propertyType?.trim() || t("defaultPropertyType");
+  const propertyTypeDisplay = item.propertyType?.trim()
+    ? formatPropertyTypeLabel(item.propertyType)
+    : t("defaultPropertyType");
 
   const specsLine = `${bedsDisplay} ${t("bdAbbr")} | ${bathsDisplay} ${t("baAbbr")} | ${sqftDisplay} ${t("sqft")} | ${propertyTypeDisplay} ${statusForSpecs}`;
 

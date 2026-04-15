@@ -12,22 +12,39 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { ROUTES } from "@/lib/constants/routes";
 
 interface ListingTypeModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /**
+   * When user chooses rent and Continue: called instead of navigating to create.
+   * Omit to fall back to `router.push(ROUTES.OWNER.CREATE)` (e.g. legacy callers).
+   */
+  onRentChosen?: () => void;
 }
 
-export function ListingTypeModal({ open, onOpenChange }: ListingTypeModalProps) {
+export function ListingTypeModal({
+  open,
+  onOpenChange,
+  onRentChosen,
+}: ListingTypeModalProps) {
   const t = useTranslations("home");
   const router = useRouter();
   const [selected, setSelected] = useState<"sell" | "rent" | null>(null);
 
   const handleContinue = () => {
-    if (selected) {
-      onOpenChange(false);
-      router.push("/listings/create");
+    if (!selected) return;
+    onOpenChange(false);
+    if (selected === "sell") {
+      router.push(ROUTES.OWNER.SALE);
+      return;
     }
+    if (onRentChosen) {
+      onRentChosen();
+      return;
+    }
+    router.push(ROUTES.OWNER.CREATE);
   };
 
   return (
@@ -41,9 +58,10 @@ export function ListingTypeModal({ open, onOpenChange }: ListingTypeModalProps) 
 
         <div className="mt-4 flex gap-4">
           <button
+            type="button"
             onClick={() => setSelected("sell")}
             className={cn(
-              "flex flex-1 flex-col items-center gap-3 rounded-xl border-2 p-6 transition-all",
+              "flex flex-1 flex-col items-center gap-3 rounded-xl border-2 p-6 transition-all cursor-pointer",
               selected === "sell"
                 ? "border-brand bg-brand-light"
                 : "border-gray-200 hover:border-gray-300"
@@ -66,9 +84,10 @@ export function ListingTypeModal({ open, onOpenChange }: ListingTypeModalProps) 
           </button>
 
           <button
+            type="button"
             onClick={() => setSelected("rent")}
             className={cn(
-              "flex flex-1 flex-col items-center gap-3 rounded-xl border-2 p-6 transition-all",
+              "flex flex-1 flex-col items-center gap-3 rounded-xl border-2 p-6 transition-all cursor-pointer",
               selected === "rent"
                 ? "border-brand bg-brand-light"
                 : "border-gray-200 hover:border-gray-300"

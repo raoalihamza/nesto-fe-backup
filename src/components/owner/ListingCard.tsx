@@ -1,10 +1,16 @@
 "use client";
 
 import Image from "next/image";
-import { Pencil, Eye, Archive } from "lucide-react";
+import { Pencil, Archive, Trash2, Loader2, MoreHorizontal, Eye } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { ListingStatusBadge } from "@/components/owner/ListingStatusBadge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { formatListingPrice, formatListingLocation } from "@/lib/utils/listingDisplay";
 import type { MyListingItem } from "@/types/listings";
 
@@ -14,12 +20,26 @@ function isDraft(listing: MyListingItem) {
 
 interface ListingCardProps {
   listing: MyListingItem;
-  onArchive?: (id: string) => void;
+  onArchive?: (listing: MyListingItem) => void;
   onEditDraft?: (listing: MyListingItem) => void;
+  onDeleteDraft?: (listing: MyListingItem) => void;
+  deletingDraftId?: string | null;
+  archivingListingId?: string | null;
 }
 
-export function ListingCard({ listing, onArchive, onEditDraft }: ListingCardProps) {
-  const t = useTranslations("property");
+export function ListingCard({
+  listing,
+  onArchive,
+  onEditDraft,
+  onDeleteDraft,
+  deletingDraftId,
+  archivingListingId,
+}: ListingCardProps) {
+  const tProperty = useTranslations("property");
+  const tDashboard = useTranslations("dashboard");
+  const tCommon = useTranslations("common");
+
+  const isBusy = deletingDraftId === listing.id || archivingListingId === listing.id;
 
   return (
     <div className="flex gap-3 rounded-xl border border-border bg-card p-3">
@@ -44,35 +64,56 @@ export function ListingCard({ listing, onArchive, onEditDraft }: ListingCardProp
             </p>
           </div>
           <div className="flex shrink-0 gap-1.5">
-            {isDraft(listing) ? (
-              <button
-                className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
-                onClick={() => onEditDraft?.(listing)}
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={isBusy}
+                aria-label={tDashboard("action")}
               >
-                <Pencil className="size-3.5" />
-              </button>
-            ) : listing.actionFlags.canArchive ? (
-              <button
-                className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
-                onClick={() => onArchive?.(listing.id)}
-              >
-                <Archive className="size-3.5" />
-              </button>
-            ) : (
-              <button className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground">
-                <Pencil className="size-3.5" />
-              </button>
-            )}
-            <button className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground">
-              <Eye className="size-3.5" />
-            </button>
+                {isBusy ? (
+                  <Loader2 className="size-3.5 animate-spin" />
+                ) : (
+                  <MoreHorizontal className="size-3.5" />
+                )}
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-auto min-w-36">
+                <DropdownMenuItem>
+                  <Eye className="size-4" />
+                  {tDashboard("view")}
+                </DropdownMenuItem>
+                {isDraft(listing) ? (
+                  <>
+                    <DropdownMenuItem onClick={() => onEditDraft?.(listing)}>
+                      <Pencil className="size-4" />
+                      {tCommon("edit")}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      variant="destructive"
+                      onClick={() => onDeleteDraft?.(listing)}
+                    >
+                      <Trash2 className="size-4" />
+                      {tCommon("delete")}
+                    </DropdownMenuItem>
+                  </>
+                ) : listing.actionFlags.canArchive ? (
+                  <DropdownMenuItem onClick={() => onArchive?.(listing)}>
+                    <Archive className="size-4" />
+                    {tDashboard("archive")}
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem disabled>
+                    {tDashboard("action")}
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
         <div className="mt-2 flex items-end justify-between">
           <div>
             <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-              {t("forRent").split(" ").pop()}
+              {tProperty("forRent").split(" ").pop()}
             </p>
             <p className="text-sm font-bold text-foreground">
               {formatListingPrice(listing.pricing)}
@@ -80,7 +121,7 @@ export function ListingCard({ listing, onArchive, onEditDraft }: ListingCardProp
           </div>
           <div className="text-right">
             <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-              {t("leaseDuration")}
+              {tProperty("leaseDuration")}
             </p>
             <p className="text-sm font-semibold text-foreground">
               {listing.leaseDuration ?? "—"}

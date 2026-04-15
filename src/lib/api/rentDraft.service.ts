@@ -284,13 +284,43 @@ export const rentDraftService = {
     draftId: string,
     body: Omit<FinalDetailsData, never>
   ): Promise<RentDraftResponse> {
+    // Phone is set only via verify-phone; backend owns phoneNumber + phoneVerified on draft.
+    const { phoneVerified, phoneNumber, ...payload } = body;
+    void phoneVerified;
+    void phoneNumber;
     return apiClient<RentDraftResponse>(
       `/listings/rent/drafts/${draftId}/final-details`,
       {
         method: "PUT",
+        body: JSON.stringify(payload),
+      }
+    );
+  },
+
+  // Step 6 — verify phone via Firebase ID token
+  async verifyPhone(
+    draftId: string,
+    body: { firebaseIdToken: string }
+  ): Promise<RentDraftResponse> {
+    const response = await apiClient<RentDraftResponse | Record<string, never>>(
+      `/listings/rent/drafts/${draftId}/verify-phone`,
+      {
+        method: "POST",
         body: JSON.stringify(body),
       }
     );
+
+    if (
+      typeof response === "object" &&
+      response !== null &&
+      "id" in response &&
+      typeof response.id === "string"
+    ) {
+      return response as RentDraftResponse;
+    }
+
+    // Backend may return empty payload. Refresh draft to get server truth.
+    return this.getDraft(draftId);
   },
 
   // Step 7 — review (GET on mount)

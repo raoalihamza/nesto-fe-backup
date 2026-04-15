@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import type { AuthSuccessResponse, ApiError } from "@/types/user";
 import { getSafeReturnUrl, isLoginEmailNotVerifiedError } from "@/lib/auth/safeReturnUrl";
 import { hydratePendingRentListingFromStorage } from "@/lib/utils/pendingRentListingStorage";
+import { setRentCreateIntent } from "@/lib/utils/rentCreateSession";
 import { ROUTES } from "@/lib/constants/routes";
 
 function completeSocialAuthSuccess(
@@ -40,6 +41,7 @@ function completeSocialAuthSuccess(
   const safe = getSafeReturnUrl(returnUrl ?? null);
   const destination = safe ?? ROUTES.OWNER.DASHBOARD;
   if (safe === ROUTES.OWNER.CREATE) {
+    setRentCreateIntent();
     hydratePendingRentListingFromStorage(dispatch);
   }
   router.push(destination);

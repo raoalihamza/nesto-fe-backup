@@ -6,10 +6,12 @@ import { useRouter } from "@/i18n/routing";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useSaveStep } from "@/hooks/rentDraft";
+import { useRentStepperUiOptional } from "@/components/rent-listing-form/RentStepperUiContext";
 
 export function SaveExitButton() {
   const t = useTranslations("listing");
   const router = useRouter();
+  const stepperUi = useRentStepperUiOptional();
   const isSaving = useAppSelector((s) => s.listingForm.isSaving);
   const mediaUploadBusy =
     useAppSelector((s) => s.listingForm.mediaUploadInFlight) > 0;
@@ -24,10 +26,22 @@ export function SaveExitButton() {
       return;
     }
 
-    const success = await saveStep(currentStep);
-    if (success) {
-      router.push("/dashboard");
-      toast.success("Draft saved!");
+    // Avoid flashing Property Info address fields: save sets draftId in Redux before navigate.
+    const onPropertyInfoStep = currentStep === 0;
+    if (onPropertyInfoStep) {
+      stepperUi?.setSuppressPropertyInfoAddress(true);
+    }
+    let success = false;
+    try {
+      success = await saveStep(currentStep);
+      if (success) {
+        router.push("/dashboard");
+        toast.success("Draft saved!");
+      }
+    } finally {
+      if (!success && onPropertyInfoStep) {
+        stepperUi?.setSuppressPropertyInfoAddress(false);
+      }
     }
   }
 

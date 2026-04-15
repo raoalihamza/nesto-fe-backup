@@ -176,6 +176,7 @@ export interface FinalDetailsData {
   name: string | null;
   email: string | null;
   phoneNumber: string | null;
+  phoneVerified?: boolean;
   bookingToursInstantly: boolean | null;
   propertyDescription: string | null;
   hidePropertyAddress: boolean;
@@ -348,6 +349,7 @@ const initialFinalDetails: FinalDetailsData = {
   name: null,
   email: null,
   phoneNumber: null,
+  phoneVerified: false,
   bookingToursInstantly: null,
   propertyDescription: null,
   hidePropertyAddress: false,

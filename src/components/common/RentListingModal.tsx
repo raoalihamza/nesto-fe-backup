@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { ROUTES } from "@/lib/constants/routes";
 import { RentAddressAndListingEntryFields } from "@/components/rent-listing-form/shared/RentAddressAndListingEntryFields";
+import { setRentCreateIntent } from "@/lib/utils/rentCreateSession";
 
 /** Let the client start navigation before unmounting the dialog (avoids close-then-navigate flash). */
 function deferToNextPaint(): Promise<void> {
@@ -52,6 +53,7 @@ export function RentListingModal({
             enabled={open}
             onRequestClose={() => onOpenChange(false)}
             onModalComplete={async () => {
+              setRentCreateIntent();
               router.push(ROUTES.OWNER.CREATE);
               await deferToNextPaint();
               onOpenChange(false);

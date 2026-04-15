@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Pencil, Eye, Archive, Home } from "lucide-react";
+import { Pencil, Eye, Archive, Home, Trash2, Loader2 } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 
 import { ListingStatusBadge } from "@/components/owner/ListingStatusBadge";
@@ -14,11 +14,21 @@ function isDraft(listing: MyListingItem) {
 
 interface ListingTableProps {
   listings: MyListingItem[];
-  onArchive?: (id: string) => void;
+  onArchive?: (listing: MyListingItem) => void;
   onEditDraft?: (listing: MyListingItem) => void;
+  onDeleteDraft?: (listing: MyListingItem) => void;
+  deletingDraftId?: string | null;
+  archivingListingId?: string | null;
 }
 
-export function ListingTable({ listings, onArchive, onEditDraft }: ListingTableProps) {
+export function ListingTable({
+  listings,
+  onArchive,
+  onEditDraft,
+  onDeleteDraft,
+  deletingDraftId,
+  archivingListingId,
+}: ListingTableProps) {
   const t = useTranslations("dashboard");
   const locale = useLocale();
 
@@ -89,18 +99,37 @@ export function ListingTable({ listings, onArchive, onEditDraft }: ListingTableP
               <td className="px-4 py-4">
                 <div className="flex gap-1">
                   {isDraft(listing) ? (
-                    <button
-                      className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
-                      onClick={() => onEditDraft?.(listing)}
-                    >
-                      <Pencil className="size-4" />
-                    </button>
+                    <>
+                      <button
+                        className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
+                        onClick={() => onEditDraft?.(listing)}
+                      >
+                        <Pencil className="size-4" />
+                      </button>
+                      <button
+                        className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
+                        onClick={() => onDeleteDraft?.(listing)}
+                        disabled={deletingDraftId === listing.id}
+                        aria-label={t("deleteDraft")}
+                      >
+                        {deletingDraftId === listing.id ? (
+                          <Loader2 className="size-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="size-4" />
+                        )}
+                      </button>
+                    </>
                   ) : listing.actionFlags.canArchive ? (
                     <button
-                      className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
-                      onClick={() => onArchive?.(listing.id)}
+                      className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
+                      onClick={() => onArchive?.(listing)}
+                      disabled={archivingListingId === listing.id}
                     >
-                      <Archive className="size-4" />
+                      {archivingListingId === listing.id ? (
+                        <Loader2 className="size-4 animate-spin" />
+                      ) : (
+                        <Archive className="size-4" />
+                      )}
                     </button>
                   ) : (
                     <button className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer">

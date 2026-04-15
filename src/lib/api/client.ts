@@ -25,9 +25,12 @@ export async function apiClient<T>(
   const { skipAuth, ...init } = options ?? {};
 
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
     ...(init.headers as Record<string, string>),
   };
+
+  if (init.body) {
+    headers["Content-Type"] ??= "application/json";
+  }
 
   if (!skipAuth && typeof window !== "undefined") {
     const token = localStorage.getItem("nesto_access_token");

@@ -90,6 +90,7 @@ export function useSaveStep() {
   const { draftId, formData } = useAppSelector((s) => s.listingForm);
 
   async function saveStep(stepIndex: number): Promise<boolean> {
+    const priorDraftId = draftId;
     dispatch(setIsSaving(true));
     try {
       let response: RentDraftResponse;
@@ -104,14 +105,14 @@ export function useSaveStep() {
             return false;
           }
           response =
-            draftId === null
+            priorDraftId === null
               ? await rentDraftService.createDraft(body)
-              : await rentDraftService.savePropertyInfo(draftId, body);
+              : await rentDraftService.savePropertyInfo(priorDraftId, body);
           break;
         }
         case 1: {
-          if (!draftId) throw new Error("No draft ID");
-          response = await rentDraftService.saveRentDetails(draftId, {
+          if (!priorDraftId) throw new Error("No draft ID");
+          response = await rentDraftService.saveRentDetails(priorDraftId, {
             monthlyRent: formData.rentDetails.monthlyRent,
             securityDeposit: formData.rentDetails.securityDeposit,
             specialOffer: formData.rentDetails.specialOffer,
@@ -119,42 +120,42 @@ export function useSaveStep() {
           break;
         }
         case 2: {
-          if (!draftId) throw new Error("No draft ID");
+          if (!priorDraftId) throw new Error("No draft ID");
           const tours3d = formData.media.tours3d.map((t, i) => ({
             tourName: t.tourName,
             tourUrl: t.tourUrl,
             sortOrder: typeof t.sortOrder === "number" ? t.sortOrder : i,
           }));
-          response = await rentDraftService.saveMediaStep(draftId, {
+          response = await rentDraftService.saveMediaStep(priorDraftId, {
             tours3d,
           });
           break;
         }
         case 3: {
-          if (!draftId) throw new Error("No draft ID");
+          if (!priorDraftId) throw new Error("No draft ID");
           response = await rentDraftService.saveAmenities(
-            draftId,
+            priorDraftId,
             formData.amenities
           );
           break;
         }
         case 4: {
-          if (!draftId) throw new Error("No draft ID");
+          if (!priorDraftId) throw new Error("No draft ID");
           response = await rentDraftService.saveScreeningCriteria(
-            draftId,
+            priorDraftId,
             buildScreeningBody(formData.screeningCriteria)
           );
           break;
         }
         case 5: {
-          if (!draftId) throw new Error("No draft ID");
-          response = await rentDraftService.saveCostsAndFeesStep(draftId);
+          if (!priorDraftId) throw new Error("No draft ID");
+          response = await rentDraftService.saveCostsAndFeesStep(priorDraftId);
           break;
         }
         case 6: {
-          if (!draftId) throw new Error("No draft ID");
+          if (!priorDraftId) throw new Error("No draft ID");
           response = await rentDraftService.saveFinalDetails(
-            draftId,
+            priorDraftId,
             formData.finalDetails
           );
           break;
@@ -164,6 +165,7 @@ export function useSaveStep() {
       }
 
       dispatch(restoreFromDraft(response));
+
       return true;
     } catch (err) {
       const message =

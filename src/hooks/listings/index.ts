@@ -71,7 +71,15 @@ export function useUnsaveListing() {
 
 export function useMyListings(
   params?: {
-    tab?: "all" | "for-rent" | "for-sale" | "draft" | "archived" | "sold";
+    tab?:
+      | "overview"
+      | "my-listing"
+      | "all"
+      | "for-rent"
+      | "for-sale"
+      | "draft"
+      | "archived"
+      | "sold";
     page?: number;
     limit?: number;
     locale?: string;
@@ -88,7 +96,15 @@ export function useMyListings(
 
 export function useInfiniteMyListings(
   params?: {
-    tab?: "all" | "for-rent" | "for-sale" | "draft" | "archived" | "sold";
+    tab?:
+      | "overview"
+      | "my-listing"
+      | "all"
+      | "for-rent"
+      | "for-sale"
+      | "draft"
+      | "archived"
+      | "sold";
     limit?: number;
     locale?: string;
   },
@@ -125,6 +141,22 @@ export function useArchiveListing() {
     },
     onError: () => {
       toast.error(t("archiveFailed"));
+    },
+  });
+}
+
+export function useDeleteRentDraftListing() {
+  const queryClient = useQueryClient();
+  const t = useTranslations("dashboard");
+  return useMutation({
+    mutationFn: ({ listingId }: { listingId: string }) =>
+      listingsService.deleteRentDraft(listingId),
+    onSuccess: () => {
+      toast.success(t("draftDeleted"));
+      queryClient.invalidateQueries({ queryKey: MY_LISTINGS_QUERY_KEY });
+    },
+    onError: () => {
+      toast.error(t("draftDeleteFailed"));
     },
   });
 }

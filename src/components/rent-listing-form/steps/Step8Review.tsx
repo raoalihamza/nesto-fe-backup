@@ -135,9 +135,7 @@ function ReviewSection({
       >
         <span className="flex items-center gap-2 text-base font-semibold text-foreground">
           {title}
-          {hasIssues && !open && (
-            <AlertCircle className="h-4 w-4 text-red-500" />
-          )}
+          {hasIssues && <AlertCircle className="h-4 w-4 shrink-0 text-red-500" aria-hidden />}
         </span>
         <ChevronDown
           className={`h-5 w-5 text-muted-foreground transition-transform duration-200 ${
@@ -207,7 +205,10 @@ export function Step8Review() {
   const dispatch = useAppDispatch();
   const draftId = useAppSelector((s) => s.listingForm.draftId);
   const formData = useAppSelector((s) => s.listingForm.formData);
-  const validationIssues = useAppSelector((s) => s.listingForm.draftProgress?.validationIssues ?? []);
+  const draftProgress = useAppSelector((s) => s.listingForm.draftProgress);
+  const validationIssues = draftProgress?.validationIssues ?? [];
+  const publishReady = draftProgress?.publishReady === true;
+  const publishStatusKnown = draftProgress !== null;
 
   // Group issues by section for ReviewSection icons
   const issuesBySection = useMemo(() => {
@@ -241,29 +242,20 @@ export function Step8Review() {
   const [modalCategory, setModalCategory] = useState<FeeCategory>("administrative");
   const [editingFee, setEditingFee] = useState<PropertyFee | null>(null);
 
-  // Compute required completion
-  const completionInfo = useMemo(() => {
+  // Completion ring: local “filled form” progress (not API publishReady)
+  const completionPiePercent = useMemo(() => {
     const checks = [
-      {
-        key: "address",
-        ok: Boolean(propertyInfo.address?.placeId),
-      },
-      { key: "totalBedrooms", ok: propertyInfo.totalBedrooms !== null },
-      { key: "totalBathrooms", ok: propertyInfo.totalBathrooms !== null },
-      { key: "monthlyRent", ok: rentDetails.monthlyRent !== null },
-      { key: "photos", ok: media.photos.length > 0 },
-      { key: "leaseDuration", ok: finalDetails.leaseDuration !== null },
-      { key: "name", ok: finalDetails.name !== null },
-      { key: "email", ok: finalDetails.email !== null },
+      Boolean(propertyInfo.address?.placeId),
+      propertyInfo.totalBedrooms !== null,
+      propertyInfo.totalBathrooms !== null,
+      rentDetails.monthlyRent !== null,
+      media.photos.length > 0,
+      finalDetails.leaseDuration !== null,
+      finalDetails.name !== null,
+      finalDetails.email !== null,
     ];
-    const complete = checks.filter((c) => c.ok).length;
-    const total = checks.length;
-    const missing = checks.filter((c) => !c.ok);
-    return {
-      requiredComplete: missing.length === 0,
-      missingCount: missing.length,
-      percent: Math.round((complete / total) * 100),
-    };
+    const done = checks.filter(Boolean).length;
+    return Math.round((done / checks.length) * 100);
   }, [propertyInfo, rentDetails, media, finalDetails]);
 
   // Navigation helpers
@@ -397,21 +389,36 @@ export function Step8Review() {
 
   return (
     <div className="w-full max-w-lg">
-      {/* Incomplete / complete banner */}
+      {/* Title/subtitle from API; pie shows local form fill progress; field errors live in sections */}
       <div className="rounded-xl border border-border p-4 flex items-center gap-4 mb-6">
-        <CompletionPie percent={completionInfo.percent} />
+        <CompletionPie percent={completionPiePercent} />
         <div className="flex-1 min-w-0">
           <p className="text-sm font-bold text-foreground">
-            {completionInfo.requiredComplete ? t("listingComplete") : t("listingIncomplete")}
+            {!publishStatusKnown
+              ? t("publishStatusChecking")
+              : publishReady
+                ? t("listingComplete")
+                : t("listingNotReady")}
           </p>
           <p className="text-sm text-muted-foreground">
-            {completionInfo.requiredComplete
-              ? t("readyToPublish")
-              : t("completeToPublish", { count: completionInfo.missingCount })}{" "}
-            {!completionInfo.requiredComplete && (
-              <button type="button" className="text-brand font-medium hover:underline">
-                {tCommon("learnMore")}
-              </button>
+            {!publishStatusKnown ? (
+              t("publishStatusCheckingHint")
+            ) : publishReady ? (
+              t("readyToPublish")
+            ) : validationIssues.length > 0 ? (
+              <>
+                {t("issuesBlockingPublish", { count: validationIssues.length })}{" "}
+                <button type="button" className="text-brand font-medium hover:underline">
+                  {tCommon("learnMore")}
+                </button>
+              </>
+            ) : (
+              <>
+                {t("publishNotReadyGeneric")}{" "}
+                <button type="button" className="text-brand font-medium hover:underline">
+                  {tCommon("learnMore")}
+                </button>
+              </>
             )}
           </p>
         </div>
@@ -574,6 +581,7 @@ export function Step8Review() {
           }
           onEdit={() => editStep(2)}
           editLabel={tourDisplay ? editLabel : tMedia("addTour")}
+          issue={findIssue("media", "tours3d")}
         />
       </ReviewSection>
 
