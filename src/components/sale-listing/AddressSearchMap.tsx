@@ -1,47 +1,92 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import Map, { Marker, Popup, NavigationControl } from "react-map-gl/mapbox";
+import {
+  GoogleMap,
+  MarkerF,
+  InfoWindowF,
+  useJsApiLoader,
+} from "@react-google-maps/api";
 import { useAppDispatch } from "@/store";
-import { setAddress } from "@/store/slices/saleListingSlice";
+import {
+  resetSaleForm,
+  setSaleAddressFromConfirm,
+} from "@/store/slices/saleListingSlice";
+import { saleListingService } from "@/lib/api/saleListing.service";
+import type { ApiError } from "@/types/user";
+import { reverseGeocodeToAddressFieldsGoogle } from "@/lib/googleMaps/reverseGeocodeAddress";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { MapPin } from "lucide-react";
 import { ROUTES } from "@/lib/constants/routes";
-import "mapbox-gl/dist/mapbox-gl.css";
+import { toast } from "sonner";
 import "@/styles/map.css";
 
-const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN ?? "";
+const GOOGLE_MAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? "";
 
-const US_STATES = [
-  "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
-  "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
-  "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
-  "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
-  "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY",
-] as const;
-
-const DEFAULT_CENTER = { lat: 40.7128, lng: -74.006 }; // New York City
+/** Default map center (Lahore) — PK/UZ sale markets. */
+const DEFAULT_CENTER = { lat: 31.5204, lng: 74.3587 };
 const DEFAULT_ZOOM = 12;
 
-interface SearchResult {
+/** Marker + popover only after successful address-validate (backend lat/lng). */
+interface ValidatedPin {
   address: string;
   coordinates: { lat: number; lng: number };
+}
+
+function firstVisibleInputByField(field: "street" | "zip"): HTMLInputElement | null {
+  if (typeof document === "undefined") return null;
+  const candidates = Array.from(
+    document.querySelectorAll<HTMLInputElement>(`input[data-address-field="${field}"]`)
+  );
+  return (
+    candidates.find(
+      (el) =>
+        el.offsetParent !== null &&
+        window.getComputedStyle(el).visibility !== "hidden"
+    ) ?? null
+  );
+}
+
+function hasRequiredAddressFields(
+  street: string,
+  city: string,
+  state: string,
+  zip: string
+): boolean {
+  return (
+    street.trim().length > 0 &&
+    city.trim().length > 0 &&
+    state.trim().length > 0 &&
+    zip.trim().length > 0
+  );
+}
+
+function apiErrorMessage(error: unknown, fallback: string): string {
+  if (
+    error &&
+    typeof error === "object" &&
+    "message" in error &&
+    typeof (error as ApiError).message === "string"
+  ) {
+    return (error as ApiError).message;
+  }
+  return fallback;
 }
 
 export function AddressSearchMap() {
   const t = useTranslations("saleListing.addressSearch");
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const reverseReqIdRef = useRef(0);
+  const geocoderRef = useRef<google.maps.Geocoder | null>(null);
+  const mapRef = useRef<google.maps.Map | null>(null);
+
+  const { isLoaded: isGoogleLoaded } = useJsApiLoader({
+    id: "sale-address-google-map",
+    googleMapsApiKey: GOOGLE_MAPS_KEY,
+  });
 
   const [street, setStreet] = useState("");
   const [unit, setUnit] = useState("");
@@ -49,162 +94,295 @@ export function AddressSearchMap() {
   const [state, setState] = useState("");
   const [zip, setZip] = useState("");
   const [isSearching, setIsSearching] = useState(false);
-  const [searchResult, setSearchResult] = useState<SearchResult | null>(null);
+  const [isConfirming, setIsConfirming] = useState(false);
+  const [validatedPin, setValidatedPin] = useState<ValidatedPin | null>(null);
+  const [selectedPointLabel, setSelectedPointLabel] = useState("");
+  const [selectedPoint, setSelectedPoint] = useState<{ lat: number; lng: number } | null>(
+    null
+  );
 
   const [viewState, setViewState] = useState({
-    latitude: DEFAULT_CENTER.lat,
-    longitude: DEFAULT_CENTER.lng,
+    lat: DEFAULT_CENTER.lat,
+    lng: DEFAULT_CENTER.lng,
     zoom: DEFAULT_ZOOM,
   });
 
+  /** Clear marker/popover when address fields change (unit excluded). */
+  const clearValidatedPin = useCallback(() => {
+    setValidatedPin(null);
+    setSelectedPoint(null);
+    setSelectedPointLabel("");
+  }, []);
+
+  const runValidateAddress = useCallback(async () => {
+    return saleListingService.validateAddress({
+      streetAddress: street.trim(),
+      unit: unit.trim() || undefined,
+      city: city.trim(),
+      state: state.trim(),
+      zip: zip.trim(),
+    });
+  }, [street, unit, city, state, zip]);
+
   const handleSearch = useCallback(async () => {
-    if (!street && !city) return;
+    if (!hasRequiredAddressFields(street, city, state, zip)) {
+      toast.error(t("addressRequiredFields"));
+      return;
+    }
 
-    const query = [street, city, state, zip].filter(Boolean).join(", ");
     setIsSearching(true);
-
     try {
-      const response = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${MAPBOX_TOKEN}&limit=1`
-      );
-      const data = await response.json();
-
-      if (data.features && data.features.length > 0) {
-        const feature = data.features[0];
-        const [lng, lat] = feature.center as [number, number];
-
-        setSearchResult({
-          address: feature.place_name as string,
-          coordinates: { lat, lng },
-        });
-
-        setViewState({
-          latitude: lat,
-          longitude: lng,
-          zoom: 16,
-        });
-      }
-    } catch {
-      // Geocoding failed silently — user can retry
+      const validated = await runValidateAddress();
+      setValidatedPin({
+        address: validated.formattedAddress,
+        coordinates: {
+          lat: validated.latitude,
+          lng: validated.longitude,
+        },
+      });
+      setSelectedPoint({
+        lat: validated.latitude,
+        lng: validated.longitude,
+      });
+      setSelectedPointLabel(validated.formattedAddress);
+      setViewState({
+        lat: validated.latitude,
+        lng: validated.longitude,
+        zoom: 16,
+      });
+      mapRef.current?.panTo({
+        lat: validated.latitude,
+        lng: validated.longitude,
+      });
+      mapRef.current?.setZoom(16);
+    } catch (e) {
+      toast.error(apiErrorMessage(e, t("addressValidateError")));
     } finally {
       setIsSearching(false);
     }
-  }, [street, city, state, zip]);
+  }, [street, city, state, zip, runValidateAddress, t]);
 
-  const handleMapClick = useCallback(async (evt: { lngLat: { lat: number; lng: number } }) => {
-    const { lat, lng } = evt.lngLat;
-
-    try {
-      const response = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${MAPBOX_TOKEN}&types=address&limit=1`
-      );
-      const data = await response.json();
-
-      if (data.features && data.features.length > 0) {
-        const feature = data.features[0];
-        const context: { id: string; text: string; short_code?: string }[] = feature.context ?? [];
-
-        const streetNum = (feature.address as string) ?? "";
-        const streetName = (feature.text as string) ?? "";
-        const postcode = context.find((c) => c.id.startsWith("postcode"))?.text ?? "";
-        const cityName = context.find((c) => c.id.startsWith("place"))?.text ?? "";
-        const regionCode = context.find((c) => c.id.startsWith("region"))?.short_code ?? "";
-        const stateCode = regionCode.replace("US-", "");
-
-        setStreet(`${streetNum} ${streetName}`.trim());
-        setCity(cityName);
-        setState(stateCode);
-        setZip(postcode);
-
-        setSearchResult({
-          address: feature.place_name as string,
-          coordinates: { lat, lng },
-        });
-
-        setViewState((prev) => ({ ...prev, latitude: lat, longitude: lng, zoom: 16 }));
+  const handleMapClick = useCallback(
+    async (evt: google.maps.MapMouseEvent) => {
+      const clickLat = evt.latLng?.lat();
+      const clickLng = evt.latLng?.lng();
+      if (clickLat == null || clickLng == null) return;
+      if (!GOOGLE_MAPS_KEY) {
+        toast.error(t("googleMapsKeyMissing"));
+        return;
       }
-    } catch {
-      // reverse geocoding failed silently
+      if (!isGoogleLoaded) return;
+
+      // First map click while a popover is open: dismiss only (so user can pan / pick elsewhere).
+      // Second click: run normal pick + reverse geocode.
+      const popoverOpen = validatedPin !== null || selectedPoint !== null;
+      if (popoverOpen) {
+        clearValidatedPin();
+        return;
+      }
+
+      if (!geocoderRef.current) {
+        geocoderRef.current = new window.google.maps.Geocoder();
+      }
+      const geocoder = geocoderRef.current;
+
+      // Show immediate visual feedback for click selection.
+      setSelectedPoint({ lat: clickLat, lng: clickLng });
+      setValidatedPin(null);
+      setSelectedPointLabel("");
+
+      reverseReqIdRef.current += 1;
+      const requestId = reverseReqIdRef.current;
+      try {
+        const parsed = await reverseGeocodeToAddressFieldsGoogle(
+          geocoder,
+          clickLat,
+          clickLng
+        );
+        if (requestId !== reverseReqIdRef.current) return;
+        if (!parsed) {
+          toast.error(t("mapReverseGeocodeFailed"));
+          return;
+        }
+
+        setStreet(parsed.street);
+        setCity(parsed.city);
+        setState(parsed.state);
+        setZip(parsed.zip);
+        setSelectedPointLabel(parsed.label);
+
+        if (!parsed.street) {
+          const streetInput = firstVisibleInputByField("street");
+          streetInput?.focus();
+        } else if (!parsed.zip) {
+          const zipInput = firstVisibleInputByField("zip");
+          zipInput?.focus();
+        }
+
+        const filled = [parsed.street, parsed.city, parsed.state, parsed.zip].filter(
+          Boolean
+        ).length;
+        if (filled < 2) {
+          toast.message(t("mapPartialFillHint"), {
+            description: parsed.label || t("mapCompleteFieldsHint"),
+          });
+        }
+      } catch {
+        if (requestId !== reverseReqIdRef.current) return;
+        toast.error(t("mapReverseGeocodeFailed"));
+      }
+    },
+    [t, isGoogleLoaded, validatedPin, selectedPoint, clearValidatedPin]
+  );
+
+  const handleConfirmLocation = useCallback(async () => {
+    if (!hasRequiredAddressFields(street, city, state, zip)) {
+      toast.error(t("addressRequiredFields"));
+      return;
     }
-  }, []);
 
-  const handleConfirmLocation = useCallback(() => {
-    if (!searchResult) return;
+    setIsConfirming(true);
+    try {
+      dispatch(resetSaleForm());
+      const validated = await runValidateAddress();
+      dispatch(setSaleAddressFromConfirm({ validated }));
+      router.push(ROUTES.OWNER.SALE_CREATE);
+    } catch (e) {
+      toast.error(apiErrorMessage(e, t("addressValidateError")));
+    } finally {
+      setIsConfirming(false);
+    }
+  }, [dispatch, router, runValidateAddress, street, city, state, zip, t]);
 
-    dispatch(
-      setAddress({
-        street,
-        unit,
-        city,
-        state,
-        zip,
-        coordinates: searchResult.coordinates,
-      })
-    );
-
-    router.push(ROUTES.OWNER.SALE_CREATE);
-  }, [dispatch, router, searchResult, street, unit, city, state, zip]);
+  const onStreetChange = (v: string) => {
+    setStreet(v);
+    clearValidatedPin();
+  };
+  const onCityChange = (v: string) => {
+    setCity(v);
+    clearValidatedPin();
+  };
+  const onStateChange = (v: string) => {
+    setState(v);
+    clearValidatedPin();
+  };
+  const onZipChange = (v: string) => {
+    setZip(v);
+    clearValidatedPin();
+  };
 
   return (
     <div className="relative flex flex-col px-4 pt-2 md:px-8">
-      {/* Map */}
       <div className="relative h-[65vh] overflow-hidden rounded-[10px]">
-        <Map
-          {...viewState}
-          onMove={(evt: { viewState: typeof viewState }) => setViewState(evt.viewState)}
-          onClick={handleMapClick}
-          mapboxAccessToken={MAPBOX_TOKEN}
-          mapStyle="mapbox://styles/mapbox/streets-v12"
-          cooperativeGestures={true}
-          style={{ width: "100%", height: "100%" }}
-        >
-          <NavigationControl position="top-right" showCompass={false} />
+        {!GOOGLE_MAPS_KEY ? (
+          <div className="flex h-full items-center justify-center bg-muted/20 px-4 text-center text-sm text-muted-foreground">
+            {t("googleMapsKeyMissing")}
+          </div>
+        ) : isGoogleLoaded ? (
+          <GoogleMap
+            mapContainerStyle={{ width: "100%", height: "100%" }}
+            center={viewState}
+            zoom={viewState.zoom}
+            onClick={(evt) => void handleMapClick(evt)}
+            onLoad={(map) => {
+              mapRef.current = map;
+            }}
+            onUnmount={() => {
+              mapRef.current = null;
+            }}
+            options={{
+              gestureHandling: "cooperative",
+              disableDefaultUI: false,
+              clickableIcons: false,
+              mapTypeControl: false,
+              streetViewControl: false,
+              fullscreenControl: false,
+              zoomControl: true,
+            }}
+          >
+            {!validatedPin && selectedPoint && (
+              <MarkerF
+                position={{ lat: selectedPoint.lat, lng: selectedPoint.lng }}
+                opacity={0.8}
+              />
+            )}
 
-          {searchResult && (
-            <>
-              <Marker
-                latitude={searchResult.coordinates.lat}
-                longitude={searchResult.coordinates.lng}
-                anchor="bottom"
-              >
-                <MapPin className="size-8 fill-foreground text-foreground" />
-              </Marker>
+            {validatedPin && (
+              <>
+                <MarkerF
+                  position={{
+                    lat: validatedPin.coordinates.lat,
+                    lng: validatedPin.coordinates.lng,
+                  }}
+                />
+                <InfoWindowF
+                  position={{
+                    lat: validatedPin.coordinates.lat,
+                    lng: validatedPin.coordinates.lng,
+                  }}
+                  options={{
+                    disableAutoPan: true,
+                    // Remove default Google header/close affordance for compact custom card UI.
+                    headerDisabled: true,
+                  }}
+                >
+                  <div className="w-[260px] p-2 sm:w-[300px]">
+                    <p className="mb-3 text-sm font-semibold leading-5 text-foreground sm:text-base">
+                      {validatedPin.address}
+                    </p>
+                    <Button
+                      type="button"
+                      onClick={() => void handleConfirmLocation()}
+                      disabled={isConfirming}
+                      className="shadow-none! mx-auto block h-10 min-w-[200px] bg-brand px-5 text-white hover:bg-brand/90"
+                    >
+                      {t("confirmLocation")}
+                    </Button>
+                  </div>
+                </InfoWindowF>
+              </>
+            )}
 
-              <Popup
-                latitude={searchResult.coordinates.lat}
-                longitude={searchResult.coordinates.lng}
-                offset={10}
-                closeOnClick={false}
-                closeButton={false}
-                anchor="bottom"
+            {!validatedPin && selectedPoint && (
+              <InfoWindowF
+                position={{ lat: selectedPoint.lat, lng: selectedPoint.lng }}
+                options={{
+                  disableAutoPan: true,
+                  headerDisabled: true,
+                }}
               >
-                <div className="p-4">
-                  <p className="mb-3 text-base font-bold text-foreground">
-                    {searchResult.address}
+                <div className="w-[260px] p-2 sm:w-[300px]">
+                  <p className="mb-3 text-sm font-semibold leading-5 text-foreground sm:text-base">
+                    {selectedPointLabel || [street, city, state, zip].filter(Boolean).join(", ")}
                   </p>
                   <Button
-                    onClick={handleConfirmLocation}
-                    className="btn-brand-shadow w-full bg-brand text-white hover:bg-brand/90"
+                    type="button"
+                    onClick={() => void handleConfirmLocation()}
+                    disabled={isConfirming}
+                    className="btn-brand-shadow mx-auto block h-10 min-w-[180px] bg-brand px-5 text-white hover:bg-brand/90"
                   >
                     {t("confirmLocation")}
                   </Button>
                 </div>
-              </Popup>
-            </>
-          )}
-        </Map>
+              </InfoWindowF>
+            )}
+          </GoogleMap>
+        ) : (
+          <div className="flex h-full items-center justify-center bg-muted/20 text-sm text-muted-foreground">
+            {t("mapLoading")}
+          </div>
+        )}
       </div>
 
-      {/* Search Card */}
       <div className="relative z-10 -mt-10 px-4 pb-6 md:-mt-14 md:px-8">
         <div className="mx-auto max-w-5xl rounded-xl bg-white p-4 shadow-lg md:p-6">
-          {/* Desktop: single row */}
           <div className="hidden items-end gap-3 md:flex">
             <div className="flex-1">
               <Input
+                data-address-field="street"
                 placeholder={t("streetAddress")}
                 value={street}
-                onChange={(e) => setStreet(e.target.value)}
+                onChange={(e) => onStreetChange(e.target.value)}
                 className="h-12"
               />
             </div>
@@ -220,47 +398,43 @@ export function AddressSearchMap() {
               <Input
                 placeholder={t("city")}
                 value={city}
-                onChange={(e) => setCity(e.target.value)}
+                onChange={(e) => onCityChange(e.target.value)}
+                className="h-12"
+              />
+            </div>
+            <div className="min-w-28 flex-1">
+              <Input
+                placeholder={t("state")}
+                value={state}
+                onChange={(e) => onStateChange(e.target.value)}
                 className="h-12"
               />
             </div>
             <div className="w-28">
-              <Select value={state} onValueChange={(v) => setState(v ?? "")}>
-                <SelectTrigger className="h-12! w-full text-base">
-                  <SelectValue placeholder={t("state")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {US_STATES.map((s) => (
-                    <SelectItem key={s} value={s}>
-                      {s}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="w-28">
               <Input
+                data-address-field="zip"
                 placeholder={t("zip")}
                 value={zip}
-                onChange={(e) => setZip(e.target.value)}
+                onChange={(e) => onZipChange(e.target.value)}
                 className="h-12"
               />
             </div>
             <Button
-              onClick={handleSearch}
-              disabled={isSearching}
+              type="button"
+              onClick={() => void handleSearch()}
+              disabled={isSearching || isConfirming}
               className="btn-brand-shadow h-12 bg-brand px-8 text-white hover:bg-brand/90"
             >
               {t("search")}
             </Button>
           </div>
 
-          {/* Mobile: stacked layout */}
           <div className="flex flex-col gap-3 md:hidden">
             <Input
+              data-address-field="street"
               placeholder={t("streetAddress")}
               value={street}
-              onChange={(e) => setStreet(e.target.value)}
+              onChange={(e) => onStreetChange(e.target.value)}
               className="h-12"
             />
             <div className="grid grid-cols-2 gap-3">
@@ -273,33 +447,29 @@ export function AddressSearchMap() {
               <Input
                 placeholder={t("city")}
                 value={city}
-                onChange={(e) => setCity(e.target.value)}
+                onChange={(e) => onCityChange(e.target.value)}
                 className="h-12"
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <Select value={state} onValueChange={(v) => setState(v ?? "")}>
-                <SelectTrigger className="h-12! w-full text-base">
-                  <SelectValue placeholder={t("state")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {US_STATES.map((s) => (
-                    <SelectItem key={s} value={s}>
-                      {s}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
               <Input
+                placeholder={t("state")}
+                value={state}
+                onChange={(e) => onStateChange(e.target.value)}
+                className="h-12"
+              />
+              <Input
+                data-address-field="zip"
                 placeholder={t("zip")}
                 value={zip}
-                onChange={(e) => setZip(e.target.value)}
+                onChange={(e) => onZipChange(e.target.value)}
                 className="h-12"
               />
             </div>
             <Button
-              onClick={handleSearch}
-              disabled={isSearching}
+              type="button"
+              onClick={() => void handleSearch()}
+              disabled={isSearching || isConfirming}
               className="btn-brand-shadow h-12 w-full bg-brand text-white hover:bg-brand/90"
             >
               {t("search")}
@@ -308,7 +478,6 @@ export function AddressSearchMap() {
         </div>
       </div>
 
-      {/* Other posting options */}
       <div className="pb-8 text-center">
         <span className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
           {t("otherPostingOptions")}:{" "}
@@ -316,7 +485,7 @@ export function AddressSearchMap() {
         <button
           type="button"
           onClick={() => router.push(ROUTES.OWNER.CREATE)}
-          className="text-sm font-semibold tracking-wide text-brand uppercase hover:underline cursor-pointer"
+          className="cursor-pointer text-sm font-semibold tracking-wide text-brand uppercase hover:underline"
         >
           {t("rent")}
         </button>

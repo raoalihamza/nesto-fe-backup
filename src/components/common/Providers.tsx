@@ -15,7 +15,10 @@ function AuthInitializer({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const accessToken = localStorage.getItem("nesto_access_token");
-    if (!accessToken) return;
+    if (!accessToken) {
+      dispatch(logout());
+      return;
+    }
 
     authService
       .me()

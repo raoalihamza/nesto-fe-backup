@@ -1,12 +1,19 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import type { BackendUser } from "@/types/user";
 
+/** Client bootstrap: token check + optional `me()` before gating private routes. */
+export type AuthSessionStatus =
+  | "checking"
+  | "unauthenticated"
+  | "authenticated";
+
 interface AuthState {
   user: BackendUser | null;
   accessToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
+  sessionStatus: AuthSessionStatus;
 }
 
 const initialState: AuthState = {
@@ -15,6 +22,7 @@ const initialState: AuthState = {
   isAuthenticated: false,
   isLoading: false,
   error: null,
+  sessionStatus: "checking",
 };
 
 const authSlice = createSlice({
@@ -34,6 +42,7 @@ const authSlice = createSlice({
       state.isAuthenticated = true;
       state.isLoading = false;
       state.error = null;
+      state.sessionStatus = "authenticated";
       if (typeof window !== "undefined") {
         localStorage.setItem("nesto_access_token", action.payload.accessToken);
         localStorage.setItem(
@@ -51,12 +60,14 @@ const authSlice = createSlice({
       state.isAuthenticated = true;
       state.isLoading = false;
       state.error = null;
+      state.sessionStatus = "authenticated";
     },
     logout(state) {
       state.user = null;
       state.accessToken = null;
       state.isAuthenticated = false;
       state.error = null;
+      state.sessionStatus = "unauthenticated";
       if (typeof window !== "undefined") {
         localStorage.removeItem("nesto_access_token");
         localStorage.removeItem("nesto_refresh_token");

@@ -4,6 +4,11 @@ import Image from "next/image";
 import { Pencil, Eye, Archive, Home, Trash2, Loader2 } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { ListingStatusBadge } from "@/components/owner/ListingStatusBadge";
 import { formatListingPrice, formatListingLocation } from "@/lib/utils/listingDisplay";
 import type { MyListingItem } from "@/types/listings";
@@ -33,16 +38,29 @@ export function ListingTable({
   const locale = useLocale();
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full border-separate border-spacing-y-1">
+    <div className="min-w-0 overflow-x-auto">
+      <table className="w-full min-w-0 table-fixed border-separate border-spacing-y-1">
         <thead>
           <tr className="text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-            <th className="bg-muted/50 px-4 py-3 font-semibold">{t("propertyInformation")}</th>
-            <th className="bg-muted/50 px-4 py-3 font-semibold">{t("status")}</th>
-            <th className="bg-muted/50 px-4 py-3 font-semibold">{t("lease")}</th>
-            <th className="bg-muted/50 px-4 py-3 font-semibold">{t("published")}</th>
-            <th className="bg-muted/50 px-4 py-3 font-semibold">{t("price")}</th>
-            <th className="bg-muted/50 px-4 py-3 font-semibold">{t("action")}</th>
+            {/* % width uses remaining table space; max-width caps so truncate + tooltip stay meaningful */}
+            <th className="min-w-0 w-[30%] max-w-[320px] overflow-hidden bg-muted/50 px-4 py-3 font-semibold">
+              {t("propertyInformation")}
+            </th>
+            <th className="w-[82px] whitespace-nowrap bg-muted/50 px-2 py-3 font-semibold">
+              {t("status")}
+            </th>
+            <th className="w-[88px] whitespace-nowrap bg-muted/50 px-2 py-3 font-semibold">
+              {t("lease")}
+            </th>
+            <th className="w-[86px] whitespace-nowrap bg-muted/50 px-2 py-3 font-semibold">
+              {t("published")}
+            </th>
+            <th className="w-[104px] whitespace-nowrap bg-muted/50 px-2 py-3 font-semibold">
+              {t("price")}
+            </th>
+            <th className="w-[80px] whitespace-nowrap bg-muted/50 px-2 py-3 font-semibold">
+              {t("action")}
+            </th>
           </tr>
         </thead>
         <tbody className="divide-y divide-border">
@@ -56,10 +74,12 @@ export function ListingTable({
               </td>
             </tr>
           )}
-          {listings.map((listing) => (
+          {listings.map((listing) => {
+            const addressLine = formatListingLocation(listing.location);
+            return (
             <tr key={listing.id} className="group">
-              <td className="px-4 py-4">
-                <div className="flex items-center gap-3">
+              <td className="min-w-0 w-[24%] max-w-[280px] overflow-hidden px-4 py-4 align-middle">
+                <div className="flex min-w-0 items-center gap-3">
                   <div className="relative h-12 w-16 shrink-0 overflow-hidden rounded-lg">
                     <Image
                       src={listing.thumbnailUrl ?? "/images/property.jpg"}
@@ -68,35 +88,47 @@ export function ListingTable({
                       className="object-cover"
                     />
                   </div>
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-foreground">
-                      {listing.title}
-                    </p>
-                    <p className="truncate text-xs text-muted-foreground">
-                      {formatListingLocation(listing.location)}
-                    </p>
-                  </div>
+                  <Tooltip>
+                    <TooltipTrigger className="min-w-0 w-full flex-1 cursor-default overflow-hidden text-left">
+                      <p className="truncate text-sm font-semibold text-foreground">
+                        {listing.title}
+                      </p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {addressLine}
+                      </p>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="max-w-sm whitespace-normal text-xs">
+                      <p className="font-semibold text-background">{listing.title}</p>
+                      <p className="mt-1 text-background/90">{addressLine}</p>
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
               </td>
-              <td className="px-4 py-4">
+              <td className="px-2 py-4 align-middle">
                 <ListingStatusBadge statusLabel={listing.statusLabel} statusTone={listing.statusTone} />
               </td>
-              <td className="px-4 py-4">
-                <p className="text-sm text-foreground">{listing.leaseDuration ? listing.leaseDuration.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) : "—"}</p>
+              <td className="whitespace-nowrap px-2 py-4 align-middle">
+                <p className="text-sm text-foreground">
+                  {listing.leaseDuration
+                    ? listing.leaseDuration
+                        .replace(/_/g, " ")
+                        .replace(/\b\w/g, (c) => c.toUpperCase())
+                    : "—"}
+                </p>
               </td>
-              <td className="px-4 py-4">
+              <td className="whitespace-nowrap px-2 py-4 align-middle">
                 <p className="text-sm text-foreground">
                   {listing.publishedAt
                     ? new Date(listing.publishedAt).toLocaleDateString(locale)
                     : "—"}
                 </p>
               </td>
-              <td className="px-4 py-4">
+              <td className="whitespace-nowrap px-2 py-4 align-middle">
                 <p className="text-sm text-foreground">
                   {formatListingPrice(listing.pricing)}
                 </p>
               </td>
-              <td className="px-4 py-4">
+              <td className="whitespace-nowrap px-2 py-4 align-middle">
                 <div className="flex gap-1">
                   {isDraft(listing) ? (
                     <>
@@ -142,7 +174,8 @@ export function ListingTable({
                 </div>
               </td>
             </tr>
-          ))}
+            );
+          })}
         </tbody>
       </table>
     </div>

@@ -4,6 +4,8 @@ import { ROUTES } from "@/lib/constants/routes";
 const ALLOWED_RETURN_PATHS = new Set<string>([
   ROUTES.OWNER.CREATE,
   ROUTES.OWNER.DASHBOARD,
+  ROUTES.OWNER.SALE,
+  ROUTES.OWNER.SALE_CREATE,
 ]);
 
 /**

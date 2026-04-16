@@ -1,4 +1,13 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+import type { SaleValidatedAddress } from "@/lib/api/saleListing.service";
+
+export type { SaleValidatedAddress };
+/** @deprecated Import from `@/lib/saleListing/saleListingFormTypes` — form state is RHF, not Redux. */
+export type {
+  SaleFormData,
+  SaleListingPhoto,
+  OpenHouseEntry,
+} from "@/lib/saleListing/saleListingFormTypes";
 
 export interface SaleAddressData {
   street: string;
@@ -9,111 +18,14 @@ export interface SaleAddressData {
   coordinates: { lat: number; lng: number } | null;
 }
 
-export interface OpenHouseEntry {
-  date: string;
-  startTime: string;
-  endTime: string;
-}
-
-/** Confirmed sale listing photo from presign → S3 → confirm (used for display + DELETE). */
-export interface SaleListingPhoto {
-  id: string;
-  url: string;
-  fileName: string;
-  fileSizeBytes?: number;
-}
-
-export interface SaleFormData {
-  // Pricing
-  price: number | null;
-
-  // Media
-  photos: SaleListingPhoto[];
-  virtualTourUrl: string;
-  tourUrl3D: string;
-
-  // Home facts
-  homeType: string;
-  hoaDues: string;
-  beds: string;
-  squareFootage: string;
-  fullBaths: string;
-  threeFourthBaths: string;
-  halfBaths: string;
-  quarterBaths: string;
-  description: string;
-  finishedSqFt: string;
-  lotSize: string;
-  lotSizeUnit: string;
-  yearBuilt: string;
-  structuralRemodelYear: string;
-
-  // Open house
-  openHouseDates: OpenHouseEntry[];
-
-  // Additional info
-  realtorWebsite: string;
-  additionalInfo: string;
-
-  // Room details
-  rooms: string[];
-  totalRooms: string;
-
-  // Appliances
-  appliances: string[];
-
-  // Floor coverings
-  flooring: string[];
-
-  // Utility details
-  heating: string[];
-  cooling: string[];
-  electric: string[];
-  water: string[];
-  waterHeater: string[];
-
-  // Building details
-  conditionType: string;
-  architectureStyle: string;
-  construction: string[];
-
-  // Exterior features
-  exteriorFeatures: string[];
-
-  // Building amenities
-  buildingAmenities: string[];
-
-  // Architecture style (radio)
-  architectureType: string;
-
-  // Style (radio)
-  styleType: string;
-
-  // Exterior material
-  exteriorMaterial: string[];
-
-  // Outdoor amenities
-  outdoorAmenities: string[];
-  stories: string;
-
-  // Parking
-  parking: string[];
-  parkingSpaces: string;
-
-  // Roof
-  roof: string[];
-
-  // Contact
-  contactPhone: string;
-
-  // Terms
-  agreedToTerms: boolean;
-}
-
 export interface SaleListingState {
   address: SaleAddressData;
-  formData: SaleFormData;
-  isDirty: boolean;
+  /** Set only after successful “Yes, this is my location” + address-validate. */
+  validatedAddress: SaleValidatedAddress | null;
+  /** Firebase + POST /listings/sale/verify-phone succeeded for `verifiedSalePhone`. */
+  salePhoneVerified: boolean;
+  /** E.164 phone that passed sale verify-phone (must match contact at publish). */
+  verifiedSalePhone: string | null;
 }
 
 const initialAddress: SaleAddressData = {
@@ -125,58 +37,11 @@ const initialAddress: SaleAddressData = {
   coordinates: null,
 };
 
-const initialFormData: SaleFormData = {
-  price: null,
-  photos: [],
-  virtualTourUrl: "",
-  tourUrl3D: "",
-  homeType: "",
-  hoaDues: "",
-  beds: "",
-  squareFootage: "",
-  fullBaths: "",
-  threeFourthBaths: "",
-  halfBaths: "",
-  quarterBaths: "",
-  description: "",
-  finishedSqFt: "",
-  lotSize: "",
-  lotSizeUnit: "sqft",
-  yearBuilt: "",
-  structuralRemodelYear: "",
-  openHouseDates: [],
-  realtorWebsite: "",
-  additionalInfo: "",
-  rooms: [],
-  totalRooms: "",
-  appliances: [],
-  flooring: [],
-  heating: [],
-  cooling: [],
-  electric: [],
-  water: [],
-  waterHeater: [],
-  conditionType: "",
-  architectureStyle: "",
-  construction: [],
-  exteriorFeatures: [],
-  buildingAmenities: [],
-  architectureType: "",
-  styleType: "",
-  exteriorMaterial: [],
-  outdoorAmenities: [],
-  stories: "",
-  parking: [],
-  parkingSpaces: "",
-  roof: [],
-  contactPhone: "",
-  agreedToTerms: false,
-};
-
 const initialState: SaleListingState = {
   address: initialAddress,
-  formData: initialFormData,
-  isDirty: false,
+  validatedAddress: null,
+  salePhoneVerified: false,
+  verifiedSalePhone: null,
 };
 
 const saleListingSlice = createSlice({
@@ -186,11 +51,31 @@ const saleListingSlice = createSlice({
     setAddress(state, action: PayloadAction<SaleAddressData>) {
       state.address = action.payload;
     },
-    setSaleFormData(state, action: PayloadAction<Partial<SaleFormData>>) {
-      state.formData = { ...state.formData, ...action.payload };
+    /** After confirm: canonical backend address + editable mirror for display. */
+    setSaleAddressFromConfirm(
+      state,
+      action: PayloadAction<{ validated: SaleValidatedAddress }>
+    ) {
+      const v = action.payload.validated;
+      state.validatedAddress = v;
+      state.address = {
+        street: v.addressLine1,
+        unit: v.unit ?? "",
+        city: v.city,
+        state: v.state,
+        zip: v.postalCode,
+        coordinates: { lat: v.latitude, lng: v.longitude },
+      };
     },
-    setIsDirty(state, action: PayloadAction<boolean>) {
-      state.isDirty = action.payload;
+    clearSaleValidatedAddress(state) {
+      state.validatedAddress = null;
+    },
+    setSalePhoneVerification(
+      state,
+      action: PayloadAction<{ verified: boolean; phoneE164: string | null }>
+    ) {
+      state.salePhoneVerified = action.payload.verified;
+      state.verifiedSalePhone = action.payload.phoneE164;
     },
     resetSaleForm() {
       return initialState;
@@ -198,7 +83,12 @@ const saleListingSlice = createSlice({
   },
 });
 
-export const { setAddress, setSaleFormData, setIsDirty, resetSaleForm } =
-  saleListingSlice.actions;
+export const {
+  setAddress,
+  setSaleAddressFromConfirm,
+  clearSaleValidatedAddress,
+  setSalePhoneVerification,
+  resetSaleForm,
+} = saleListingSlice.actions;
 
 export default saleListingSlice.reducer;
