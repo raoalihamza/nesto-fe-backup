@@ -18,6 +18,10 @@ function isDraft(listing: MyListingItem) {
   return listing.status.toLowerCase() === "draft";
 }
 
+function isArchived(listing: MyListingItem) {
+  return listing.status.toLowerCase() === "archived";
+}
+
 interface ListingCardProps {
   listing: MyListingItem;
   onArchive?: (listing: MyListingItem) => void;
@@ -100,7 +104,7 @@ export function ListingCard({
                     <Archive className="size-4" />
                     {tDashboard("archive")}
                   </DropdownMenuItem>
-                ) : (
+                ) : isArchived(listing) ? null : (
                   <DropdownMenuItem disabled>
                     {tDashboard("action")}
                   </DropdownMenuItem>

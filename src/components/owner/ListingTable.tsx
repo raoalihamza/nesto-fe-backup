@@ -17,6 +17,10 @@ function isDraft(listing: MyListingItem) {
   return listing.status.toLowerCase() === "draft";
 }
 
+function isArchived(listing: MyListingItem) {
+  return listing.status.toLowerCase() === "archived";
+}
+
 interface ListingTableProps {
   listings: MyListingItem[];
   onArchive?: (listing: MyListingItem) => void;
@@ -163,7 +167,7 @@ export function ListingTable({
                         <Archive className="size-4" />
                       )}
                     </button>
-                  ) : (
+                  ) : isArchived(listing) ? null : (
                     <button className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer">
                       <Pencil className="size-4" />
                     </button>
