@@ -934,6 +934,7 @@ export const SaleListingContactFooterBlock = memo(
     onValidSubmit,
     onInvalidSubmit,
     isSubmitting,
+    isEditMode = false,
   }: {
     control: Control<SaleFormData>;
     patch: SaleFormPatch;
@@ -943,9 +944,20 @@ export const SaleListingContactFooterBlock = memo(
     onValidSubmit: SubmitHandler<SaleFormData>;
     onInvalidSubmit: SubmitErrorHandler<SaleFormData>;
     isSubmitting: boolean;
+    isEditMode?: boolean;
   }) {
     const contactPhone = useWatch({ control, name: "contactPhone" }) ?? "";
     const agreedToTerms = useWatch({ control, name: "agreedToTerms" }) ?? false;
+
+    const submitDisabled =
+      isSubmitting || (!isEditMode && !agreedToTerms);
+    const submitLabel = isSubmitting
+      ? isEditMode
+        ? t("editSaving")
+        : t("submitting")
+      : isEditMode
+        ? t("editSaveButton")
+        : t("submitButton");
 
     return (
       <>
@@ -971,26 +983,28 @@ export const SaleListingContactFooterBlock = memo(
         </div>
 
         <div className="mt-10 border-t border-border pt-8">
-          <label className="flex max-w-2xl cursor-pointer items-start gap-3 text-sm leading-relaxed text-muted-foreground">
-            <Checkbox
-              checked={agreedToTerms}
-              onCheckedChange={(checked) =>
-                patch({ agreedToTerms: checked === true })
-              }
-              className="mt-0.5"
-            />
-            <span>{t("termsText")}</span>
-          </label>
+          {!isEditMode && (
+            <label className="flex max-w-2xl cursor-pointer items-start gap-3 text-sm leading-relaxed text-muted-foreground">
+              <Checkbox
+                checked={agreedToTerms}
+                onCheckedChange={(checked) =>
+                  patch({ agreedToTerms: checked === true })
+                }
+                className="mt-0.5"
+              />
+              <span>{t("termsText")}</span>
+            </label>
+          )}
 
           <Button
             type="button"
             onClick={() =>
               void handleSubmit(onValidSubmit, onInvalidSubmit)()
             }
-            disabled={!agreedToTerms || isSubmitting}
+            disabled={submitDisabled}
             className="btn-brand-shadow mt-6 h-12 bg-brand px-10 text-white hover:bg-brand/90"
           >
-            {isSubmitting ? t("submitting") : t("submitButton")}
+            {submitLabel}
           </Button>
         </div>
       </>

@@ -655,7 +655,14 @@
       "termsText": "Men quyidagilarni tan olaman va tushunaman: Men uy egasi nomidan harakat qilish vakolatiga egaman. Noto'g'ri ma'lumot bermayman. Nesto Foydalanish shartlari va E'lon sifati siyosatiga rioya qilaman.",
       "submitButton": "Hozir e'lon bering!",
       "submitting": "Yuborilmoqda...",
-      "submitError": "Xatolik yuz berdi. Qaytadan urinib ko'ring."
+      "submitError": "Xatolik yuz berdi. Qaytadan urinib ko'ring.",
+      "editTitle": "Sotuv e'lonini tahrirlash",
+      "editLoading": "E'lon yuklanmoqda...",
+      "editLoadError": "Ushbu e'lonni yuklab bo'lmadi. Qaytadan urinib ko'ring.",
+      "editSaveButton": "O'zgarishlarni saqlash",
+      "editSaving": "Saqlanmoqda...",
+      "editSaveSuccess": "E'lon yangilandi.",
+      "photoLastCannotDelete": "E'londa kamida bitta suratni saqlab qolish kerak."
     },
     "options": {
       "homeType": {

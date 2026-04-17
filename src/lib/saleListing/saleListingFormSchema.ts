@@ -209,5 +209,6 @@ export const saleListingFormSchema = z
     };
     noneExclusive(data.cooling, "none", "cooling");
     noneExclusive(data.waterHeater, "none_heater", "waterHeater");
+    noneExclusive(data.water, "none_water", "water");
     noneExclusive(data.parking, "none", "parking");
   });

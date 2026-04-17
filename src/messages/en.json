@@ -655,7 +655,14 @@
       "termsText": "I agree to acknowledge and understand the following: I can have authority to act on behalf of the owner of this home. I will not provide incorrect information or omit a discriminating preference. I will comply with the Nesto Terms of Use and our Listing Quality Policy.",
       "submitButton": "Get to list it now!",
       "submitting": "Submitting...",
-      "submitError": "Something went wrong. Please try again."
+      "submitError": "Something went wrong. Please try again.",
+      "editTitle": "Edit your sale listing",
+      "editLoading": "Loading your listing...",
+      "editLoadError": "Could not load this listing. Please try again.",
+      "editSaveButton": "Save changes",
+      "editSaving": "Saving...",
+      "editSaveSuccess": "Your listing has been updated.",
+      "photoLastCannotDelete": "You must keep at least one photo on the listing."
     },
     "options": {
       "homeType": {

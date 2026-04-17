@@ -20,6 +20,7 @@ export const ROUTES = {
     PREVIEW: (id: string) => `/listings/${id}/preview`,
     SALE: "/listings/sale",
     SALE_CREATE: "/listings/sale/create",
+    SALE_EDIT: (id: string) => `/listings/sale/${id}/edit`,
     APPLICANTS: "/applicants",
     ANALYTICS: "/analytics",
   },

@@ -21,10 +21,21 @@ function isArchived(listing: MyListingItem) {
   return listing.status.toLowerCase() === "archived";
 }
 
+/** Published sale/rent listings are editable (excluding draft/archived/sold). */
+function canEditPublishedListing(listing: MyListingItem) {
+  const status = (listing.status ?? "").toLowerCase();
+  if (status === "draft" || status === "archived" || status === "sold") {
+    return false;
+  }
+  const type = (listing.listingType ?? "").toString().toLowerCase();
+  return type === "sale" || type === "rent";
+}
+
 interface ListingTableProps {
   listings: MyListingItem[];
   onArchive?: (listing: MyListingItem) => void;
   onEditDraft?: (listing: MyListingItem) => void;
+  onEditListing?: (listing: MyListingItem) => void;
   onDeleteDraft?: (listing: MyListingItem) => void;
   deletingDraftId?: string | null;
   archivingListingId?: string | null;
@@ -34,6 +45,7 @@ export function ListingTable({
   listings,
   onArchive,
   onEditDraft,
+  onEditListing,
   onDeleteDraft,
   deletingDraftId,
   archivingListingId,
@@ -155,22 +167,35 @@ export function ListingTable({
                         )}
                       </button>
                     </>
-                  ) : listing.actionFlags.canArchive ? (
-                    <button
-                      className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
-                      onClick={() => onArchive?.(listing)}
-                      disabled={archivingListingId === listing.id}
-                    >
-                      {archivingListingId === listing.id ? (
-                        <Loader2 className="size-4 animate-spin" />
-                      ) : (
-                        <Archive className="size-4" />
+                  ) : (
+                    <>
+                      {canEditPublishedListing(listing) && (
+                        <button
+                          className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
+                          onClick={() => onEditListing?.(listing)}
+                          aria-label={t("action")}
+                        >
+                          <Pencil className="size-4" />
+                        </button>
                       )}
-                    </button>
-                  ) : isArchived(listing) ? null : (
-                    <button className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer">
-                      <Pencil className="size-4" />
-                    </button>
+                      {listing.actionFlags.canArchive ? (
+                        <button
+                          className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
+                          onClick={() => onArchive?.(listing)}
+                          disabled={archivingListingId === listing.id}
+                        >
+                          {archivingListingId === listing.id ? (
+                            <Loader2 className="size-4 animate-spin" />
+                          ) : (
+                            <Archive className="size-4" />
+                          )}
+                        </button>
+                      ) : isArchived(listing) || canEditPublishedListing(listing) ? null : (
+                        <button className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer">
+                          <Pencil className="size-4" />
+                        </button>
+                      )}
+                    </>
                   )}
                   <button className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer">
                     <Eye className="size-4" />

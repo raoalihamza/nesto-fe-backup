@@ -22,10 +22,21 @@ function isArchived(listing: MyListingItem) {
   return listing.status.toLowerCase() === "archived";
 }
 
+/** Published sale/rent listings are editable (excluding draft/archived/sold). */
+function canEditPublishedListing(listing: MyListingItem) {
+  const status = (listing.status ?? "").toLowerCase();
+  if (status === "draft" || status === "archived" || status === "sold") {
+    return false;
+  }
+  const type = (listing.listingType ?? "").toString().toLowerCase();
+  return type === "sale" || type === "rent";
+}
+
 interface ListingCardProps {
   listing: MyListingItem;
   onArchive?: (listing: MyListingItem) => void;
   onEditDraft?: (listing: MyListingItem) => void;
+  onEditListing?: (listing: MyListingItem) => void;
   onDeleteDraft?: (listing: MyListingItem) => void;
   deletingDraftId?: string | null;
   archivingListingId?: string | null;
@@ -35,6 +46,7 @@ export function ListingCard({
   listing,
   onArchive,
   onEditDraft,
+  onEditListing,
   onDeleteDraft,
   deletingDraftId,
   archivingListingId,
@@ -99,15 +111,25 @@ export function ListingCard({
                       {tCommon("delete")}
                     </DropdownMenuItem>
                   </>
-                ) : listing.actionFlags.canArchive ? (
-                  <DropdownMenuItem onClick={() => onArchive?.(listing)}>
-                    <Archive className="size-4" />
-                    {tDashboard("archive")}
-                  </DropdownMenuItem>
-                ) : isArchived(listing) ? null : (
-                  <DropdownMenuItem disabled>
-                    {tDashboard("action")}
-                  </DropdownMenuItem>
+                ) : (
+                  <>
+                    {canEditPublishedListing(listing) && (
+                      <DropdownMenuItem onClick={() => onEditListing?.(listing)}>
+                        <Pencil className="size-4" />
+                        {tCommon("edit")}
+                      </DropdownMenuItem>
+                    )}
+                    {listing.actionFlags.canArchive ? (
+                      <DropdownMenuItem onClick={() => onArchive?.(listing)}>
+                        <Archive className="size-4" />
+                        {tDashboard("archive")}
+                      </DropdownMenuItem>
+                    ) : isArchived(listing) || canEditPublishedListing(listing) ? null : (
+                      <DropdownMenuItem disabled>
+                        {tDashboard("action")}
+                      </DropdownMenuItem>
+                    )}
+                  </>
                 )}
               </DropdownMenuContent>
             </DropdownMenu>

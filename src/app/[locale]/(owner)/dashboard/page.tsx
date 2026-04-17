@@ -16,6 +16,7 @@ import {
   useDeleteRentDraftListing,
 } from "@/hooks/listings";
 import { useRouter } from "@/i18n/routing";
+import { ROUTES } from "@/lib/constants/routes";
 import type { MyListingItem } from "@/types/listings";
 import {
   Dialog,
@@ -172,6 +173,19 @@ export default function DashboardPage() {
 
   const handleEditDraft = useCallback(
     (listing: MyListingItem) => {
+      router.push(`/listings/create/${listing.id}`);
+    },
+    [router]
+  );
+
+  const handleEditListing = useCallback(
+    (listing: MyListingItem) => {
+      const type = (listing.listingType ?? "").toString().toLowerCase();
+      if (type === "sale") {
+        router.push(ROUTES.OWNER.SALE_EDIT(listing.id));
+        return;
+      }
+      // Rent listings (published or draft) reuse the rent stepper edit route.
       router.push(`/listings/create/${listing.id}`);
     },
     [router]
@@ -351,6 +365,7 @@ export default function DashboardPage() {
                   listings={overviewItems}
                   onArchive={handleOpenArchive}
                   onEditDraft={handleEditDraft}
+                  onEditListing={handleEditListing}
                   onDeleteDraft={handleOpenDeleteDraft}
                   deletingDraftId={deletingDraftId}
                   archivingListingId={archivingListingId}
@@ -372,6 +387,7 @@ export default function DashboardPage() {
                     listing={listing}
                     onArchive={handleOpenArchive}
                     onEditDraft={handleEditDraft}
+                    onEditListing={handleEditListing}
                     onDeleteDraft={handleOpenDeleteDraft}
                     deletingDraftId={deletingDraftId}
                     archivingListingId={archivingListingId}
@@ -568,6 +584,7 @@ export default function DashboardPage() {
                 listings={myListingsItems}
                 onArchive={handleOpenArchive}
                 onEditDraft={handleEditDraft}
+                onEditListing={handleEditListing}
                 onDeleteDraft={handleOpenDeleteDraft}
                 deletingDraftId={deletingDraftId}
                 archivingListingId={archivingListingId}
@@ -589,6 +606,7 @@ export default function DashboardPage() {
                   listing={listing}
                   onArchive={handleOpenArchive}
                   onEditDraft={handleEditDraft}
+                  onEditListing={handleEditListing}
                   onDeleteDraft={handleOpenDeleteDraft}
                   deletingDraftId={deletingDraftId}
                   archivingListingId={archivingListingId}

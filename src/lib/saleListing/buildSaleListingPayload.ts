@@ -71,6 +71,16 @@ const ARCHITECTURAL_STYLE: Record<string, string> = {
   other_arch: "other",
 };
 
+// Electric UI key → electricType API enum.
+const ELECTRIC_TYPE: Record<string, string> = {
+  other_electric: "other",
+};
+
+// Water UI key → waterType API enum.
+const WATER_TYPE: Record<string, string> = {
+  none_water: "none",
+};
+
 function mapWithTable(value: string, table: Record<string, string>): string {
   const v = toApiSnake(value);
   if (!v) return v;
@@ -218,6 +228,8 @@ export function buildCreateSaleListingBody(
     coolingType: filterToAllowlist(formData.cooling, COOLING_OPTIONS),
     heatingType: filterToAllowlist(formData.heating, HEATING_OPTIONS),
     heatingFuel: mapArray(formData.waterHeater, HEATING_FUEL),
+    electricType: mapArray(formData.electric, ELECTRIC_TYPE),
+    waterType: mapArray(formData.water, WATER_TYPE),
   };
 
   const styleRaw = formData.styleType.trim();
@@ -267,6 +279,170 @@ export function buildCreateSaleListingBody(
     },
     consent: {
       listingTermsAccepted: formData.agreedToTerms,
+    },
+  };
+}
+
+function parseOptionalIntOrNull(value: string): number | null {
+  const n = parseOptionalInt(value);
+  return n === undefined ? null : n;
+}
+
+function parseOptionalFloatOrNull(value: string): number | null {
+  const n = parseOptionalFloat(value);
+  return n === undefined ? null : n;
+}
+
+/**
+ * Build PUT /listings/sale/:listingId body from validated address + form state.
+ *
+ * Differences vs create per SALE_LISTING_EDIT_FRONTEND_GUIDE.md:
+ * - `media` is `{ virtualTourUrl? }` only (photos are managed via media APIs).
+ * - Optional numeric fields use `null` (not `undefined`) when the user clears them.
+ * - No `consent` block (already accepted at creation time).
+ */
+export function buildUpdateSaleListingBody(
+  // Kept in the signature for parity with the create builder and to assert the
+  // caller has a validated address in state, even though the backend PUT
+  // schema does not accept an `address` key.
+  _validated: SaleValidatedAddress,
+  formData: SaleFormData
+): import("@/lib/api/saleListing.service").UpdateSaleListingRequest {
+  void _validated;
+  if (formData.price == null || formData.price <= 0) {
+    throw new Error("Asking price must be a positive number.");
+  }
+  if (!formData.homeType.trim()) {
+    throw new Error("Home type is required.");
+  }
+  const homeDescription = formData.description.trim();
+  if (!homeDescription) {
+    throw new Error("Home description is required.");
+  }
+
+  const lotSize = parseOptionalFloatOrNull(formData.lotSize);
+  const lotSizeUnitRaw = formData.lotSizeUnit.trim();
+  if ((lotSize !== null) !== Boolean(lotSizeUnitRaw)) {
+    throw new Error("Lot size and lot size unit must be provided together.");
+  }
+  const lotSizeUnit = lotSizeUnitRaw || null;
+
+  const yearBuilt = parseOptionalIntOrNull(formData.yearBuilt);
+  const structuralRemodelYear = parseOptionalIntOrNull(
+    formData.structuralRemodelYear
+  );
+  if (
+    yearBuilt !== null &&
+    structuralRemodelYear !== null &&
+    structuralRemodelYear < yearBuilt
+  ) {
+    throw new Error(
+      "Structural remodel year must be the same as or after year built."
+    );
+  }
+
+  const beds = parseRequiredNonNegativeInt(formData.beds, "Beds");
+
+  const openHouses = formData.openHouseDates
+    .filter((o) => o.date && o.startTime && o.endTime)
+    .map((o) => ({
+      date: o.date,
+      startTime: o.startTime,
+      endTime: o.endTime,
+    }));
+
+  for (const oh of openHouses) {
+    if (oh.endTime <= oh.startTime) {
+      throw new Error("Each open house end time must be after start time.");
+    }
+  }
+
+  const architecturalStyleRaw = formData.architectureType.trim();
+  const architecturalStyle = architecturalStyleRaw
+    ? mapWithTable(architecturalStyleRaw, ARCHITECTURAL_STYLE)
+    : null;
+
+  const homeFacts: Record<string, unknown> = {
+    homeType: mapHomeType(formData.homeType.trim()),
+    hoaDues: parseOptionalFloatOrNull(formData.hoaDues),
+    beds,
+    fullBaths: parseOptionalInt(formData.fullBaths) ?? 0,
+    threeQuarterBaths: parseOptionalInt(formData.threeFourthBaths) ?? 0,
+    halfBaths: parseOptionalInt(formData.halfBaths) ?? 0,
+    quarterBaths: parseOptionalInt(formData.quarterBaths) ?? 0,
+    basementSqFt: parseOptionalIntOrNull(formData.squareFootage),
+    garageSqFt: parseOptionalIntOrNull(formData.garageSqFt),
+    finishedSquareFeet: parseOptionalIntOrNull(formData.finishedSqFt),
+    lotSize,
+    lotSizeUnit,
+    yearBuilt,
+    structuralRemodelYear,
+    homeDescription,
+  };
+
+  const basementFiltered = filterToAllowlist(
+    formData.basement.trim() ? [formData.basement.trim()] : [],
+    BASEMENT_OPTIONS
+  );
+  const roomDetails: Record<string, unknown> = {
+    appliances: filterToAllowlist(formData.appliances, APPLIANCE_OPTIONS),
+    basement: basementFiltered,
+    floorCovering: filterToAllowlist(formData.flooring, FLOORING_OPTIONS),
+    rooms: filterToAllowlist(formData.rooms, ROOM_OPTIONS),
+    totalRooms: parseOptionalIntOrNull(formData.totalRooms),
+    indoorFeatures: filterToAllowlist(formData.exteriorFeatures, INDOOR_FEATURES),
+  };
+
+  const utilityDetails: Record<string, unknown> = {
+    coolingType: filterToAllowlist(formData.cooling, COOLING_OPTIONS),
+    heatingType: filterToAllowlist(formData.heating, HEATING_OPTIONS),
+    heatingFuel: mapArray(formData.waterHeater, HEATING_FUEL),
+    electricType: mapArray(formData.electric, ELECTRIC_TYPE),
+    waterType: mapArray(formData.water, WATER_TYPE),
+  };
+
+  const styleRaw = formData.styleType.trim();
+  const viewValue = styleRaw ? mapWithTable(styleRaw, VIEW) : "";
+  const buildingDetails: Record<string, unknown> = {
+    buildingAmenities: filterToAllowlist(
+      formData.buildingAmenities,
+      BUILDING_AMENITY_OPTIONS
+    ),
+    architecturalStyle,
+    exterior: filterToAllowlist(
+      formData.exteriorMaterial,
+      EXTERIOR_MATERIAL_OPTIONS
+    ),
+    outdoorAmenities: filterToAllowlist(
+      formData.outdoorAmenities,
+      OUTDOOR_AMENITY_OPTIONS
+    ),
+    numberOfStories: parseOptionalIntOrNull(formData.stories),
+    parking: filterToAllowlist(formData.parking, PARKING_OPTIONS),
+    parkingSpaces: parseOptionalIntOrNull(formData.parkingSpaces),
+    roof: filterToAllowlist(formData.roof, ROOF_OPTIONS),
+    view: viewValue ? [viewValue] : [],
+  };
+
+  return {
+    pricing: {
+      askingPrice: formData.price,
+      currencyCode: "USD",
+    },
+    media: {
+      virtualTourUrl: formData.virtualTourUrl.trim() || undefined,
+    },
+    homeFacts,
+    openHouses,
+    additionalInformation: {
+      relatedWebsiteUrl: formData.realtorWebsite.trim() || undefined,
+      whatILoveAboutThisHome: formData.additionalInfo.trim() || undefined,
+    },
+    roomDetails,
+    utilityDetails,
+    buildingDetails,
+    contactInformation: {
+      phoneNumber: formData.contactPhone.trim(),
     },
   };
 }

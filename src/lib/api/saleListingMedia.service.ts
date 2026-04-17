@@ -15,7 +15,10 @@ export interface SalePresignBody {
 }
 
 export interface SalePresignUploadItem {
-  uploadId: string;
+  /** Returned by the flow-scoped presign. */
+  uploadId?: string;
+  /** Returned by the listing-scoped presign (per edit guide). */
+  mediaId?: string;
   uploadUrl: string;
   objectKey: string;
   bucket: string;
@@ -38,6 +41,18 @@ export interface SaleConfirmUpload {
 
 export interface SaleConfirmBody {
   uploads: SaleConfirmUpload[];
+}
+
+/** Listing-scoped confirm item; guide uses `mediaId` instead of `uploadId`. */
+export interface SaleListingConfirmUpload {
+  mediaId: string;
+  fileSizeBytes: number;
+  sortOrder: number;
+  metadata?: Record<string, string>;
+}
+
+export interface SaleListingConfirmBody {
+  uploads: SaleListingConfirmUpload[];
 }
 
 export interface SaleMediaItem {
@@ -78,6 +93,51 @@ export const saleListingMediaService = {
   deleteMedia(uploadId: string): Promise<{ deleted: boolean }> {
     return apiClient<{ deleted: boolean }>(
       `/listings/sale/media/${uploadId}`,
+      {
+        method: "DELETE",
+      }
+    );
+  },
+
+  getListingMedia(listingId: string): Promise<SaleConfirmMediaResponse> {
+    return apiClient<SaleConfirmMediaResponse>(
+      `/listings/sale/${listingId}/media`,
+      { method: "GET" }
+    );
+  },
+
+  presignListingMedia(
+    listingId: string,
+    body: SalePresignBody
+  ): Promise<SalePresignResponse> {
+    return apiClient<SalePresignResponse>(
+      `/listings/sale/${listingId}/media/presign`,
+      {
+        method: "POST",
+        body: JSON.stringify(body),
+      }
+    );
+  },
+
+  confirmListingMedia(
+    listingId: string,
+    body: SaleListingConfirmBody
+  ): Promise<SaleConfirmMediaResponse> {
+    return apiClient<SaleConfirmMediaResponse>(
+      `/listings/sale/${listingId}/media/confirm`,
+      {
+        method: "POST",
+        body: JSON.stringify(body),
+      }
+    );
+  },
+
+  deleteListingMedia(
+    listingId: string,
+    mediaId: string
+  ): Promise<{ deleted: boolean }> {
+    return apiClient<{ deleted: boolean }>(
+      `/listings/sale/${listingId}/media/${mediaId}`,
       {
         method: "DELETE",
       }

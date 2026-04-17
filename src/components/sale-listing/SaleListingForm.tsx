@@ -12,13 +12,25 @@ import {
 } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAppSelector, useAppDispatch } from "@/store";
-import { resetSaleForm } from "@/store/slices/saleListingSlice";
+import {
+  resetSaleForm,
+  setSaleAddressFromConfirm,
+  setSalePhoneVerification,
+} from "@/store/slices/saleListingSlice";
 import type { SaleFormData, SaleListingPhoto } from "@/lib/saleListing/saleListingFormTypes";
 import { createEmptySaleFormData } from "@/lib/saleListing/saleListingFormTypes";
 import { saleListingFormSchema } from "@/lib/saleListing/saleListingFormSchema";
 import { saleListingMediaService } from "@/lib/api/saleListingMedia.service";
 import { saleListingService } from "@/lib/api/saleListing.service";
-import { buildCreateSaleListingBody } from "@/lib/saleListing/buildSaleListingPayload";
+import {
+  buildCreateSaleListingBody,
+  buildUpdateSaleListingBody,
+} from "@/lib/saleListing/buildSaleListingPayload";
+import {
+  mapEditResponseToValidatedAddress,
+  mapSaleEditResponseToFormData,
+} from "@/lib/saleListing/mapSaleEditResponseToForm";
+import { Loader2 } from "lucide-react";
 import type { ApiError } from "@/types/user";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -63,8 +75,14 @@ interface SalePhotoUploadPreview {
   previewUrl: string;
 }
 
+interface SaleListingFormProps {
+  /** When provided, the form loads the listing and submits a PUT update. */
+  listingId?: string;
+}
+
 // ─── Main component ─────────────────────────────────────────────────
-export function SaleListingForm() {
+export function SaleListingForm({ listingId }: SaleListingFormProps = {}) {
+  const isEditMode = Boolean(listingId);
   const t = useTranslations("saleListing.form");
   const tOpt = useTranslations("saleListing.options");
   const dispatch = useAppDispatch();
@@ -111,6 +129,8 @@ export function SaleListingForm() {
   const [utilityDetailsOpen, setUtilityDetailsOpen] = useState(true);
   const [buildingDetailsOpen, setBuildingDetailsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingListing, setIsLoadingListing] = useState(isEditMode);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [uploadingFiles, setUploadingFiles] = useState<SalePhotoUploadPreview[]>(
     []
   );
@@ -125,6 +145,59 @@ export function SaleListingForm() {
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);
   }, [isDirty]);
+
+  useEffect(() => {
+    if (!listingId) return;
+    let cancelled = false;
+    setIsLoadingListing(true);
+    setLoadError(null);
+
+    (async () => {
+      try {
+        const [editResp, mediaResp] = await Promise.all([
+          saleListingService.getListingForEdit(listingId),
+          saleListingMediaService.getListingMedia(listingId),
+        ]);
+        if (cancelled) return;
+
+        const validated = mapEditResponseToValidatedAddress(editResp);
+        if (!validated) {
+          setLoadError(t("editLoadError"));
+          return;
+        }
+
+        const photos = (mediaResp.photos && mediaResp.photos.length > 0)
+          ? mediaResp.photos
+          : mediaResp.items ?? [];
+        const formValues = mapSaleEditResponseToFormData(editResp, photos);
+
+        dispatch(setSaleAddressFromConfirm({ validated }));
+        if (formValues.contactPhone) {
+          dispatch(
+            setSalePhoneVerification({
+              verified: true,
+              phoneE164: formValues.contactPhone,
+            })
+          );
+        }
+        reset(formValues);
+      } catch (error) {
+        if (cancelled) return;
+        const message =
+          error instanceof Error && error.message
+            ? error.message
+            : t("editLoadError");
+        setLoadError(message);
+        toast.error(message);
+      } finally {
+        if (!cancelled) setIsLoadingListing(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [listingId, dispatch, reset, t]);
 
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
@@ -151,7 +224,7 @@ export function SaleListingForm() {
 
       try {
         const photosLen = getValues("photos").length;
-        const presignResult = await saleListingMediaService.presignMedia({
+        const presignBody = {
           files: uniqueFiles.map((file, i) => ({
             listingType: "SALE" as const,
             mediaType: "PHOTO" as const,
@@ -161,7 +234,10 @@ export function SaleListingForm() {
             sortOrder: photosLen + i,
             metadata: { source: "sale-listing-form" },
           })),
-        });
+        };
+        const presignResult = listingId
+          ? await saleListingMediaService.presignListingMedia(listingId, presignBody)
+          : await saleListingMediaService.presignMedia(presignBody);
 
         const uploadResults = await Promise.allSettled(
           presignResult.uploads.map(async (upload, i) => {
@@ -195,14 +271,33 @@ export function SaleListingForm() {
 
         if (successfulUploads.length > 0) {
           const baseLen = getValues("photos").length;
-          const confirmed = await saleListingMediaService.confirmMedia({
-            uploads: successfulUploads.map(({ upload, file, index }) => ({
-              uploadId: upload.uploadId,
-              fileSizeBytes: file.size,
-              sortOrder: baseLen + index,
-              metadata: { confirmedBy: "sale-listing-form" },
-            })),
-          });
+          // Listing-scoped presign returns `mediaId`; flow-scoped returns `uploadId`.
+          // Normalize here so downstream confirm + photo resolution works for both.
+          const uploadsWithId = successfulUploads
+            .map((u) => ({ ...u, id: u.upload.mediaId ?? u.upload.uploadId ?? "" }))
+            .filter((u) => u.id);
+
+          if (uploadsWithId.length !== successfulUploads.length) {
+            toast.error(t("photoUploadError"));
+          }
+
+          const confirmed = listingId
+            ? await saleListingMediaService.confirmListingMedia(listingId, {
+                uploads: uploadsWithId.map(({ id, file, index }) => ({
+                  mediaId: id,
+                  fileSizeBytes: file.size,
+                  sortOrder: baseLen + index,
+                  metadata: { confirmedBy: "sale-listing-form" },
+                })),
+              })
+            : await saleListingMediaService.confirmMedia({
+                uploads: uploadsWithId.map(({ id, file, index }) => ({
+                  uploadId: id,
+                  fileSizeBytes: file.size,
+                  sortOrder: baseLen + index,
+                  metadata: { confirmedBy: "sale-listing-form" },
+                })),
+              });
 
           const byId = new Map(
             confirmed.photos.map((item) => [item.id, item] as [string, typeof item])
@@ -213,8 +308,8 @@ export function SaleListingForm() {
             }
           }
 
-          const newPhotos: SaleListingPhoto[] = successfulUploads
-            .map(({ upload }) => byId.get(upload.uploadId))
+          const newPhotos: SaleListingPhoto[] = uploadsWithId
+            .map(({ id }) => byId.get(id))
             .filter((item): item is NonNullable<typeof item> => Boolean(item))
             .map((item) => ({
               id: item.id,
@@ -237,7 +332,7 @@ export function SaleListingForm() {
         });
       }
     },
-    [getValues, setValue, t]
+    [getValues, setValue, t, listingId]
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -249,9 +344,18 @@ export function SaleListingForm() {
     const photos = getValues("photos");
     const photo = photos[index];
     if (!photo || deletingIds.has(photo.id)) return;
+    // Backend blocks deleting the last confirmed photo on edit; enforce in UI too.
+    if (listingId && photos.length <= 1) {
+      toast.error(t("photoLastCannotDelete"));
+      return;
+    }
     setDeletingIds((prev) => new Set(prev).add(photo.id));
     try {
-      await saleListingMediaService.deleteMedia(photo.id);
+      if (listingId) {
+        await saleListingMediaService.deleteListingMedia(listingId, photo.id);
+      } else {
+        await saleListingMediaService.deleteMedia(photo.id);
+      }
       setValue(
         "photos",
         photos.filter((_, i) => i !== index),
@@ -316,11 +420,19 @@ export function SaleListingForm() {
     setIsSubmitting(true);
 
     try {
-      const body = buildCreateSaleListingBody(validatedAddress, data);
-      await saleListingService.createListing(body);
-      dispatch(resetSaleForm());
-      reset(createEmptySaleFormData());
-      router.push(ROUTES.OWNER.DASHBOARD);
+      if (listingId) {
+        const body = buildUpdateSaleListingBody(validatedAddress, data);
+        await saleListingService.updateListing(listingId, body);
+        toast.success(t("editSaveSuccess"));
+        dispatch(resetSaleForm());
+        router.push(ROUTES.OWNER.DASHBOARD);
+      } else {
+        const body = buildCreateSaleListingBody(validatedAddress, data);
+        await saleListingService.createListing(body);
+        dispatch(resetSaleForm());
+        reset(createEmptySaleFormData());
+        router.push(ROUTES.OWNER.DASHBOARD);
+      }
     } catch (error) {
       if (error instanceof Error) {
         toast.error(error.message);
@@ -354,10 +466,31 @@ export function SaleListingForm() {
   const displayAddress =
     validatedAddress?.formattedAddress?.trim() || addressText;
 
+  if (isEditMode && isLoadingListing) {
+    return (
+      <div className="max-w-4xl px-6 py-8 lg:px-10">
+        <div className="flex items-center gap-3 text-muted-foreground">
+          <Loader2 className="size-5 animate-spin" />
+          <span className="text-sm">{t("editLoading")}</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (isEditMode && loadError) {
+    return (
+      <div className="max-w-4xl px-6 py-8 lg:px-10">
+        <p className="text-sm text-destructive">{loadError}</p>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl px-6 py-8 lg:px-10">
       <div className="mb-8 border-b border-border pb-6">
-        <h1 className="text-2xl font-bold text-foreground">{t("title")}</h1>
+        <h1 className="text-2xl font-bold text-foreground">
+          {isEditMode ? t("editTitle") : t("title")}
+        </h1>
         <p className="mt-1 text-base font-medium text-foreground">{displayAddress}</p>
         <p className="mt-1 text-sm text-muted-foreground">{t("addressLockedHint")}</p>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
@@ -477,6 +610,7 @@ export function SaleListingForm() {
         onValidSubmit={onValidSubmit}
         onInvalidSubmit={onInvalidSubmit}
         isSubmitting={isSubmitting}
+        isEditMode={isEditMode}
       />
     </div>
   );
