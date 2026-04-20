@@ -1,82 +1,87 @@
 # Nesto — Claude Code Context
 
 ## Project
-Real estate marketplace for Uzbekistan. Zillow-like platform.
-Client: Timur Rakhmatov. Built by: Ali (Cherry Byte Technologies).
+Real estate marketplace (Zillow-like), with multilingual support and owner workflows for rent/sale listing creation and editing.
 
 ## Tech Stack
 - Next.js 16.1.7, React 19, TypeScript (strict)
-- Tailwind v4 + shadcn/ui (base-nova style)
+- Tailwind v4 + shadcn/ui
 - next-intl v4 (en default, uz, ru)
-- Redux Toolkit — authSlice, uiSlice, listingFormSlice, saleListingSlice
+- Redux Toolkit — `authSlice`, `uiSlice`, `listingFormSlice`, `saleListingSlice`
 - TanStack Query (server state)
 - react-hook-form + zod
 - nuqs (URL filters)
 - Mapbox (react-map-gl + mapbox-gl-draw)
 - react-dropzone
-- Port: 3001
 
 ## Brand
-Primary color: #C02121 — available as `bg-brand`, `text-brand`, `border-brand`
-Button shadow class: `btn-brand-shadow` (defined in globals.css)
-Logo: SVG at /icons/nesto-logo-navbar.svg (already in public)
+- Primary color: `#C02121` (`bg-brand`, `text-brand`, `border-brand`)
+- Button shadow class: `btn-brand-shadow` (globals.css)
+- Logo: `/icons/nesto-logo-navbar.svg`
 
-## Key Rules
-- Every string → `useTranslations()` from next-intl, no hardcoded text
-- Paths → `@/` alias only
-- "use client" → only on interactive components
-- No bottom mobile nav bar
-- No NextAuth — backend provides auth APIs directly
-- API base: `process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001"`
+## Core Rules
+- Every user-facing string uses `useTranslations()` (`next-intl`)
+- Use `@/` path alias imports
+- `"use client"` only where interaction/hooks are needed
+- No NextAuth; backend auth APIs directly
+- API base from `NEXT_PUBLIC_API_URL`
 
 ## i18n
-- Locales: en (default), uz, ru
-- Messages: src/messages/en.json, uz.json, ru.json
-- Routing: src/i18n/routing.ts
-- All routes are under src/app/[locale]/
+- Locales: `en` (default), `uz`, `ru`
+- Messages: `src/messages/en.json`, `src/messages/uz.json`, `src/messages/ru.json`
+- Routing: `src/i18n/routing.ts`
+- App routes under `src/app/[locale]/`
 
 ## Route Groups
-- (auth) — login, register, forgot-password, reset-password — no navbar
-- (main) — buy, rent, sell, search, saved, messages, property/[slug]
-- (owner) — dashboard, listings/create (rent), listings/sale, listings/sale/create
-- (rent-listing) — rent stepper, no navbar
+- `(auth)` — login/register/forgot/reset password (no navbar)
+- `(main)` — buy/rent/sell/search/saved/messages/property pages
+- `(owner)` — dashboard, owner listing flows
+- `(rent-listing)` — rent stepper flow (no navbar)
 
-## Current State (what's built)
-- Auth: LoginForm, RegisterForm, SocialLoginButtons, NestoLogo
-- Layout: Navbar, LanguageSwitcher, Footer
-- Home: HeroSection, PropertyGridSection, FeatureCardsSection
-- Common: Providers, ListingTypeModal
-- Owner: Dashboard (Overview tab fully built), ListingTable, ListingCard, ListingStatusBadge
-- Redux: authSlice, uiSlice, listingFormSlice, saleListingSlice
-- Draft: draftMiddleware, clearAllDraftData, useLocalDraft
-- Rent listing stepper: ALL 9 STEPS DONE in src/components/rent-listing-form/
-- Sale listing: Screen 1 (map + address) + Screen 2 (full form) DONE
+## Current State (important)
+- Rent listing stepper flow: implemented and editable via `listings/create/[draftId]`
+- Sale listing flow:
+  - Address confirm/map step: implemented
+  - Create form step: implemented
+  - Edit form route: implemented at `listings/sale/[listingId]/edit`
+- Sale edit API integration implemented with:
+  - GET edit preload + GET media preload
+  - listing-scoped media upload/confirm/delete
+  - PUT full update body (no `address`, no `consent`, no `media.uploadIds`)
+- Dashboard:
+  - Overview + My Listings + Saved Homes working with API-backed data and infinite scroll
+  - Edit action (pencil) wired for published sale and rent listings
+- Owner listing UI components:
+  - `ListingTable`, `ListingCard`, `ListingStatusBadge`
+  - Archive action + delete draft flow dialogs
 
-## Dashboard Tabs — Current vs Expected
-- Overview tab: DONE (property management table + messages panel)
-- Favorites tab: placeholder only — needs full implementation
-- My Listings tab: placeholder only — needs full implementation
-- Messages tab: placeholder only
-- Settings tab: placeholder only
+## Sale Listing — Implementation Notes
+- `SaleListingForm` supports both create and edit mode via optional `listingId`
+- Edit mode behavior:
+  - hydrate form from GET edit + media
+  - keep address non-editable on form page
+  - phone verification required when changed
+  - media handled through listing-specific media endpoints
+- Create mode behavior remains on original flow (global sale media endpoints + POST create)
 
-## What's NOT built yet (this session)
-- Dashboard "My Listings" tab — full table with correct filters + Upload Sheet button
-- Dashboard "Favorites" tab — property grid with sub-tabs (Favorites / Hidden Homes)
-- propertySlice — savedIds[], hiddenIds[] arrays for favorites/hidden state
+## Payload/Contract Caveats
+- Backend PUT sale edit currently rejects unknown keys strictly
+- `address` must NOT be sent in sale edit PUT body
+- `consent` is create-only and not sent on sale edit PUT
+- `electric`/`water` UI fields are now mapped to backend utility keys:
+  - `electricType` (array)
+  - `waterType` (array)
+  - mapping handles UI/API key differences (`other_electric -> other`, `none_water -> none`)
 
-## PropertyCard location
-- src/components/property/PropertyCard.tsx
-- Takes `property: PropertyPreview` prop
-- Heart button exists but has no onClick logic yet
+## Key Files to Know
+- Sale form: `src/components/sale-listing/SaleListingForm.tsx`
+- Sale form sections/footer: `src/components/sale-listing/SaleListingFormSections.tsx`
+- Sale API services: `src/lib/api/saleListing.service.ts`, `src/lib/api/saleListingMedia.service.ts`
+- Sale payload builders: `src/lib/saleListing/buildSaleListingPayload.ts`
+- Sale edit mappers: `src/lib/saleListing/mapSaleEditResponseToForm.ts`
+- Dashboard: `src/app/[locale]/(owner)/dashboard/page.tsx`
+- Owner row/card actions: `src/components/owner/ListingTable.tsx`, `src/components/owner/ListingCard.tsx`
 
-## Dummy Data
-- src/lib/constants/dummyProperties.ts
-- DUMMY_PROPERTIES (8 full objects), DUMMY_PROPERTY_PREVIEWS, DUMMY_MY_LISTINGS
-- All images: /images/property.jpg, hero: /images/hero.png
-
-## shadcn Components Available
-button, input, textarea, card, badge, dialog, drawer, sheet,
-dropdown-menu, select, checkbox, radio-group, switch, slider,
-tabs, avatar, skeleton, toast, sonner, tooltip, popover,
-calendar, progress, separator, label, form, table, command,
-scroll-area, alert, breadcrumb
+## Known TODO / Follow-up
+- Keep frontend utility field mapping aligned with backend enums for `electricType` and `waterType`
+- If backend changes strict schemas, re-check create/edit payload builders accordingly

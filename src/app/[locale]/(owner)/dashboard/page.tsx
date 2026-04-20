@@ -185,8 +185,14 @@ export default function DashboardPage() {
         router.push(ROUTES.OWNER.SALE_EDIT(listing.id));
         return;
       }
-      // Rent listings (published or draft) reuse the rent stepper edit route.
-      router.push(`/listings/create/${listing.id}`);
+      // Rent drafts resume the per-step save flow; published rent listings open
+      // the stepper in edit mode (GET /edit preload + single full PUT).
+      const status = (listing.status ?? "").toString().toLowerCase();
+      if (status === "draft") {
+        router.push(`/listings/create/${listing.id}`);
+        return;
+      }
+      router.push(`/listings/create/${listing.id}?mode=edit`);
     },
     [router]
   );

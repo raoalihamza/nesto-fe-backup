@@ -9,6 +9,7 @@ import {
 } from "@/store/slices/listingFormSlice";
 import { Button } from "@/components/ui/button";
 import { useSaveStep, usePublishDraft } from "@/hooks/rentDraft";
+import { useUpdateRentListing } from "@/hooks/rentEdit";
 
 const TOTAL_STEPS = 9;
 
@@ -24,6 +25,7 @@ export function StepNavButtons() {
   const currentStep = useAppSelector((s) => s.listingForm.currentStep);
   const currentSubStep = useAppSelector((s) => s.listingForm.currentSubStep);
   const isSaving = useAppSelector((s) => s.listingForm.isSaving);
+  const mode = useAppSelector((s) => s.listingForm.mode);
   const mediaUploadInFlight = useAppSelector(
     (s) => s.listingForm.mediaUploadInFlight
   );
@@ -34,14 +36,17 @@ export function StepNavButtons() {
 
   const { saveStep } = useSaveStep();
   const { publish } = usePublishDraft();
+  const { updateAndExit } = useUpdateRentListing();
 
+  const isEditMode = mode === "edit";
   const isFirstStep = currentStep === 0;
   const isLastStep = currentStep === TOTAL_STEPS - 1;
   const totalSubSteps = SUB_STEP_COUNTS[currentStep] ?? 1;
+  // Address lookup only gates Next in create mode (edit mode has readonly address).
   const nextDisabled =
     isSaving ||
     mediaUploadBusy ||
-    (isFirstStep && addressLookupBusy);
+    (isFirstStep && !isEditMode && addressLookupBusy);
 
   function handleBack() {
     if (currentSubStep > 0) {
@@ -57,19 +62,36 @@ export function StepNavButtons() {
   }
 
   async function handleNext() {
+    // Last step behavior
     if (isLastStep) {
-      await publish();
+      if (isEditMode) {
+        await updateAndExit();
+      } else {
+        await publish();
+      }
       return;
     }
 
-    // Step 7 (Review) navigates without save — review already loaded on mount
+    // Edit mode: Back/Next are local-only, no per-step API calls.
+    if (isEditMode) {
+      if (currentSubStep < totalSubSteps - 1) {
+        dispatch(goToSubStep(currentSubStep + 1));
+      } else {
+        dispatch(markStepComplete(currentStep));
+        dispatch(goToStep(currentStep + 1));
+        dispatch(goToSubStep(0));
+      }
+      return;
+    }
+
+    // Create (draft) mode: Review step navigates without save (already loaded)
     if (currentStep === 7) {
       dispatch(markStepComplete(7));
       dispatch(goToStep(8));
       return;
     }
 
-    // All other steps: save then navigate
+    // Create (draft) mode: save then navigate
     const success = await saveStep(currentStep);
     if (!success) return;
 
@@ -80,6 +102,13 @@ export function StepNavButtons() {
       dispatch(goToStep(currentStep + 1));
       dispatch(goToSubStep(0));
     }
+  }
+
+  function lastStepLabel() {
+    if (isEditMode) {
+      return isSaving ? t("updating") : t("updateAndPublish");
+    }
+    return isSaving ? t("publish.publishing") : t("publish.publishListing");
   }
 
   return (
@@ -101,7 +130,11 @@ export function StepNavButtons() {
         onClick={handleNext}
         disabled={nextDisabled}
         title={
-          isFirstStep && addressLookupBusy && !isSaving && !mediaUploadBusy
+          isFirstStep &&
+          addressLookupBusy &&
+          !isEditMode &&
+          !isSaving &&
+          !mediaUploadBusy
             ? t("addressSearchBusy")
             : mediaUploadBusy && !isSaving
               ? t("uploadingMedia")
@@ -110,11 +143,13 @@ export function StepNavButtons() {
         className="h-10 rounded-lg bg-brand px-6 text-sm font-medium text-white btn-brand-shadow hover:bg-brand-dark"
       >
         {isSaving
-          ? t("saving")
+          ? isEditMode
+            ? t("updating")
+            : t("saving")
           : mediaUploadBusy
             ? t("uploadingMedia")
             : isLastStep
-              ? t("publish.publishListing")
+              ? lastStepLabel()
               : t("next")}
       </Button>
     </div>

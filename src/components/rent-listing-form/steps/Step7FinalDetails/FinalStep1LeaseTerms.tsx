@@ -23,6 +23,20 @@ const LEASE_DURATION_OPTIONS = [
   "2_years",
 ] as const;
 
+function toDateInputValue(value: string | null | undefined): string {
+  if (!value) return "";
+  // HTML date inputs require YYYY-MM-DD. Backend usually sends ISO datetime.
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed;
+  const parsed = new Date(trimmed);
+  if (Number.isNaN(parsed.getTime())) return "";
+  const year = parsed.getUTCFullYear();
+  const month = String(parsed.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(parsed.getUTCDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 export function FinalStep1LeaseTerms() {
   const t = useTranslations("listing.finalDetails");
   const dispatch = useAppDispatch();
@@ -75,7 +89,7 @@ export function FinalStep1LeaseTerms() {
         </Label>
         <Input
           type="date"
-          value={finalDetails.dateAvailable ?? ""}
+          value={toDateInputValue(finalDetails.dateAvailable)}
           onChange={(e) =>
             dispatch(setFinalDetails({ dateAvailable: e.target.value || null }))
           }

@@ -11,6 +11,7 @@ import {
 import type { RentDraftResponse } from "@/store/slices/listingFormSlice";
 import { getFirebaseAuth } from "@/lib/firebase/app";
 import { rentDraftService } from "@/lib/api/rentDraft.service";
+import { rentListingEditService } from "@/lib/api/rentListingEdit.service";
 
 export type PhoneVerificationPhase =
   | "phoneInput"
@@ -37,6 +38,12 @@ export interface UseRentPhoneVerificationOptions {
   recaptchaContainerId: string;
   initialPhone?: string | null;
   initialVerified?: boolean;
+  /**
+   * Selects which backend verify endpoint to hit after the Firebase OTP succeeds:
+   * - `create` (default) — `POST /v1/listings/rent/drafts/:draftId/verify-phone`
+   * - `edit`             — `POST /v1/listings/rent/:listingId/verify-phone`
+   */
+  mode?: "create" | "edit";
 }
 
 function normalizePhoneToE164(phone: string): string {
@@ -74,6 +81,7 @@ export function useRentPhoneVerification({
   recaptchaContainerId,
   initialPhone,
   initialVerified = false,
+  mode = "create",
 }: UseRentPhoneVerificationOptions) {
   const auth = useMemo(() => getFirebaseAuth(), []);
   const [phase, setPhase] = useState<PhoneVerificationPhase>(
@@ -187,9 +195,29 @@ export function useRentPhoneVerification({
         const firebaseIdToken = await currentUser.getIdToken(true);
 
         setPhase("submittingBackend");
-        const response = await rentDraftService.verifyPhone(draftId, {
-          firebaseIdToken,
-        });
+        let response: RentDraftResponse;
+        if (mode === "edit") {
+          const raw = await rentListingEditService.verifyPhone(draftId, {
+            firebaseIdToken,
+          });
+          // Published edit verify-phone may return an empty payload; fall back
+          // to a fresh GET /edit so Redux stays consistent with server truth.
+          if (
+            raw &&
+            typeof raw === "object" &&
+            "id" in raw &&
+            typeof (raw as RentDraftResponse).id === "string"
+          ) {
+            response = raw as RentDraftResponse;
+          } else {
+            response =
+              await rentListingEditService.getListingForEdit(draftId);
+          }
+        } else {
+          response = await rentDraftService.verifyPhone(draftId, {
+            firebaseIdToken,
+          });
+        }
 
         setPhase("verified");
         await signOut(auth).catch(() => undefined);
@@ -201,7 +229,7 @@ export function useRentPhoneVerification({
         return null;
       }
     },
-    [auth, draftId]
+    [auth, draftId, mode]
   );
 
   const changePhoneNumber = useCallback(() => {

@@ -372,6 +372,16 @@ const initialFormData: ListingFormData = {
 
 // ── Slice state ─────────────────────────────────────────────
 
+/**
+ * Rent stepper mode.
+ *
+ * - `create` — the original draft flow: each Next saves to draft step endpoints.
+ * - `edit`   — published rent listing edit flow: Next is local-only, a single
+ *   full PUT is sent on Update & Exit / Update & Publish. See
+ *   `RENT_LISTING_EDIT_FRONTEND_GUIDE.md`.
+ */
+export type ListingFormMode = "create" | "edit";
+
 interface ListingFormState {
   currentStep: number;
   currentSubStep: number;
@@ -385,6 +395,7 @@ interface ListingFormState {
   addressLookupBusy: boolean;
   lastSavedAt: string | null;
   draftProgress: DraftProgressData | null;
+  mode: ListingFormMode;
 }
 
 const initialState: ListingFormState = {
@@ -398,6 +409,7 @@ const initialState: ListingFormState = {
   addressLookupBusy: false,
   lastSavedAt: null,
   draftProgress: null,
+  mode: "create",
 };
 
 // ── Slice ───────────────────────────────────────────────────
@@ -494,6 +506,10 @@ const listingFormSlice = createSlice({
       state.draftProgress = action.payload.progress;
     },
 
+    setListingFormMode(state, action: PayloadAction<ListingFormMode>) {
+      state.mode = action.payload;
+    },
+
     // Full reset
     resetListingForm() {
       return initialState;
@@ -520,6 +536,7 @@ export const {
   setAddressLookupBusy,
   setLastSavedAt,
   restoreFromDraft,
+  setListingFormMode,
   resetListingForm,
 } = listingFormSlice.actions;
 

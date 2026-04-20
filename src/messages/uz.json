@@ -159,6 +159,9 @@
   },
   "listing": {
     "saveAndExit": "Saqlash va chiqish",
+    "updateAndExit": "Yangilash va chiqish",
+    "updateAndPublish": "Yangilash va nashr etish",
+    "updating": "Yangilanmoqda...",
     "saving": "Saqlanmoqda...",
     "uploadingMedia": "Suratlar yuklanmoqda...",
     "addressSearchBusy": "Manzil qidiruvi tugashini kuting",
@@ -234,7 +237,8 @@
       "removeTour": "3D turni olib tashlash",
       "cancel": "Bekor qilish",
       "saveTour": "Saqlash",
-      "duplicatePhoto": "\"{name}\" allaqachon yuklangan"
+      "duplicatePhoto": "\"{name}\" allaqachon yuklangan",
+      "lastPhotoCannotDelete": "Nashr etilgan e'londagi oxirgi suratni o'chira olmaysiz. Avval yangi surat yuklang."
     },
     "amenities": {
       "title": "Qulayliklar",

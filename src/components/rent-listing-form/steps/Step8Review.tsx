@@ -204,6 +204,7 @@ export function Step8Review() {
 
   const dispatch = useAppDispatch();
   const draftId = useAppSelector((s) => s.listingForm.draftId);
+  const mode = useAppSelector((s) => s.listingForm.mode);
   const formData = useAppSelector((s) => s.listingForm.formData);
   const draftProgress = useAppSelector((s) => s.listingForm.draftProgress);
   const validationIssues = draftProgress?.validationIssues ?? [];
@@ -227,13 +228,16 @@ export function Step8Review() {
 
   useEffect(() => {
     if (!draftId) return;
+    // Review endpoint is draft-only. Edit mode reuses the already-hydrated
+    // GET /edit snapshot (which also carries `progress`).
+    if (mode === "edit") return;
     rentDraftService
       .getReview(draftId)
       .then((response) => dispatch(restoreFromDraft(response)))
       .catch(() => {
         // Review fetch failed silently — display existing Redux data
       });
-  }, [draftId, dispatch]);
+  }, [draftId, dispatch, mode]);
   const { listingContext, propertyInfo, rentDetails, media, amenities, screeningCriteria, costsAndFees, finalDetails } =
     formData;
 

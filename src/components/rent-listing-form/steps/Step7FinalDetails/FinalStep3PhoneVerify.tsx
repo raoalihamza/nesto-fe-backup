@@ -54,6 +54,7 @@ export function FinalStep3PhoneVerify() {
   const t = useTranslations("listing.finalDetails");
   const dispatch = useAppDispatch();
   const draftId = useAppSelector((s) => s.listingForm.draftId);
+  const mode = useAppSelector((s) => s.listingForm.mode);
   const finalDetails = useAppSelector(
     (s) => s.listingForm.formData.finalDetails
   );
@@ -83,6 +84,7 @@ export function FinalStep3PhoneVerify() {
     recaptchaContainerId: "rent-phone-recaptcha",
     initialPhone: finalDetails.phoneNumber,
     initialVerified: Boolean(finalDetails.phoneVerified && finalDetails.phoneNumber),
+    mode,
   });
 
   const isOtpPhase =
@@ -189,6 +191,7 @@ export function FinalStep3PhoneVerify() {
     const verifiedPhoneFromResponse = response.finalDetails?.phoneNumber ?? null;
     const fallbackVerifiedPhone = phone || finalDetails.phoneNumber || null;
 
+    // Draft and edit responses share the same shape; reuse the same hydrator.
     dispatch(restoreFromDraft(response));
 
     // Defensive fallback: some verify-phone responses may not include finalDetails.phoneNumber.

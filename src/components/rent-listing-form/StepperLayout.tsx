@@ -2,8 +2,13 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslations } from "next-intl";
-import { useAppSelector } from "@/store";
+import { useAppSelector, useAppDispatch } from "@/store";
 import { useRestoreDraft } from "@/hooks/rentDraft";
+import { useRestoreEditListing } from "@/hooks/rentEdit";
+import {
+  setListingFormMode,
+  type ListingFormMode,
+} from "@/store/slices/listingFormSlice";
 import { useRouter } from "@/i18n/routing";
 import { ROUTES } from "@/lib/constants/routes";
 import { clearRentCreateIntent } from "@/lib/utils/rentCreateSession";
@@ -72,39 +77,66 @@ function getStepComponent(step: number) {
 
 interface StepperLayoutProps {
   draftId?: string;
+  /**
+   * `create` — original draft flow (first-save POST, then PUT step endpoints).
+   * `edit`   — published rent listing edit flow: GET /edit preload + single
+   *            full PUT on Update & Exit / Update & Publish.
+   */
+  mode?: ListingFormMode;
 }
 
-export function StepperLayout({ draftId: draftIdFromUrl }: StepperLayoutProps) {
+export function StepperLayout({
+  draftId: draftIdFromUrl,
+  mode: modeFromUrl = "create",
+}: StepperLayoutProps) {
   const t = useTranslations("listing.steps");
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const currentStep = useAppSelector((s) => s.listingForm.currentStep);
   const currentSubStep = useAppSelector((s) => s.listingForm.currentSubStep);
   const draftId = useAppSelector((s) => s.listingForm.draftId);
+  const mode = useAppSelector((s) => s.listingForm.mode);
   const placeId = useAppSelector(
     (s) => s.listingForm.formData.propertyInfo.address.placeId
   );
   const { restoreDraft } = useRestoreDraft();
-  const [isRestoring, setIsRestoring] = useState(false);
+  const { restoreEditListing } = useRestoreEditListing();
+  const [isRestoring, setIsRestoring] = useState(
+    Boolean(draftIdFromUrl)
+  );
 
-  // On mount: if draftId in URL → fetch draft and jump to last step
+  // On mount: fetch listing/draft and hydrate Redux. In edit mode we must
+  // call GET /edit (published) instead of GET /drafts. For plain
+  // `/listings/create` (no id in URL) we always force mode back to `create`
+  // so a prior edit-mode Redux state can't leak into the next create flow.
   useEffect(() => {
-    if (draftIdFromUrl) {
-      setIsRestoring(true);
+    if (!draftIdFromUrl) {
+      dispatch(setListingFormMode("create"));
+      return;
+    }
+    setIsRestoring(true);
+    if (modeFromUrl === "edit") {
+      dispatch(setListingFormMode("edit"));
+      restoreEditListing(draftIdFromUrl).finally(() => setIsRestoring(false));
+    } else {
+      dispatch(setListingFormMode("create"));
       restoreDraft(draftIdFromUrl).finally(() => setIsRestoring(false));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Plain /listings/create: allow only with prefilled address (modal), saved draft in Redux, or [draftId] URL
+  // Plain /listings/create (create mode only): allow only with prefilled address
+  // (modal), saved draft in Redux, or [draftId] URL. Edit mode always has a URL id.
   useEffect(() => {
     if (draftIdFromUrl) return;
+    if (mode === "edit") return;
     if (draftId !== null) return;
     if (placeId) return;
     clearRentCreateIntent();
     router.replace(ROUTES.HOME);
-  }, [draftIdFromUrl, draftId, placeId, router]);
+  }, [draftIdFromUrl, draftId, placeId, router, mode]);
 
-  // beforeunload guard — warn if active draft exists
+  // beforeunload guard — warn if there's an in-progress draft or edit session
   const handleBeforeUnload = useCallback(
     (e: BeforeUnloadEvent) => {
       if (draftId !== null) {

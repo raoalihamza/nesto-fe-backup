@@ -159,6 +159,9 @@
   },
   "listing": {
     "saveAndExit": "Сохранить и выйти",
+    "updateAndExit": "Обновить и выйти",
+    "updateAndPublish": "Обновить и опубликовать",
+    "updating": "Обновление...",
     "saving": "Сохранение...",
     "uploadingMedia": "Загрузка фото...",
     "addressSearchBusy": "Дождитесь окончания поиска адреса",
@@ -234,7 +237,8 @@
       "removeTour": "Удалить 3D тур",
       "cancel": "Отмена",
       "saveTour": "Сохранить",
-      "duplicatePhoto": "\"{name}\" уже загружено"
+      "duplicatePhoto": "\"{name}\" уже загружено",
+      "lastPhotoCannotDelete": "Нельзя удалить последнее фото опубликованного объявления. Сначала загрузите новое фото."
     },
     "amenities": {
       "title": "Удобства",

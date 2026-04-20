@@ -139,14 +139,17 @@ export function RentAddressAndListingEntryFields({
   const isAuthenticated = useAppSelector((s) => s.auth.isAuthenticated);
 
   const draftId = useAppSelector((s) => s.listingForm.draftId);
+  const mode = useAppSelector((s) => s.listingForm.mode);
+  const isEditMode = variant === "step" && mode === "edit";
 
   const showOnStep =
     variant === "modal" ? true : draftId !== null;
 
+  // Address search is disabled in edit mode (address is readonly there).
   const searchActive =
     variant === "modal"
       ? enabled
-      : enabled && showOnStep;
+      : enabled && showOnStep && !isEditMode;
 
   const [addressQuery, setAddressQuery] = useState("");
   const debouncedQuery = useDebounce(addressQuery, DEBOUNCE_MS);
@@ -486,9 +489,11 @@ export function RentAddressAndListingEntryFields({
                 value={addressQuery}
                 onChange={handleAddressChange}
                 onFocus={() => {
-                  if (suggestions.length > 0) setSuggestionsOpen(true);
+                  if (!isEditMode && suggestions.length > 0)
+                    setSuggestionsOpen(true);
                 }}
-                disabled={detailsLoading}
+                disabled={detailsLoading || isEditMode}
+                readOnly={isEditMode}
                 autoComplete="off"
                 className="h-12 rounded-lg text-base"
               />
@@ -572,9 +577,11 @@ export function RentAddressAndListingEntryFields({
               value={addressQuery}
               onChange={handleAddressChange}
               onFocus={() => {
-                if (suggestions.length > 0) setSuggestionsOpen(true);
+                if (!isEditMode && suggestions.length > 0)
+                  setSuggestionsOpen(true);
               }}
-              disabled={detailsLoading}
+              disabled={detailsLoading || isEditMode}
+              readOnly={isEditMode}
               autoComplete="off"
               className="h-12 rounded-lg text-base"
             />

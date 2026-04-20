@@ -159,6 +159,9 @@
   },
   "listing": {
     "saveAndExit": "Save & exit",
+    "updateAndExit": "Update & exit",
+    "updateAndPublish": "Update & publish",
+    "updating": "Updating...",
     "saving": "Saving...",
     "uploadingMedia": "Uploading photos...",
     "addressSearchBusy": "Wait for address search to finish",
@@ -234,7 +237,8 @@
       "removeTour": "Remove 3D tour",
       "cancel": "Cancel",
       "saveTour": "Save",
-      "duplicatePhoto": "\"{name}\" is already uploaded"
+      "duplicatePhoto": "\"{name}\" is already uploaded",
+      "lastPhotoCannotDelete": "You can't remove the last photo from a live listing. Upload a new one before deleting this."
     },
     "amenities": {
       "title": "Amenities",

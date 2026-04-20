@@ -7,11 +7,13 @@ import { useAppSelector, useAppDispatch } from "@/store";
 import {
   setMedia,
   restoreFromDraft,
+  normalizeTours3d,
   beginMediaUpload,
   endMediaUpload,
 } from "@/store/slices/listingFormSlice";
-import type { DraftMediaItem } from "@/store/slices/listingFormSlice";
+import type { DraftMediaItem, RentDraftResponse } from "@/store/slices/listingFormSlice";
 import { rentDraftService } from "@/lib/api/rentDraft.service";
+import { rentListingEditService } from "@/lib/api/rentListingEdit.service";
 import { toast } from "sonner";
 import { CloudUpload, X, Loader2, DoorOpen } from "lucide-react";
 import {
@@ -31,6 +33,26 @@ interface UploadingFile {
   id: string;
   name: string;
   previewUrl: string;
+}
+
+function hasTopLevelMedia(
+  value: unknown
+): value is {
+  items?: DraftMediaItem[];
+  photos?: DraftMediaItem[];
+  tours3d?: unknown;
+} {
+  if (!value || typeof value !== "object") return false;
+  const o = value as Record<string, unknown>;
+  return "items" in o || "photos" in o || "tours3d" in o;
+}
+
+function hasFullDraftShape(
+  value: unknown
+): value is RentDraftResponse {
+  if (!value || typeof value !== "object") return false;
+  const o = value as Record<string, unknown>;
+  return typeof o.id === "string" && "media" in o;
 }
 
 function chunkIntoColumns<T>(items: readonly T[], columnCount: number): T[][] {
@@ -55,6 +77,8 @@ export function Step3Media() {
   const dispatch = useAppDispatch();
   const media = useAppSelector((s) => s.listingForm.formData.media);
   const draftId = useAppSelector((s) => s.listingForm.draftId);
+  const mode = useAppSelector((s) => s.listingForm.mode);
+  const isEditMode = mode === "edit";
 
   const [tourModalOpen, setTourModalOpen] = useState(false);
   const [tourNameInput, setTourNameInput] = useState("");
@@ -107,7 +131,7 @@ export function Step3Media() {
       dispatch(beginMediaUpload());
 
       try {
-        const presignResult = await rentDraftService.presignMedia(draftId, {
+        const presignBody = {
           files: uniqueFiles.map((file, i) => ({
             mediaType: "PHOTO" as const,
             fileName: file.name,
@@ -115,7 +139,10 @@ export function Step3Media() {
             fileSizeBytes: file.size,
             sortOrder: media.photos.length + i,
           })),
-        });
+        };
+        const presignResult = isEditMode
+          ? await rentListingEditService.presignMedia(draftId, presignBody)
+          : await rentDraftService.presignMedia(draftId, presignBody);
 
         const uploadResults = await Promise.allSettled(
           presignResult.uploads.map(async (upload, i) => {
@@ -148,20 +175,37 @@ export function Step3Media() {
         }
 
         if (successfulUploads.length > 0) {
-          const confirmed = await rentDraftService.confirmMedia(draftId, {
+          const confirmBody = {
             uploads: successfulUploads.map(({ upload, file, index }) => ({
               mediaId: upload.mediaId,
               fileSizeBytes: file.size,
               sortOrder: media.photos.length + index,
             })),
-          });
+          };
+          const confirmed = isEditMode
+            ? await rentListingEditService.confirmMedia(draftId, confirmBody)
+            : await rentDraftService.confirmMedia(draftId, confirmBody);
 
           setUploadingFiles((prev) =>
             prev.filter((f) => !previews.some((p) => p.id === f.id))
           );
           previews.forEach((p) => URL.revokeObjectURL(p.previewUrl));
-
-          dispatch(restoreFromDraft(confirmed));
+          // Draft confirm may return the full draft payload.
+          if (hasFullDraftShape(confirmed)) {
+            dispatch(restoreFromDraft(confirmed));
+            return;
+          }
+          // Published edit confirm currently returns media-only payload
+          // (items/photos/tours3d at the top level).
+          if (hasTopLevelMedia(confirmed)) {
+            dispatch(
+              setMedia({
+                items: confirmed.items ?? [],
+                photos: confirmed.photos ?? [],
+                tours3d: normalizeTours3d(confirmed.tours3d),
+              })
+            );
+          }
         }
       } catch {
         toast.error("Failed to upload photos.");
@@ -176,7 +220,7 @@ export function Step3Media() {
         });
       }
     },
-    [draftId, dispatch, media.photos, t]
+    [draftId, dispatch, media.photos, t, isEditMode]
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -186,17 +230,29 @@ export function Step3Media() {
 
   async function removePhoto(item: DraftMediaItem) {
     if (!draftId || deletingIds.has(item.id)) return;
+    // Backend blocks deleting the last confirmed photo from a live rent listing.
+    // Guard client-side so the user gets a clear message instead of a raw API error.
+    if (isEditMode && media.photos.length <= 1) {
+      toast.error(t("lastPhotoCannotDelete"));
+      return;
+    }
     setDeletingIds((prev) => new Set(prev).add(item.id));
     try {
-      await rentDraftService.deleteMedia(draftId, item.id);
+      if (isEditMode) {
+        await rentListingEditService.deleteMedia(draftId, item.id);
+      } else {
+        await rentDraftService.deleteMedia(draftId, item.id);
+      }
       dispatch(
         setMedia({
           photos: media.photos.filter((p) => p.id !== item.id),
           items: media.items.filter((i) => i.id !== item.id),
         })
       );
-    } catch {
-      toast.error("Failed to delete photo.");
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to delete photo.";
+      toast.error(message);
     } finally {
       setDeletingIds((prev) => {
         const next = new Set(prev);
