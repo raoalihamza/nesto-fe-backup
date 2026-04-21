@@ -6,7 +6,14 @@
     "getMortgage": "Get a mortgage",
     "findAgent": "Find an agent",
     "manageRentals": "Manage rentals",
-    "advertise": "Advertise"
+    "advertise": "Advertise",
+    "profile": "Profile",
+    "logout": "Log out",
+    "accountMenu": "Account menu"
+  },
+  "comingSoonPage": {
+    "title": "Coming soon",
+    "subtitle": "We are working on this experience. Please check back later."
   },
   "auth": {
     "signIn": "Sign in",
@@ -115,6 +122,7 @@
   },
   "dashboard": {
     "welcome": "Welcome back, {name}!",
+    "welcomeGuest": "friend",
     "newInquiries": "You have {count} new message inquiries and {homes} homes saved.",
     "postListing": "Post Listing",
     "overview": "Overview",

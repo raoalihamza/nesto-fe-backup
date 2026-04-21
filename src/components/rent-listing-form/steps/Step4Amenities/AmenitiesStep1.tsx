@@ -61,7 +61,6 @@ export function AmenitiesStep1() {
         <div>
           <h3 className="text-sm font-semibold text-foreground">
             {t("laundry")}
-            <span className="text-brand">*</span>
           </h3>
           <RadioGroup
             value={amenities.laundry[0] ?? ""}

@@ -1,6 +1,9 @@
 export const ROUTES = {
   HOME: "/",
   BUY: "/buy",
+  GET_MORTGAGE: "/get-a-mortgage",
+  FIND_AGENT: "/find-an-agent",
+  ADVERTISE: "/advertise",
   RENT: "/rent",
   SELL: "/sell",
   SEARCH: "/search",

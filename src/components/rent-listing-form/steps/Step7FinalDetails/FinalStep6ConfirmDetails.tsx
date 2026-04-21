@@ -25,12 +25,7 @@ export function FinalStep6ConfirmDetails() {
       editSubStep: 0,
     },
     {
-      label: (
-        <>
-          {t("leaseDuration")}
-          <span className="text-brand">*</span>
-        </>
-      ),
+      label: t("leaseDuration"),
       value: finalDetails.leaseDuration || "1 year",
       editSubStep: 0,
     },

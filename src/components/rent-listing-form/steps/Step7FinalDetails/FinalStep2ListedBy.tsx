@@ -47,7 +47,6 @@ export function FinalStep2ListedBy() {
       <div className="space-y-3">
         <p className="text-sm font-semibold text-foreground">
           {t("listedByLabel")}
-          <span className="text-brand">*</span>
         </p>
 
         <RadioGroup
@@ -81,7 +80,6 @@ export function FinalStep2ListedBy() {
       <div className="space-y-2">
         <Label className="text-sm font-semibold text-foreground">
           {t("nameLabel")}
-          <span className="text-brand">*</span>
         </Label>
         <Input
           value={finalDetails.name || "Kurtesan"}
@@ -95,7 +93,6 @@ export function FinalStep2ListedBy() {
       <div className="space-y-2">
         <Label className="text-sm font-semibold text-foreground">
           {t("emailLabel")}
-          <span className="text-brand">*</span>
         </Label>
         <div className="flex items-center gap-3">
           <Input

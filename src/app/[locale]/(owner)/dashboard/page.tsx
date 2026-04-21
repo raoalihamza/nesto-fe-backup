@@ -17,6 +17,8 @@ import {
 } from "@/hooks/listings";
 import { useRouter } from "@/i18n/routing";
 import { ROUTES } from "@/lib/constants/routes";
+import { useAppSelector } from "@/store";
+import { getUserDisplayName } from "@/lib/auth/getUserDisplayName";
 import type { MyListingItem } from "@/types/listings";
 import {
   Dialog,
@@ -55,6 +57,10 @@ export default function DashboardPage() {
   const t = useTranslations("dashboard");
   const tCommon = useTranslations("common");
   const locale = useLocale();
+  const user = useAppSelector((s) => s.auth.user);
+  const welcomeName = user
+    ? getUserDisplayName(user)
+    : t("welcomeGuest");
   const [listingModalOpen, setListingModalOpen] = useState(false);
   const [rentModalOpen, setRentModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<MainTab>("overview");
@@ -300,7 +306,7 @@ export default function DashboardPage() {
       {/* Welcome Section */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
-          {t("welcome", { name: "Alex" })} 👋
+          {t("welcome", { name: welcomeName })} 👋
         </h1>
         <p className="mt-1 text-sm text-muted-foreground sm:text-base">
           {t("newInquiries", { count: 2, homes: 12 })}

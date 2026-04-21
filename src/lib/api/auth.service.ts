@@ -7,6 +7,21 @@ const DEVICE = {
   platform: "web",
 } as const;
 
+/** Backend may return `{ user }` or a flat user object; callers always get `{ user }`. */
+function normalizeAuthMeResponse(data: unknown): { user: BackendUser } {
+  if (!data || typeof data !== "object") {
+    throw new Error("Invalid /auth/me response");
+  }
+  const record = data as Record<string, unknown>;
+  if (record.user && typeof record.user === "object") {
+    return { user: record.user as BackendUser };
+  }
+  if (typeof record.id === "string" && typeof record.email === "string") {
+    return { user: data as BackendUser };
+  }
+  throw new Error("Invalid /auth/me response");
+}
+
 export const authService = {
   login(email: string, password: string): Promise<AuthSuccessResponse> {
     return apiClient<AuthSuccessResponse>("/auth/login", {
@@ -89,9 +104,9 @@ export const authService = {
   },
 
   me(): Promise<{ user: BackendUser }> {
-    return apiClient<{ user: BackendUser }>("/auth/me", {
+    return apiClient<unknown>("/auth/me", {
       method: "GET",
-    });
+    }).then(normalizeAuthMeResponse);
   },
 
   updateMe(data: {
@@ -99,10 +114,10 @@ export const authService = {
     lastName?: string;
     phone?: string;
   }): Promise<{ user: BackendUser }> {
-    return apiClient<{ user: BackendUser }>("/auth/me", {
+    return apiClient<unknown>("/auth/me", {
       method: "PATCH",
       body: JSON.stringify(data),
-    });
+    }).then(normalizeAuthMeResponse);
   },
 
   changePassword(

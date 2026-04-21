@@ -67,7 +67,7 @@ export function Step1PropertyInfo() {
         {/* Total bedrooms */}
         <div>
           <label className="mb-2 block text-sm font-medium text-foreground">
-            {t("bedrooms")} <span className="text-brand">*</span>
+            {t("bedrooms")}
           </label>
           <Select
             value={data.totalBedrooms !== null ? String(data.totalBedrooms) : ""}
@@ -91,7 +91,7 @@ export function Step1PropertyInfo() {
         {/* Total bathrooms */}
         <div>
           <label className="mb-2 block text-sm font-medium text-foreground">
-            {t("bathrooms")} <span className="text-brand">*</span>
+            {t("bathrooms")}
           </label>
           <Select
             value={data.totalBathrooms ?? ""}

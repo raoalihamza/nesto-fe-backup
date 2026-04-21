@@ -22,7 +22,6 @@ export function ScreeningStep1() {
       <div className="space-y-4">
         <p className="text-sm font-semibold text-foreground">
           {t("arePetsAllowed")}
-          <span className="text-brand">*</span>
         </p>
 
         <div className="flex gap-3">

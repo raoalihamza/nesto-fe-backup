@@ -32,6 +32,7 @@ export function StepNavButtons() {
   const addressLookupBusy = useAppSelector(
     (s) => s.listingForm.addressLookupBusy
   );
+  const draftProgress = useAppSelector((s) => s.listingForm.draftProgress);
   const mediaUploadBusy = mediaUploadInFlight > 0;
 
   const { saveStep } = useSaveStep();
@@ -42,11 +43,15 @@ export function StepNavButtons() {
   const isFirstStep = currentStep === 0;
   const isLastStep = currentStep === TOTAL_STEPS - 1;
   const totalSubSteps = SUB_STEP_COUNTS[currentStep] ?? 1;
+  // Review (step 7): block Pay & publish until server marks listing ready (same as Step8Review banner).
+  const reviewBlocksNext =
+    currentStep === 7 && draftProgress?.publishReady !== true;
   // Address lookup only gates Next in create mode (edit mode has readonly address).
   const nextDisabled =
     isSaving ||
     mediaUploadBusy ||
-    (isFirstStep && !isEditMode && addressLookupBusy);
+    (isFirstStep && !isEditMode && addressLookupBusy) ||
+    reviewBlocksNext;
 
   function handleBack() {
     if (currentSubStep > 0) {
@@ -138,7 +143,9 @@ export function StepNavButtons() {
             ? t("addressSearchBusy")
             : mediaUploadBusy && !isSaving
               ? t("uploadingMedia")
-              : undefined
+              : reviewBlocksNext && !isSaving && !mediaUploadBusy
+                ? t("review.publishNotReadyGeneric")
+                : undefined
         }
         className="h-10 rounded-lg bg-brand px-6 text-sm font-medium text-white btn-brand-shadow hover:bg-brand-dark"
       >

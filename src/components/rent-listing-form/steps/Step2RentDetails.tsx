@@ -66,7 +66,7 @@ export function Step2RentDetails() {
         {/* Monthly rent */}
         <div>
           <label className="mb-2 block text-sm font-medium text-foreground">
-            {t("monthlyRent")} <span className="text-brand">*</span>
+            {t("monthlyRent")}
           </label>
           <div className="relative">
             <span className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-base text-muted-foreground">

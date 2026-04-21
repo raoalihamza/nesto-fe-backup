@@ -6,7 +6,14 @@
     "getMortgage": "Ипотека",
     "findAgent": "Найти агента",
     "manageRentals": "Управление арендой",
-    "advertise": "Реклама"
+    "advertise": "Реклама",
+    "profile": "Профиль",
+    "logout": "Выйти",
+    "accountMenu": "Меню аккаунта"
+  },
+  "comingSoonPage": {
+    "title": "Скоро",
+    "subtitle": "Мы работаем над этим разделом. Загляните позже."
   },
   "auth": {
     "signIn": "Войти",
@@ -115,6 +122,7 @@
   },
   "dashboard": {
     "welcome": "С возвращением, {name}!",
+    "welcomeGuest": "друг",
     "newInquiries": "У вас {count} новых сообщений и {homes} сохранённых домов.",
     "postListing": "Разместить объявление",
     "overview": "Обзор",

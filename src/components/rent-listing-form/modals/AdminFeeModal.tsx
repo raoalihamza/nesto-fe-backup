@@ -136,7 +136,6 @@ export function AdminFeeModal({
             <div>
               <label className="mb-2 block text-sm font-medium text-foreground">
                 {t("feeName")}
-                <span className="text-brand">*</span>
               </label>
               <Select value={feeName} onValueChange={(v) => setFeeName(v ?? "")}>
                 <SelectTrigger className="h-12! w-full text-base">
@@ -156,7 +155,6 @@ export function AdminFeeModal({
             <div>
               <label className="mb-2 block text-sm font-medium text-foreground">
                 {t("paymentFrequency")}
-                <span className="text-brand">*</span>
               </label>
               <Select
                 value={paymentFrequency}
@@ -196,7 +194,6 @@ export function AdminFeeModal({
             <div>
               <label className="mb-2 block text-sm font-medium text-foreground">
                 {t("feeFormat")}
-                <span className="text-brand">*</span>
               </label>
               <Select
                 value={feeFormat}
@@ -222,7 +219,6 @@ export function AdminFeeModal({
             <div>
               <label className="mb-2 block text-sm font-medium text-foreground">
                 {t("feeAmount")}
-                <span className="text-brand">*</span>
               </label>
               <div className="relative">
                 <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm text-muted-foreground">
@@ -246,7 +242,6 @@ export function AdminFeeModal({
             <div>
               <p className="mb-2 text-sm font-medium text-foreground">
                 {t("isRequired")}
-                <span className="text-brand">*</span>
               </p>
               <RadioGroup
                 value={feeRequiredType}

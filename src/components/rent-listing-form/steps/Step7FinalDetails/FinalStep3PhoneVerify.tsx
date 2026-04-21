@@ -234,7 +234,6 @@ export function FinalStep3PhoneVerify() {
       <div className="space-y-3">
         <Label className="text-sm font-semibold text-foreground">
           {t("phoneNumberLabel")}
-          <span className="text-brand">*</span>
         </Label>
 
         {!isOtpPhase && phase !== "verified" && (

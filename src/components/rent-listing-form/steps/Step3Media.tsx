@@ -490,7 +490,6 @@ export function Step3Media() {
                   className="text-foreground"
                 >
                   {t("tourNameLabel")}
-                  <span className="text-destructive"> *</span>
                 </Label>
                 <Input
                   id="nesto-tour-name"
@@ -516,7 +515,6 @@ export function Step3Media() {
               <div className="space-y-2">
                 <Label htmlFor="nesto-tour-url" className="text-foreground">
                   {t("tourLinkLabel")}
-                  <span className="text-destructive"> *</span>
                 </Label>
                 <Input
                   id="nesto-tour-url"

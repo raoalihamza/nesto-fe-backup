@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/routing";
+import { Link, useRouter } from "@/i18n/routing";
 import { Menu, User } from "lucide-react";
 import {
   Sheet,
@@ -11,22 +11,75 @@ import {
   SheetTrigger,
   SheetTitle,
 } from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { RentListingModal } from "@/components/common/RentListingModal";
 import { useAppSelector } from "@/store";
+import { ROUTES } from "@/lib/constants/routes";
+import { useLogout } from "@/hooks/auth/useLogout";
+import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
-  { key: "buy", href: "/buy" },
+  { key: "buy", href: ROUTES.BUY },
   { key: "rent", href: "/listings/create" },
   { key: "sell", href: "/listings/sale" },
-  { key: "getMortgage", href: "#" },
-  { key: "findAgent", href: "#" },
+  { key: "getMortgage", href: ROUTES.GET_MORTGAGE },
+  { key: "findAgent", href: ROUTES.FIND_AGENT },
 ] as const;
 
 const RIGHT_LINKS = [
   { key: "manageRentals", href: "/dashboard" },
-  { key: "advertise", href: "#" },
+  { key: "advertise", href: ROUTES.ADVERTISE },
 ] as const;
+
+function ProfileAccountControl({ className }: { className?: string }) {
+  const t = useTranslations("nav");
+  const router = useRouter();
+  const isAuthenticated = useAppSelector((s) => s.auth.isAuthenticated);
+  const { mutate: logoutMutate, isPending: isLoggingOut } = useLogout();
+
+  if (!isAuthenticated) {
+    return (
+      <Link href={ROUTES.LOGIN} className={cn("shrink-0", className)}>
+        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 hover:bg-gray-300">
+          <User className="h-4 w-4 text-gray-600" />
+        </div>
+      </Link>
+    );
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        className={cn(
+          "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-200 outline-none hover:bg-gray-300 cursor-pointer focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2",
+          className
+        )}
+        aria-label={t("accountMenu")}
+      >
+        <User className="h-4 w-4 text-gray-600" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="min-w-40">
+        <DropdownMenuItem onClick={() => router.push(ROUTES.PROFILE)} className="cursor-pointer">
+          {t("profile")}
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          variant="destructive"
+          disabled={isLoggingOut}
+          onClick={() => logoutMutate()}
+          className="cursor-pointer"
+        >
+          {t("logout")}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 export function Navbar() {
   const t = useTranslations("nav");
@@ -141,20 +194,12 @@ export function Navbar() {
               </Link>
             ))}
             <LanguageSwitcher />
-            <Link href={isAuthenticated ? "/profile" : "/login"} className="shrink-0">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200">
-                <User className="h-4 w-4 text-gray-600" />
-              </div>
-            </Link>
+            <ProfileAccountControl className="shrink-0" />
           </div>
 
           <div className="flex items-center gap-1 lg:hidden">
             <LanguageSwitcher />
-            <Link href={isAuthenticated ? "/profile" : "/login"}>
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200">
-                <User className="h-4 w-4 text-gray-600" />
-              </div>
-            </Link>
+            <ProfileAccountControl />
           </div>
         </div>
       </div>

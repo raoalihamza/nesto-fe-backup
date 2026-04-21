@@ -501,7 +501,7 @@ export function RentAddressAndListingEntryFields({
             {showUnitField ? (
               <div className="shrink-0 sm:w-30">
                 <label className="mb-1.5 block text-sm font-semibold text-foreground">
-                  {t("unit")} <span className="text-brand">*</span>
+                  {t("unit")}
                 </label>
                 <Input
                   inputMode="decimal"
@@ -535,8 +535,7 @@ export function RentAddressAndListingEntryFields({
             ) : (
               <div className="shrink-0 sm:w-36">
                 <label className="mb-1.5 block text-sm font-semibold text-foreground">
-                  {t("numberOfUnits")}{" "}
-                  <span className="text-brand">*</span>
+                  {t("numberOfUnits")}
                 </label>
                 <Input
                   inputMode="numeric"
@@ -631,7 +630,7 @@ export function RentAddressAndListingEntryFields({
 
       <div>
         <label className="mb-1.5 block text-sm font-semibold text-foreground">
-          {t("propertyType")} <span className="text-brand">*</span>
+          {t("propertyType")}
         </label>
         <Select
           value={propertyType}

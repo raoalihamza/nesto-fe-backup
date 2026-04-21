@@ -59,7 +59,6 @@ export function FinalStep1LeaseTerms() {
       <div className="space-y-2">
         <Label className="text-sm font-medium text-foreground">
           {t("leaseDuration")}
-          <span className="text-brand">*</span>
         </Label>
         <Select
           value={finalDetails.leaseDuration ?? ""}
