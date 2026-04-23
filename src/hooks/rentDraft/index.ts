@@ -77,7 +77,8 @@ function buildPropertyInfoBody(
       isSharedLivingSpace: listingEntry.isSharedLivingSpace,
     },
     squareFootage: p.squareFootage,
-    totalBedrooms: p.totalBedrooms,
+    totalBedrooms:
+      p.totalBedrooms !== null ? parseFloat(p.totalBedrooms) : null,
     totalBathrooms:
       p.totalBathrooms !== null ? parseFloat(p.totalBathrooms) : null,
   };

@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Pencil, Eye, Archive, Home, Trash2, Loader2 } from "lucide-react";
+import { Pencil, Archive, Home, Trash2, Loader2 } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 
 import {
@@ -51,6 +51,7 @@ export function ListingTable({
   archivingListingId,
 }: ListingTableProps) {
   const t = useTranslations("dashboard");
+  const tCommon = useTranslations("common");
   const locale = useLocale();
 
   return (
@@ -148,58 +149,87 @@ export function ListingTable({
                 <div className="flex gap-1">
                   {isDraft(listing) ? (
                     <>
-                      <button
-                        className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
-                        onClick={() => onEditDraft?.(listing)}
-                      >
-                        <Pencil className="size-4" />
-                      </button>
-                      <button
-                        className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
-                        onClick={() => onDeleteDraft?.(listing)}
-                        disabled={deletingDraftId === listing.id}
-                        aria-label={t("deleteDraft")}
-                      >
-                        {deletingDraftId === listing.id ? (
-                          <Loader2 className="size-4 animate-spin" />
-                        ) : (
-                          <Trash2 className="size-4" />
-                        )}
-                      </button>
+                      <Tooltip>
+                        <TooltipTrigger
+                          type="button"
+                          className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
+                          onClick={() => onEditDraft?.(listing)}
+                        >
+                          <Pencil className="size-4" />
+                        </TooltipTrigger>
+                        <TooltipContent side="top">{tCommon("edit")}</TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger
+                          type="button"
+                          className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
+                          onClick={() => onDeleteDraft?.(listing)}
+                          disabled={deletingDraftId === listing.id}
+                          aria-label={t("deleteDraft")}
+                        >
+                          {deletingDraftId === listing.id ? (
+                            <Loader2 className="size-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="size-4" />
+                          )}
+                        </TooltipTrigger>
+                        <TooltipContent side="top">{t("deleteDraft")}</TooltipContent>
+                      </Tooltip>
                     </>
                   ) : (
                     <>
                       {canEditPublishedListing(listing) && (
-                        <button
-                          className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
-                          onClick={() => onEditListing?.(listing)}
-                          aria-label={t("action")}
-                        >
-                          <Pencil className="size-4" />
-                        </button>
+                        <Tooltip>
+                          <TooltipTrigger
+                            type="button"
+                            className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
+                            onClick={() => onEditListing?.(listing)}
+                            aria-label={tCommon("edit")}
+                          >
+                            <Pencil className="size-4" />
+                          </TooltipTrigger>
+                          <TooltipContent side="top">{tCommon("edit")}</TooltipContent>
+                        </Tooltip>
                       )}
                       {listing.actionFlags.canArchive ? (
-                        <button
-                          className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
-                          onClick={() => onArchive?.(listing)}
-                          disabled={archivingListingId === listing.id}
-                        >
-                          {archivingListingId === listing.id ? (
-                            <Loader2 className="size-4 animate-spin" />
-                          ) : (
-                            <Archive className="size-4" />
-                          )}
-                        </button>
+                        <Tooltip>
+                          <TooltipTrigger
+                            type="button"
+                            className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
+                            onClick={() => onArchive?.(listing)}
+                            disabled={archivingListingId === listing.id}
+                            aria-label={t("archive")}
+                          >
+                            {archivingListingId === listing.id ? (
+                              <Loader2 className="size-4 animate-spin" />
+                            ) : (
+                              <Archive className="size-4" />
+                            )}
+                          </TooltipTrigger>
+                          <TooltipContent side="top">{t("archive")}</TooltipContent>
+                        </Tooltip>
                       ) : isArchived(listing) || canEditPublishedListing(listing) ? null : (
-                        <button className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer">
-                          <Pencil className="size-4" />
-                        </button>
+                        <Tooltip>
+                          <TooltipTrigger
+                            type="button"
+                            className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
+                            aria-label={tCommon("edit")}
+                          >
+                            <Pencil className="size-4" />
+                          </TooltipTrigger>
+                          <TooltipContent side="top">{tCommon("edit")}</TooltipContent>
+                        </Tooltip>
                       )}
                     </>
                   )}
-                  <button className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer">
-                    <Eye className="size-4" />
-                  </button>
+                  {/* View (Eye): not wired yet — import Eye; mirror other actions with Tooltip + TooltipContent {t("view")}
+                  <Tooltip>
+                    <TooltipTrigger type="button" className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer">
+                      <Eye className="size-4" />
+                    </TooltipTrigger>
+                    <TooltipContent side="top">{t("view")}</TooltipContent>
+                  </Tooltip>
+                  */}
                 </div>
               </td>
             </tr>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useDropzone } from "react-dropzone";
@@ -19,7 +19,14 @@ import {
 } from "@/store/slices/saleListingSlice";
 import type { SaleFormData, SaleListingPhoto } from "@/lib/saleListing/saleListingFormTypes";
 import { createEmptySaleFormData } from "@/lib/saleListing/saleListingFormTypes";
-import { saleListingFormSchema } from "@/lib/saleListing/saleListingFormSchema";
+import { createSaleListingFormSchema } from "@/lib/saleListing/saleListingFormSchema";
+import {
+  sanitizeOptionalMoneyInput,
+  formatSanitizedMoneyForDisplay,
+  formatUsdRangeLabel,
+  RENT_MONEY_MIN_AMOUNT,
+  RENT_MONEY_MAX_AMOUNT,
+} from "@/lib/rentListing/optionalMoneyField";
 import { saleListingMediaService } from "@/lib/api/saleListingMedia.service";
 import { saleListingService } from "@/lib/api/saleListing.service";
 import {
@@ -35,7 +42,6 @@ import type { ApiError } from "@/types/user";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { ROUTES } from "@/lib/constants/routes";
-import { sanitizeDecimalChars } from "@/lib/input/numericSanitize";
 import { SectionHeading } from "@/components/sale-listing/SaleListingFormUi";
 import {
   SaleListingPhotosBlock,
@@ -93,6 +99,63 @@ export function SaleListingForm({ listingId }: SaleListingFormProps = {}) {
   const salePhoneVerified = useAppSelector((s) => s.saleListing.salePhoneVerified);
   const verifiedSalePhone = useAppSelector((s) => s.saleListing.verifiedSalePhone);
 
+  const saleListingFormSchema = useMemo(
+    () =>
+      createSaleListingFormSchema({
+        price: {
+          required: t("priceErrors.required"),
+          invalid_format: t("priceErrors.invalidFormat"),
+          too_many_decimals: t("priceErrors.tooManyDecimals"),
+          not_positive: t("priceErrors.notPositive"),
+          out_of_range: t("priceErrors.outOfRange", {
+            min: formatUsdRangeLabel(RENT_MONEY_MIN_AMOUNT),
+            max: formatUsdRangeLabel(RENT_MONEY_MAX_AMOUNT),
+          }),
+        },
+        validation: {
+          atLeastOnePhoto: t("validation.atLeastOnePhoto"),
+          acceptTerms: t("validation.acceptTerms"),
+          phoneRequired: t("validation.phoneRequired"),
+          phoneLength: t("validation.phoneLength"),
+          invalidUrl: t("validation.invalidUrl"),
+          openHouseMaxRows: t("validation.openHouseMaxRows"),
+          homeTypeRequired: t("validation.homeTypeRequired"),
+          homeTypeInvalid: t("validation.homeTypeInvalid"),
+          descriptionRequired: t("validation.descriptionRequired"),
+          descriptionMax: t("validation.descriptionMax"),
+          invalidHoaDues: t("validation.invalidHoaDues"),
+          bedsRequired: t("validation.bedsRequired"),
+          bedsWholeNonNegative: t("validation.bedsWholeNonNegative"),
+          basementSqFtInvalid: t("validation.basementSqFtInvalid"),
+          garageSqFtInvalid: t("validation.garageSqFtInvalid"),
+          bathCountWholeNonNegative: t("validation.bathCountWholeNonNegative"),
+          bathroomTotalExceeded: t("validation.bathroomTotalExceeded"),
+          finishedSqFtInvalid: t("validation.finishedSqFtInvalid"),
+          lotSizeAndUnitTogether: t("validation.lotSizeAndUnitTogether"),
+          lotSizeInvalid: t("validation.lotSizeInvalid"),
+          lotSizeUnitInvalid: t("validation.lotSizeUnitInvalid"),
+          lotSizeNonNegative: t("validation.lotSizeNonNegative"),
+          yearOutOfRange: t("validation.yearOutOfRange"),
+          remodelYearOutOfRange: t("validation.remodelYearOutOfRange"),
+          remodelAfterYearBuilt: t("validation.remodelAfterYearBuilt"),
+          openHouseIncomplete: t("validation.openHouseIncomplete"),
+          openHouseDateFormat: t("validation.openHouseDateFormat"),
+          openHouseTimeFormat: t("validation.openHouseTimeFormat"),
+          openHouseEndAfterStart: t("validation.openHouseEndAfterStart"),
+          noneExclusive: t("validation.noneExclusive"),
+          duplicateSelections: t("validation.duplicateSelections"),
+          architectureTypeInvalid: t("validation.architectureTypeInvalid"),
+          styleTypeInvalid: t("validation.styleTypeInvalid"),
+          totalRoomsInvalid: t("validation.totalRoomsInvalid"),
+          storiesInvalid: t("validation.storiesInvalid"),
+          parkingSpacesInvalid: t("validation.parkingSpacesInvalid"),
+          additionalInfoMax: t("validation.additionalInfoMax"),
+        },
+        isEditMode,
+      }),
+    [t, isEditMode]
+  );
+
   const {
     control,
     handleSubmit,
@@ -135,6 +198,23 @@ export function SaleListingForm({ listingId }: SaleListingFormProps = {}) {
     []
   );
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
+  /** True once this mount has seen a validated address (map → create, or edit hydrate). Used so we do not treat `resetSaleForm()` after submit as a “lost session / refresh”. */
+  const saleCreateEverHadValidatedAddressRef = useRef(false);
+
+  useEffect(() => {
+    if (validatedAddress) {
+      saleCreateEverHadValidatedAddressRef.current = true;
+    }
+  }, [validatedAddress]);
+
+  /** Only for create when the user landed without a session (refresh, direct URL). Not when `validatedAddress` becomes null after successful submit. */
+  useEffect(() => {
+    if (isEditMode || validatedAddress) return;
+    if (saleCreateEverHadValidatedAddressRef.current) return;
+    window.alert(t("createSessionDataClearedAlert"));
+    dispatch(resetSaleForm());
+    router.replace(ROUTES.OWNER.SALE);
+  }, [isEditMode, validatedAddress, router, t, dispatch]);
 
   useEffect(() => {
     const handler = (e: BeforeUnloadEvent) => {
@@ -424,14 +504,14 @@ export function SaleListingForm({ listingId }: SaleListingFormProps = {}) {
         const body = buildUpdateSaleListingBody(validatedAddress, data);
         await saleListingService.updateListing(listingId, body);
         toast.success(t("editSaveSuccess"));
-        dispatch(resetSaleForm());
         router.push(ROUTES.OWNER.DASHBOARD);
+        dispatch(resetSaleForm());
       } else {
         const body = buildCreateSaleListingBody(validatedAddress, data);
         await saleListingService.createListing(body);
+        router.push(ROUTES.OWNER.DASHBOARD);
         dispatch(resetSaleForm());
         reset(createEmptySaleFormData());
-        router.push(ROUTES.OWNER.DASHBOARD);
       }
     } catch (error) {
       if (error instanceof Error) {
@@ -465,6 +545,14 @@ export function SaleListingForm({ listingId }: SaleListingFormProps = {}) {
     .join(", ");
   const displayAddress =
     validatedAddress?.formattedAddress?.trim() || addressText;
+
+  if (
+    !isEditMode &&
+    !validatedAddress &&
+    !saleCreateEverHadValidatedAddressRef.current
+  ) {
+    return null;
+  }
 
   if (isEditMode && isLoadingListing) {
     return (
@@ -500,37 +588,36 @@ export function SaleListingForm({ listingId }: SaleListingFormProps = {}) {
 
       <div className="mb-8 border-b border-border pb-6">
         <SectionHeading>{t("setYourPrice")}</SectionHeading>
-        <div className="relative max-w-xs">
-          <span className="absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground">
-            $
-          </span>
-          <Controller
-            name="price"
-            control={control}
-            render={({ field }) => (
-              <Input
-                type="text"
-                inputMode="decimal"
-                value={
-                  field.value === null || field.value === undefined
-                    ? ""
-                    : String(field.value)
-                }
-                onChange={(e) => {
-                  const sanitized = sanitizeDecimalChars(e.target.value);
-                  if (sanitized === "" || sanitized === ".") {
-                    field.onChange(null);
-                    return;
-                  }
-                  const n = Number(sanitized);
-                  field.onChange(Number.isFinite(n) ? n : null);
-                }}
-                onWheel={(e) => e.currentTarget.blur()}
-                className="h-12 pl-7"
-                placeholder="0"
-              />
-            )}
-          />
+        <div className="max-w-xs">
+          {/* Prefix is positioned relative to the input row only; error text must sit outside
+              or `top-1/2` on $ centers against input+message height and overlaps the field. */}
+          <div className="relative">
+            <span
+              className="pointer-events-none absolute top-1/2 left-3 z-10 -translate-y-1/2 text-muted-foreground"
+              aria-hidden
+            >
+              $
+            </span>
+            <Controller
+              name="price"
+              control={control}
+              render={({ field }) => (
+                <Input
+                  type="text"
+                  inputMode="decimal"
+                  value={field.value ?? ""}
+                  onChange={(e) => {
+                    const sanitized = sanitizeOptionalMoneyInput(e.target.value);
+                    field.onChange(formatSanitizedMoneyForDisplay(sanitized));
+                  }}
+                  onWheel={(e) => e.currentTarget.blur()}
+                  className="h-12 pl-7"
+                  placeholder="0"
+                  aria-invalid={Boolean(errors.price)}
+                />
+              )}
+            />
+          </div>
           {errors.price ? (
             <p className="mt-1 text-sm text-destructive">{errors.price.message}</p>
           ) : null}

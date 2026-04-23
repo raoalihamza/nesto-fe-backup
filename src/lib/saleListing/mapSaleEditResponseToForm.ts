@@ -9,14 +9,32 @@ import type {
   OpenHouseEntry,
 } from "@/lib/saleListing/saleListingFormTypes";
 import { createEmptySaleFormData } from "@/lib/saleListing/saleListingFormTypes";
+import { formatReduxMoneyForInput } from "@/lib/rentListing/optionalMoneyField";
 import {
   ARCHITECTURE_TYPE_OPTIONS,
   ELECTRIC_OPTIONS,
   HOME_TYPES,
+  LOT_SIZE_UNITS,
   STYLE_TYPE_OPTIONS,
   WATER_HEATER_OPTIONS,
   WATER_OPTIONS,
 } from "@/lib/saleListing/saleListingFormConstants";
+
+const ALLOWED_LOT_SIZE_UNITS = new Set<string>(LOT_SIZE_UNITS);
+
+/** Legacy `lotSizeUnit` values from older API responses → current API keys. */
+const LEGACY_LOT_SIZE_UNIT: Record<string, (typeof LOT_SIZE_UNITS)[number]> = {
+  sqft: "sqmeter",
+  acres: "acre",
+};
+
+function mapLotSizeUnitFromApi(raw: string | null | undefined): string {
+  const v = (raw ?? "").toString().trim().toLowerCase();
+  if (!v) return "";
+  if (ALLOWED_LOT_SIZE_UNITS.has(v)) return v;
+  const mapped = LEGACY_LOT_SIZE_UNIT[v];
+  return mapped ?? "";
+}
 
 // Inverse lookup tables for fields where UI keys intentionally differ from
 // API values (see `buildSaleListingPayload.ts`).
@@ -32,8 +50,9 @@ const VIEW_REVERSE: Record<string, (typeof STYLE_TYPE_OPTIONS)[number]> = {
   city: "city",
   territorial: "territorial",
   mountain: "mountain",
+  park: "park",
+  water: "water",
   none: "none_style",
-  field: "field",
 };
 
 const ARCHITECTURAL_STYLE_REVERSE: Record<
@@ -135,7 +154,12 @@ function mapStyleTypeFromApi(view: string[] | null | undefined): string {
   const arr = stringArray(view);
   if (arr.length === 0) return "";
   const first = arr[0];
-  return VIEW_REVERSE[first] ?? first;
+  const mapped = VIEW_REVERSE[first];
+  if (mapped) return mapped;
+  const opts = STYLE_TYPE_OPTIONS as readonly string[];
+  return opts.includes(first)
+    ? (first as (typeof STYLE_TYPE_OPTIONS)[number])
+    : "";
 }
 
 function mapArchitectureTypeFromApi(
@@ -238,7 +262,7 @@ export function mapSaleEditResponseToFormData(
 
   return {
     ...empty,
-    price: pricingPrice,
+    price: formatReduxMoneyForInput(pricingPrice),
     photos: mapListingMediaListToPhotos(mediaItems),
     virtualTourUrl: (resp.pricingMedia?.virtualTourUrl ?? "").trim(),
     tourUrl3D: "",
@@ -254,7 +278,8 @@ export function mapSaleEditResponseToFormData(
     description: (hf.homeDescription ?? "").toString(),
     finishedSqFt: toStringOrEmpty(hf.finishedSquareFeet),
     lotSize: toStringOrEmpty(hf.lotSize),
-    lotSizeUnit: (hf.lotSizeUnit ?? "").toString().trim() || empty.lotSizeUnit,
+    lotSizeUnit:
+      mapLotSizeUnitFromApi(hf.lotSizeUnit) || empty.lotSizeUnit,
     yearBuilt: toStringOrEmpty(hf.yearBuilt),
     structuralRemodelYear: toStringOrEmpty(hf.structuralRemodelYear),
     openHouseDates: mapOpenHouses(resp.openHouses),

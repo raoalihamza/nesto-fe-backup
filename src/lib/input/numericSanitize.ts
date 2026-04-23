@@ -4,7 +4,7 @@ export function sanitizeIntegerDigits(raw: string): string {
 }
 
 /**
- * Allow digits and at most one decimal point (for HOA, sq ft, baths, lot size, price typing).
+ * Allow digits and at most one decimal point (for HOA, area fields, baths, lot size, price typing).
  * Strips all other characters including letters, minus, commas, spaces.
  */
 export function sanitizeDecimalChars(raw: string): string {

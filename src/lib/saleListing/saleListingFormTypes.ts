@@ -14,7 +14,8 @@ export interface SaleListingPhoto {
 }
 
 export interface SaleFormData {
-  price: number | null;
+  /** Display string with optional grouping, e.g. `"50,000.50"`. Empty when unset. */
+  price: string;
   photos: SaleListingPhoto[];
   virtualTourUrl: string;
   tourUrl3D: string;
@@ -65,7 +66,7 @@ export interface SaleFormData {
 
 export function createEmptySaleFormData(): SaleFormData {
   return {
-    price: null,
+    price: "",
     photos: [],
     virtualTourUrl: "",
     tourUrl3D: "",
@@ -81,7 +82,7 @@ export function createEmptySaleFormData(): SaleFormData {
     description: "",
     finishedSqFt: "",
     lotSize: "",
-    lotSizeUnit: "sqft",
+    lotSizeUnit: "",
     yearBuilt: "",
     structuralRemodelYear: "",
     openHouseDates: [],

@@ -15,12 +15,12 @@ export function FinalStep4BookTours() {
   const selected = finalDetails.bookingToursInstantly === true;
 
   return (
-    <div className="w-full max-w-md space-y-6">
+    <div className="w-full space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
           {t("bookToursHeading")}
         </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
+        <p className="mt-2 max-w-md text-sm text-muted-foreground">
           {t("bookToursSubtitle")}
         </p>
       </div>

@@ -211,39 +211,39 @@ export default function DashboardPage() {
   const handleOpenDeleteDraft = useCallback((listing: MyListingItem) => {
     if (listing.status.toLowerCase() !== "draft") return;
     setDraftToDelete(listing);
-  }, []);
+  }, [setDraftToDelete]);
 
   const handleDeleteDraftConfirm = useCallback(async () => {
     if (!draftToDelete) return;
     await deleteDraftMutation.mutateAsync({ listingId: draftToDelete.id });
     setDraftToDelete(null);
-  }, [deleteDraftMutation, draftToDelete]);
+  }, [deleteDraftMutation, draftToDelete, setDraftToDelete]);
 
   const handleDeleteDialogOpenChange = useCallback(
     (nextOpen: boolean) => {
       if (deleteDraftMutation.isPending) return;
       if (!nextOpen) setDraftToDelete(null);
     },
-    [deleteDraftMutation.isPending]
+    [deleteDraftMutation, setDraftToDelete]
   );
 
   const handleOpenArchive = useCallback((listing: MyListingItem) => {
     if (!listing.actionFlags.canArchive || listing.status.toLowerCase() === "draft") return;
     setListingToArchive(listing);
-  }, []);
+  }, [setListingToArchive]);
 
   const handleArchiveConfirm = useCallback(async () => {
     if (!listingToArchive) return;
     await archiveMutation.mutateAsync({ listingId: listingToArchive.id, locale });
     setListingToArchive(null);
-  }, [archiveMutation, listingToArchive, locale]);
+  }, [archiveMutation, listingToArchive, locale, setListingToArchive]);
 
   const handleArchiveDialogOpenChange = useCallback(
     (nextOpen: boolean) => {
       if (archiveMutation.isPending) return;
       if (!nextOpen) setListingToArchive(null);
     },
-    [archiveMutation.isPending]
+    [archiveMutation, setListingToArchive]
   );
 
   const scrollMyListingTabs = useCallback((direction: "left" | "right") => {
@@ -254,7 +254,7 @@ export default function DashboardPage() {
       left: direction === "right" ? amount : -amount,
       behavior: "smooth",
     });
-  }, []);
+  }, [myListingsTabsRef]);
 
   // Filter drafts out of "For Rent" / "For Sale" sub-tabs (not "All" or "Drafted")
   const shouldFilterDrafts = (tab: string) =>
@@ -308,9 +308,9 @@ export default function DashboardPage() {
         <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
           {t("welcome", { name: welcomeName })} 👋
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground sm:text-base">
+        {/* <p className="mt-1 text-sm text-muted-foreground sm:text-base">
           {t("newInquiries", { count: 2, homes: 12 })}
-        </p>
+        </p> */}
       </div>
 
       {/* Main Tabs Row */}
@@ -370,7 +370,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Desktop Table */}
+            {/* Desktop Table (eye / view action hidden in ListingTable until preview exists) */}
             <div className="hidden sm:block">
               {overviewLoading ? skeletonRows : (
                 <ListingTable
@@ -589,7 +589,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Desktop Table */}
+          {/* Desktop Table (eye / view action hidden in ListingTable until preview exists) */}
           <div className="hidden sm:block">
             {myListingsLoading ? skeletonRows : (
               <ListingTable

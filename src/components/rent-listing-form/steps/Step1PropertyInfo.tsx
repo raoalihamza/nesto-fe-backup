@@ -38,7 +38,7 @@ export function Step1PropertyInfo() {
           <RentAddressAndListingEntryFields variant="step" enabled />
         )}
 
-        {/* Square footage */}
+        {/* Property size */}
         <div>
           <label className="mb-2 block text-sm font-medium text-foreground">
             {t("squareFootage")}
@@ -70,9 +70,9 @@ export function Step1PropertyInfo() {
             {t("bedrooms")}
           </label>
           <Select
-            value={data.totalBedrooms !== null ? String(data.totalBedrooms) : ""}
+            value={data.totalBedrooms ?? ""}
             onValueChange={(val) =>
-              dispatch(setPropertyInfo({ totalBedrooms: Number(val) || 8 }))
+              dispatch(setPropertyInfo({ totalBedrooms: val }))
             }
           >
             <SelectTrigger className="h-12! w-full text-base">

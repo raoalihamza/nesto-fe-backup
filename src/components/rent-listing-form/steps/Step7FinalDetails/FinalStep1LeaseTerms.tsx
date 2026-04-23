@@ -45,18 +45,18 @@ export function FinalStep1LeaseTerms() {
   );
 
   return (
-    <div className="w-full max-w-md space-y-6">
+    <div className="w-full space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
           {t("leaseTermsHeading")}
         </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
+        <p className="mt-2 text-sm max-w-md text-muted-foreground">
           {t("leaseTermsSubtitle")}
         </p>
       </div>
 
       {/* Lease duration */}
-      <div className="space-y-2">
+      <div className="space-y-2 max-w-md">
         <Label className="text-sm font-medium text-foreground">
           {t("leaseDuration")}
         </Label>
@@ -68,7 +68,9 @@ export function FinalStep1LeaseTerms() {
         >
           <SelectTrigger className="h-12! w-full text-base">
             <SelectValue placeholder={t("selectLeaseDuration")}>
-              {(value: string) => value ? t(`leaseDurationOptions.${value}`) : null}
+              {(value: string) =>
+                value ? t(`leaseDurationOptions.${value}`) : null
+              }
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
@@ -82,7 +84,7 @@ export function FinalStep1LeaseTerms() {
       </div>
 
       {/* Date available */}
-      <div className="space-y-2">
+      <div className="space-y-2 max-w-md">
         <Label className="text-sm font-medium text-foreground">
           {t("dateAvailable")}
         </Label>
@@ -97,7 +99,7 @@ export function FinalStep1LeaseTerms() {
       </div>
 
       {/* Lease terms textarea */}
-      <div className="space-y-2">
+      <div className="space-y-2 max-w-md">
         <Label className="text-sm font-medium text-foreground">
           {t("leaseTermsLabel")}
         </Label>
@@ -111,16 +113,22 @@ export function FinalStep1LeaseTerms() {
       </div>
 
       {/* Renters insurance radio */}
-      <div className="space-y-3">
+      <div className="space-y-3 max-w-md">
         <p className="text-sm font-medium text-foreground">
           {t("requireInsuranceQuestion")}
         </p>
 
         <RadioGroup
-          value={finalDetails.requiresRentersInsurance === true ? "yes" : finalDetails.requiresRentersInsurance === false ? "no" : ""}
+          value={
+            finalDetails.requiresRentersInsurance === true
+              ? "yes"
+              : finalDetails.requiresRentersInsurance === false
+                ? "no"
+                : ""
+          }
           onValueChange={(val) =>
             dispatch(
-              setFinalDetails({ requiresRentersInsurance: val === "yes" })
+              setFinalDetails({ requiresRentersInsurance: val === "yes" }),
             )
           }
           className="space-y-3"

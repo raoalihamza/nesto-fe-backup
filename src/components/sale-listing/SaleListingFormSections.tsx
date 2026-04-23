@@ -32,6 +32,8 @@ import {
   PARKING_OPTIONS,
   ROOF_OPTIONS,
   STYLE_TYPE_OPTIONS,
+  SALE_LISTING_ADDITIONAL_INFO_MAX_CHARS,
+  SALE_LISTING_DESCRIPTION_MAX_CHARS,
 } from "@/lib/saleListing/saleListingFormConstants";
 import {
   sanitizeDecimalChars,
@@ -352,13 +354,33 @@ export const SaleListingVirtualTourHomeFactsBlock = memo(
             </div>
           </div>
 
-          <div className="row-span-1 flex flex-col sm:row-span-1">
-            <Label className="mb-1 block text-sm">{t("describeHome")}</Label>
-            <Textarea
-              value={description}
-              onChange={(e) => patch({ description: e.target.value })}
-              className="min-h-[140px] flex-1 resize-y"
-            />
+          <div className="row-span-1 flex min-h-0 w-full min-w-0 flex-col sm:row-span-1">
+            <Label className="mb-1 block text-sm" htmlFor="sale-listing-description">
+              {t("describeHome")}
+            </Label>
+            <div className="relative w-full max-w-full">
+              <Textarea
+                id="sale-listing-description"
+                value={description}
+                maxLength={SALE_LISTING_DESCRIPTION_MAX_CHARS}
+                style={{ fieldSizing: "fixed" }}
+                onChange={(e) =>
+                  patch({
+                    description: e.target.value.slice(
+                      0,
+                      SALE_LISTING_DESCRIPTION_MAX_CHARS
+                    ),
+                  })
+                }
+                className="h-[140px] min-h-[140px] max-h-[140px] w-full max-w-full resize-none overflow-y-auto py-2 pr-16 pb-7"
+              />
+              <span
+                className="pointer-events-none absolute bottom-2 right-2.5 text-xs tabular-nums text-muted-foreground"
+                aria-live="polite"
+              >
+                {description.length}/{SALE_LISTING_DESCRIPTION_MAX_CHARS}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -392,10 +414,10 @@ export const SaleListingVirtualTourHomeFactsBlock = memo(
               className="h-12 flex-1"
             />
             <Select
-              value={lotSizeUnit}
+              value={lotSizeUnit.trim() ? lotSizeUnit : undefined}
               onValueChange={(v) => patch({ lotSizeUnit: v ?? "" })}
             >
-              <SelectTrigger className="h-12! w-28 text-base">
+              <SelectTrigger className="h-12! min-w-[8.5rem] text-base">
                 <SelectValue>
                   {(value: string) =>
                     value ? tOpt(`lotSizeUnit.${value}`) : null
@@ -610,14 +632,34 @@ export const SaleListingAdditionalInfoBlock = memo(
             className="h-12"
           />
         </div>
-        <div className="mt-4 max-w-sm">
-          <Label className="mb-1 block text-sm">{t("whatYouLove")}</Label>
-          <Textarea
-            value={additionalInfo}
-            onChange={(e) => patch({ additionalInfo: e.target.value })}
-            rows={4}
-            placeholder={t("whatYouLovePlaceholder")}
-          />
+        <div className="relative mt-4 max-w-sm">
+          <Label className="mb-1 block text-sm" htmlFor="sale-listing-additional-info">
+            {t("whatYouLove")}
+          </Label>
+          <div className="relative w-full">
+            <Textarea
+              id="sale-listing-additional-info"
+              value={additionalInfo}
+              maxLength={SALE_LISTING_ADDITIONAL_INFO_MAX_CHARS}
+              style={{ fieldSizing: "fixed" }}
+              onChange={(e) =>
+                patch({
+                  additionalInfo: e.target.value.slice(
+                    0,
+                    SALE_LISTING_ADDITIONAL_INFO_MAX_CHARS
+                  ),
+                })
+              }
+              placeholder={t("whatYouLovePlaceholder")}
+              className="h-[104px] min-h-[104px] max-h-[104px] w-full resize-none overflow-y-auto py-2 pr-16 pb-7"
+            />
+            <span
+              className="pointer-events-none absolute bottom-2 right-2.5 text-xs tabular-nums text-muted-foreground"
+              aria-live="polite"
+            >
+              {additionalInfo.length}/{SALE_LISTING_ADDITIONAL_INFO_MAX_CHARS}
+            </span>
+          </div>
           <p className="mt-1 text-xs text-muted-foreground">
             {t("whatYouLoveHelper")}
           </p>

@@ -21,24 +21,33 @@ const CREDIT_SCORE_OPTIONS = [
   { value: "800", label: "creditExceptional" },
 ];
 
+function formatMonthlyRentLabel(amount: number) {
+  return `$${amount.toLocaleString("en-US")}`;
+}
+
 export function ScreeningStep2() {
   const t = useTranslations("listing.screening");
   const dispatch = useAppDispatch();
   const screeningCriteria = useAppSelector((s) => s.listingForm.formData.screeningCriteria);
+  const monthlyRent = useAppSelector((s) => s.listingForm.formData.rentDetails.monthlyRent);
+  const rentDisplay =
+    monthlyRent !== null && Number.isFinite(monthlyRent) && monthlyRent > 0
+      ? formatMonthlyRentLabel(monthlyRent)
+      : null;
 
   return (
-    <div className="w-full max-w-md space-y-6">
+    <div className="w-full space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
           {t("financialHeading")}
         </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
+        <p className="mt-2 text-sm text-muted-foreground max-w-md">
           {t("financialSubtitle")}
         </p>
       </div>
 
       {/* Minimum income-to-rent ratio */}
-      <div className="space-y-2">
+      <div className="space-y-2 max-w-md">
         <p className="text-sm font-semibold text-foreground">
           {t("minIncomeToRentRatio")}
         </p>
@@ -48,13 +57,15 @@ export function ScreeningStep2() {
             dispatch(
               setScreeningCriteria({
                 minimumIncomeToRentRatio: value === "not_set" ? null : value,
-              })
+              }),
             )
           }
         >
           <SelectTrigger className="h-12! w-full text-base sm:w-80">
             <SelectValue placeholder={t("notSet")}>
-              {(value: string) => value === "not_set" ? t("notSet") : value || null}
+              {(value: string) =>
+                value === "not_set" ? t("notSet") : value || null
+              }
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
@@ -66,14 +77,20 @@ export function ScreeningStep2() {
             ))}
           </SelectContent>
         </Select>
-        <p className="text-xs text-muted-foreground">{t("rentSetAt")}</p>
+        {rentDisplay !== null ? (
+          <p className="text-xs text-muted-foreground">{t("rentSetAt", { amount: rentDisplay })}</p>
+        ) : null}
 
         <div className="flex items-center gap-2">
           <Checkbox
             id="incomeNegotiable"
             checked={screeningCriteria.incomeToRentRatioNegotiable === true}
             onCheckedChange={(checked) =>
-              dispatch(setScreeningCriteria({ incomeToRentRatioNegotiable: checked === true }))
+              dispatch(
+                setScreeningCriteria({
+                  incomeToRentRatioNegotiable: checked === true,
+                }),
+              )
             }
           />
           <Label
@@ -86,7 +103,7 @@ export function ScreeningStep2() {
       </div>
 
       {/* Minimum monthly pre-tax income */}
-      <div className="space-y-2">
+      <div className="space-y-2 max-w-md">
         <p className="text-sm font-semibold text-foreground">
           {t("minMonthlyPreTaxIncome")}
         </p>
@@ -94,7 +111,7 @@ export function ScreeningStep2() {
       </div>
 
       {/* Minimum credit score */}
-      <div className="space-y-2">
+      <div className="space-y-2 max-w-md">
         <p className="text-sm font-semibold text-foreground">
           {t("minCreditScore")}
         </p>
@@ -108,7 +125,7 @@ export function ScreeningStep2() {
             dispatch(
               setScreeningCriteria({
                 minimumCreditScore: value === "not_set" ? null : Number(value),
-              })
+              }),
             )
           }
         >
@@ -116,7 +133,9 @@ export function ScreeningStep2() {
             <SelectValue placeholder={t("notSet")}>
               {(value: string) => {
                 if (!value || value === "not_set") return t("notSet");
-                const match = CREDIT_SCORE_OPTIONS.find((o) => o.value === value);
+                const match = CREDIT_SCORE_OPTIONS.find(
+                  (o) => o.value === value,
+                );
                 return match ? t(match.label) : value;
               }}
             </SelectValue>
@@ -136,7 +155,11 @@ export function ScreeningStep2() {
             id="creditNegotiable"
             checked={screeningCriteria.creditScoreNegotiable === true}
             onCheckedChange={(checked) =>
-              dispatch(setScreeningCriteria({ creditScoreNegotiable: checked === true }))
+              dispatch(
+                setScreeningCriteria({
+                  creditScoreNegotiable: checked === true,
+                }),
+              )
             }
           />
           <Label

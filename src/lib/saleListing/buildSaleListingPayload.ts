@@ -1,5 +1,6 @@
 import type { SaleValidatedAddress } from "@/lib/api/saleListing.service";
 import type { SaleFormData } from "@/lib/saleListing/saleListingFormTypes";
+import { validateRequiredMoneyField } from "@/lib/rentListing/optionalMoneyField";
 import {
   APPLIANCE_OPTIONS,
   BASEMENT_OPTIONS,
@@ -9,11 +10,24 @@ import {
   FLOORING_OPTIONS,
   HEATING_OPTIONS,
   INDOOR_FEATURES,
+  LOT_SIZE_UNITS,
   OUTDOOR_AMENITY_OPTIONS,
   PARKING_OPTIONS,
   ROOF_OPTIONS,
   ROOM_OPTIONS,
 } from "@/lib/saleListing/saleListingFormConstants";
+
+const ALLOWED_LOT_SIZE_UNITS = new Set<string>(LOT_SIZE_UNITS);
+
+/** API `buildingDetails.view` allowed values (after UI → API mapping). */
+const ALLOWED_BUILDING_VIEW = new Set<string>([
+  "city",
+  "territorial",
+  "mountain",
+  "park",
+  "water",
+  "none",
+]);
 
 // ─── Mapping helpers ─────────────────────────────────────────────────────
 // Most enum arrays: UI option keys already equal API enum values (see
@@ -57,13 +71,14 @@ const HEATING_FUEL: Record<string, string> = {
   none_heater: "none",
 };
 
-// Style UI key → view API enum.
+// Style UI key → view API enum (`buildingDetails.view`).
 const VIEW: Record<string, string> = {
   city: "city",
   territorial: "territorial",
   mountain: "mountain",
+  park: "park",
+  water: "water",
   none_style: "none",
-  field: "field",
 };
 
 // Architecture UI key → architecturalStyle API enum.
@@ -133,14 +148,20 @@ function mapHomeType(raw: string): string {
   return raw;
 }
 
+function parseAskingPrice(raw: string): number {
+  const r = validateRequiredMoneyField(raw);
+  if (!r.isValid || r.numericValue == null) {
+    throw new Error("Asking price is invalid.");
+  }
+  return r.numericValue;
+}
+
 /** Build POST /listings/sale body from validated address + form state. */
 export function buildCreateSaleListingBody(
   validated: SaleValidatedAddress,
   formData: SaleFormData
 ): import("@/lib/api/saleListing.service").CreateSaleListingRequest {
-  if (formData.price == null || formData.price <= 0) {
-    throw new Error("Asking price must be a positive number.");
-  }
+  const askingPrice = parseAskingPrice(formData.price);
   if (!formData.homeType.trim()) {
     throw new Error("Home type is required.");
   }
@@ -153,6 +174,9 @@ export function buildCreateSaleListingBody(
   const lotSizeUnit = formData.lotSizeUnit.trim();
   if ((lotSize !== undefined) !== Boolean(lotSizeUnit)) {
     throw new Error("Lot size and lot size unit must be provided together.");
+  }
+  if (lotSizeUnit && !ALLOWED_LOT_SIZE_UNITS.has(lotSizeUnit)) {
+    throw new Error("Invalid lot size unit.");
   }
 
   const yearBuilt = parseOptionalInt(formData.yearBuilt);
@@ -233,7 +257,9 @@ export function buildCreateSaleListingBody(
   };
 
   const styleRaw = formData.styleType.trim();
-  const viewValue = styleRaw ? mapWithTable(styleRaw, VIEW) : "";
+  const viewMapped = styleRaw ? mapWithTable(styleRaw, VIEW) : "";
+  const viewValue =
+    viewMapped && ALLOWED_BUILDING_VIEW.has(viewMapped) ? viewMapped : "";
   const buildingDetails: Record<string, unknown> = {
     buildingAmenities: filterToAllowlist(
       formData.buildingAmenities,
@@ -258,7 +284,7 @@ export function buildCreateSaleListingBody(
   return {
     address: validated,
     pricing: {
-      askingPrice: formData.price,
+      askingPrice,
       currencyCode: "USD",
     },
     media: {
@@ -309,9 +335,7 @@ export function buildUpdateSaleListingBody(
   formData: SaleFormData
 ): import("@/lib/api/saleListing.service").UpdateSaleListingRequest {
   void _validated;
-  if (formData.price == null || formData.price <= 0) {
-    throw new Error("Asking price must be a positive number.");
-  }
+  const askingPrice = parseAskingPrice(formData.price);
   if (!formData.homeType.trim()) {
     throw new Error("Home type is required.");
   }
@@ -324,6 +348,9 @@ export function buildUpdateSaleListingBody(
   const lotSizeUnitRaw = formData.lotSizeUnit.trim();
   if ((lotSize !== null) !== Boolean(lotSizeUnitRaw)) {
     throw new Error("Lot size and lot size unit must be provided together.");
+  }
+  if (lotSizeUnitRaw && !ALLOWED_LOT_SIZE_UNITS.has(lotSizeUnitRaw)) {
+    throw new Error("Invalid lot size unit.");
   }
   const lotSizeUnit = lotSizeUnitRaw || null;
 
@@ -402,7 +429,9 @@ export function buildUpdateSaleListingBody(
   };
 
   const styleRaw = formData.styleType.trim();
-  const viewValue = styleRaw ? mapWithTable(styleRaw, VIEW) : "";
+  const viewMapped = styleRaw ? mapWithTable(styleRaw, VIEW) : "";
+  const viewValue =
+    viewMapped && ALLOWED_BUILDING_VIEW.has(viewMapped) ? viewMapped : "";
   const buildingDetails: Record<string, unknown> = {
     buildingAmenities: filterToAllowlist(
       formData.buildingAmenities,
@@ -426,7 +455,7 @@ export function buildUpdateSaleListingBody(
 
   return {
     pricing: {
-      askingPrice: formData.price,
+      askingPrice,
       currencyCode: "USD",
     },
     media: {

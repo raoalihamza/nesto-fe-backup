@@ -29,6 +29,8 @@ export function SaveExitButton() {
   const { updateAndExit } = useUpdateRentListing();
 
   const isEditMode = mode === "edit";
+  const rentDetailsBlocksSave =
+    currentStep === 1 && (stepperUi?.rentDetailsNextBlocked ?? false);
 
   async function handleClick() {
     if (isEditMode) {
@@ -76,7 +78,7 @@ export function SaveExitButton() {
       variant="outline"
       size="sm"
       onClick={handleClick}
-      disabled={isSaving || mediaUploadBusy}
+      disabled={isSaving || mediaUploadBusy || rentDetailsBlocksSave}
       className="h-9 rounded-lg px-4 text-sm font-medium"
     >
       {label}

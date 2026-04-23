@@ -69,7 +69,7 @@ export interface PropertyInfoData {
   address: RentDraftAddress;
   listingEntry: ListingEntryFormData;
   squareFootage: number | null;
-  totalBedrooms: number | null;
+  totalBedrooms: string | null;
   totalBathrooms: string | null;
 }
 
@@ -275,6 +275,19 @@ const initialPropertyInfo: PropertyInfoData = {
   totalBathrooms: null,
 };
 
+/** Coerce draft/API bedroom value (legacy number or string) into select value. */
+export function normalizeTotalBedroomsField(raw: unknown): string | null {
+  if (raw == null) return null;
+  if (typeof raw === "string") {
+    const t = raw.trim();
+    return t.length > 0 ? t : null;
+  }
+  if (typeof raw === "number" && Number.isFinite(raw)) {
+    return String(raw);
+  }
+  return null;
+}
+
 /** Merge API / partial propertyInfo into full shape (supports older drafts). */
 export function normalizePropertyInfo(
   pi: Partial<PropertyInfoData> | undefined
@@ -298,7 +311,7 @@ export function normalizePropertyInfo(
     address,
     listingEntry,
     squareFootage: pi.squareFootage ?? null,
-    totalBedrooms: pi.totalBedrooms ?? null,
+    totalBedrooms: normalizeTotalBedroomsField(pi.totalBedrooms),
     totalBathrooms: pi.totalBathrooms ?? null,
   };
 }
@@ -308,6 +321,32 @@ const initialRentDetails: RentDetailsData = {
   securityDeposit: null,
   specialOffer: null,
 };
+
+/** Draft API often returns money fields as strings; Redux uses `number | null`. */
+function parseDraftMoneyField(raw: unknown): number | null {
+  if (typeof raw === "number") return Number.isFinite(raw) ? raw : null;
+  if (raw == null) return null;
+  const cleaned = String(raw).trim();
+  if (!cleaned) return null;
+  const n = Number.parseFloat(cleaned);
+  return Number.isFinite(n) ? n : null;
+}
+
+function normalizeRentDetailsFromDraft(raw: unknown): RentDetailsData {
+  if (!raw || typeof raw !== "object") {
+    return { ...initialRentDetails };
+  }
+  const r = raw as {
+    monthlyRent?: unknown;
+    securityDeposit?: unknown;
+    specialOffer?: RentDetailsData["specialOffer"];
+  };
+  return {
+    monthlyRent: parseDraftMoneyField(r.monthlyRent),
+    securityDeposit: parseDraftMoneyField(r.securityDeposit),
+    specialOffer: r.specialOffer ?? null,
+  };
+}
 
 const initialMedia: MediaData = {
   items: [],
@@ -490,7 +529,9 @@ const listingFormSlice = createSlice({
       state.formData.propertyInfo = normalizePropertyInfo(
         action.payload.propertyInfo
       );
-      state.formData.rentDetails = action.payload.rentDetails;
+      state.formData.rentDetails = normalizeRentDetailsFromDraft(
+        action.payload.rentDetails
+      );
       {
         const m = action.payload.media;
         state.formData.media = {

@@ -102,7 +102,7 @@ function buildPropertyInfo(
     address: buildAddress(current.address),
     listingEntry: buildListingEntry(current.listingEntry),
     squareFootage: numberOrNull(current.squareFootage),
-    totalBedrooms: numberOrNull(current.totalBedrooms),
+    totalBedrooms: parseNumericStringOrNull(current.totalBedrooms),
     totalBathrooms: parseNumericStringOrNull(current.totalBathrooms),
   };
 }

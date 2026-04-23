@@ -166,7 +166,7 @@ export function Step6CostsAndFees() {
   }
 
   return (
-    <div className="w-full max-w-md space-y-6">
+    <div className="w-full space-y-6">
       <div>
         <p className="text-xs font-medium text-muted-foreground mb-1">
           {t("title")}
@@ -174,11 +174,13 @@ export function Step6CostsAndFees() {
         <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
           {t("heading")}
         </h1>
-        <p className="mt-2 text-sm text-muted-foreground">{t("subtitle")}</p>
+        <p className="mt-2 text-sm text-muted-foreground max-w-md">
+          {t("subtitle")}
+        </p>
       </div>
 
       {/* Toggle card */}
-      <div className="rounded-xl border border-brand/20 bg-brand/5 p-4">
+      <div className="rounded-xl border border-brand/20 bg-brand/5 p-4 max-w-md">
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-2">
             <p className="text-sm font-semibold text-foreground">
@@ -204,7 +206,7 @@ export function Step6CostsAndFees() {
       </div>
 
       {/* Fee categories */}
-      <div className="divide-y divide-border">
+      <div className="divide-y divide-border max-w-md">
         {FEE_CATEGORIES.map((cat) => {
           const fees = getFeesForCategory(cat.key);
           return (
@@ -248,7 +250,9 @@ export function Step6CostsAndFees() {
                         </span>{" "}
                         {t("each")}, {t(FREQUENCY_LABEL[fee.paymentFrequency])}{" "}
                         | {t(REQUIREMENT_LABEL[fee.feeRequiredType])} |{" "}
-                        {fee.refundability === "refundable" ? t("refundable") : t("nonRefundable")}
+                        {fee.refundability === "refundable"
+                          ? t("refundable")
+                          : t("nonRefundable")}
                       </p>
                     </div>
                     <DropdownMenu>
@@ -256,7 +260,10 @@ export function Step6CostsAndFees() {
                         <MoreHorizontal className="h-4 w-4" />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleEditFee(fee)} className="cursor-pointer">
+                        <DropdownMenuItem
+                          onClick={() => handleEditFee(fee)}
+                          className="cursor-pointer"
+                        >
                           {tCommon("edit")}
                         </DropdownMenuItem>
                         <DropdownMenuItem

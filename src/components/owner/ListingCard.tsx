@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Pencil, Archive, Trash2, Loader2, MoreHorizontal, Eye } from "lucide-react";
+import { Pencil, Archive, Trash2, Loader2, MoreHorizontal } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { ListingStatusBadge } from "@/components/owner/ListingStatusBadge";
@@ -85,6 +85,7 @@ export function ListingCard({
                 className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
                 disabled={isBusy}
                 aria-label={tDashboard("action")}
+                title={tDashboard("action")}
               >
                 {isBusy ? (
                   <Loader2 className="size-3.5 animate-spin" />
@@ -93,18 +94,24 @@ export function ListingCard({
                 )}
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-auto min-w-36">
+                {/* View: not wired on dashboard yet — restore DropdownMenuItem + Eye import when ready
                 <DropdownMenuItem>
                   <Eye className="size-4" />
                   {tDashboard("view")}
                 </DropdownMenuItem>
+                */}
                 {isDraft(listing) ? (
                   <>
-                    <DropdownMenuItem onClick={() => onEditDraft?.(listing)}>
+                    <DropdownMenuItem
+                      title={tCommon("edit")}
+                      onClick={() => onEditDraft?.(listing)}
+                    >
                       <Pencil className="size-4" />
                       {tCommon("edit")}
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       variant="destructive"
+                      title={tCommon("delete")}
                       onClick={() => onDeleteDraft?.(listing)}
                     >
                       <Trash2 className="size-4" />
@@ -114,18 +121,24 @@ export function ListingCard({
                 ) : (
                   <>
                     {canEditPublishedListing(listing) && (
-                      <DropdownMenuItem onClick={() => onEditListing?.(listing)}>
+                      <DropdownMenuItem
+                        title={tCommon("edit")}
+                        onClick={() => onEditListing?.(listing)}
+                      >
                         <Pencil className="size-4" />
                         {tCommon("edit")}
                       </DropdownMenuItem>
                     )}
                     {listing.actionFlags.canArchive ? (
-                      <DropdownMenuItem onClick={() => onArchive?.(listing)}>
+                      <DropdownMenuItem
+                        title={tDashboard("archive")}
+                        onClick={() => onArchive?.(listing)}
+                      >
                         <Archive className="size-4" />
                         {tDashboard("archive")}
                       </DropdownMenuItem>
                     ) : isArchived(listing) || canEditPublishedListing(listing) ? null : (
-                      <DropdownMenuItem disabled>
+                      <DropdownMenuItem disabled title={tDashboard("action")}>
                         {tDashboard("action")}
                       </DropdownMenuItem>
                     )}

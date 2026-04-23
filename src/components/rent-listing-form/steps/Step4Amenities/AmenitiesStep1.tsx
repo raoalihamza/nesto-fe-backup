@@ -51,9 +51,9 @@ export function AmenitiesStep1() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <h2 className="text-2xl font-bold text-foreground">
+      <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
         {t("step1Heading")}
-      </h2>
+      </h1>
       <p className="mt-1 text-sm text-muted-foreground">{t("step1Subtitle")}</p>
 
       <div className="mt-8 grid grid-cols-2 gap-x-20 gap-y-8 sm:grid-cols-[repeat(3,auto)] sm:justify-start sm:gap-x-20">

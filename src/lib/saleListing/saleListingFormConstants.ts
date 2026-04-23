@@ -1,5 +1,11 @@
 /** Shared option lists for sale listing form (UI + validation). */
 
+/** `homeFacts.homeDescription` — backend max length. */
+export const SALE_LISTING_DESCRIPTION_MAX_CHARS = 10_000;
+
+/** `additionalInformation.whatILoveAboutThisHome` — backend max length. */
+export const SALE_LISTING_ADDITIONAL_INFO_MAX_CHARS = 4_000;
+
 export const HOME_TYPES = [
   "single_family",
   "apartment",
@@ -11,7 +17,8 @@ export const HOME_TYPES = [
   "other",
 ] as const;
 
-export const LOT_SIZE_UNITS = ["sqft", "acres"] as const;
+/** API `homeFacts.lotSizeUnit` — backend accepts only these values. */
+export const LOT_SIZE_UNITS = ["acre", "sqmeter", "hectare"] as const;
 
 /** Radix Select cannot use empty string as item value; maps to optional year fields as "". */
 export const YEAR_SELECT_SENTINEL = "__none__";
@@ -150,8 +157,12 @@ export const ROOF_OPTIONS = [
   "tile", "other",
 ] as const;
 
+/** API `buildingDetails.view` — backend accepts only these values (single radio maps 1:1 except `none_style` → `none`). */
 export const STYLE_TYPE_OPTIONS = [
-  "city", "territorial",
-  "mountain", "none_style",
-  "field",
+  "city",
+  "territorial",
+  "mountain",
+  "park",
+  "water",
+  "none_style",
 ] as const;

@@ -33,18 +33,18 @@ export function FinalStep2ListedBy() {
   }, []);
 
   return (
-    <div className="w-full max-w-md space-y-6">
+    <div className="w-full space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
           {t("listedByHeading")}
         </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
+        <p className="mt-2 text-sm max-w-md text-muted-foreground">
           {t("listedBySubtitle")}
         </p>
       </div>
 
       {/* Listed by radio group */}
-      <div className="space-y-3">
+      <div className="space-y-3 max-w-md">
         <p className="text-sm font-semibold text-foreground">
           {t("listedByLabel")}
         </p>
@@ -77,7 +77,7 @@ export function FinalStep2ListedBy() {
       </div>
 
       {/* Name */}
-      <div className="space-y-2">
+      <div className="space-y-2 max-w-md">
         <Label className="text-sm font-semibold text-foreground">
           {t("nameLabel")}
         </Label>
@@ -90,7 +90,7 @@ export function FinalStep2ListedBy() {
       </div>
 
       {/* Email */}
-      <div className="space-y-2">
+      <div className="space-y-2 max-w-md">
         <Label className="text-sm font-semibold text-foreground">
           {t("emailLabel")}
         </Label>
