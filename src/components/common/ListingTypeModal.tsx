@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/routing";
-import { Home, Search } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -47,73 +47,67 @@ export function ListingTypeModal({
     router.push(ROUTES.OWNER.CREATE);
   };
 
+  const options: Array<{
+    id: "sell" | "rent";
+    icon: string;
+    label: string;
+  }> = [
+    { id: "sell", icon: "/icons/sale-listing.svg", label: t("wantToSale") },
+    { id: "rent", icon: "/icons/rent-listing.svg", label: t("wantToRent") },
+  ];
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md rounded-2xl p-8">
+      <DialogContent className="w-[calc(100vw-2rem)] max-w-lg rounded-2xl px-4 py-8 sm:min-w-[600px] sm:px-8 sm:py-16">
         <DialogHeader>
-          <DialogTitle className="text-center text-lg font-semibold">
+          <DialogTitle className="text-center text-base font-semibold sm:text-lg">
             {t("chooseOption")}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="mt-4 flex gap-4">
-          <button
-            type="button"
-            onClick={() => setSelected("sell")}
-            className={cn(
-              "flex flex-1 flex-col items-center gap-3 rounded-xl border-2 p-6 transition-all cursor-pointer",
-              selected === "sell"
-                ? "border-brand bg-brand-light"
-                : "border-gray-200 hover:border-gray-300"
-            )}
-          >
-            <div
-              className={cn(
-                "flex h-16 w-16 items-center justify-center rounded-full",
-                selected === "sell" ? "bg-brand/10" : "bg-gray-100"
-              )}
-            >
-              <Home
+        <div className="mt-4 flex gap-3 sm:mt-6 sm:gap-4">
+          {options.map((opt) => {
+            const isSelected = selected === opt.id;
+            return (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => setSelected(opt.id)}
+                aria-pressed={isSelected}
                 className={cn(
-                  "h-8 w-8",
-                  selected === "sell" ? "text-brand" : "text-gray-500"
+                  "flex h-40 flex-1 flex-col justify-between rounded-xl border bg-white p-3 text-left transition-all cursor-pointer sm:h-56 sm:p-5",
+                  isSelected
+                    ? "border-brand ring-1 ring-brand"
+                    : "border-border hover:border-gray-300",
                 )}
-              />
-            </div>
-            <span className="text-center text-sm font-medium">{t("wantToSale")}</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setSelected("rent")}
-            className={cn(
-              "flex flex-1 flex-col items-center gap-3 rounded-xl border-2 p-6 transition-all cursor-pointer",
-              selected === "rent"
-                ? "border-brand bg-brand-light"
-                : "border-gray-200 hover:border-gray-300"
-            )}
-          >
-            <div
-              className={cn(
-                "flex h-16 w-16 items-center justify-center rounded-full",
-                selected === "rent" ? "bg-brand/10" : "bg-gray-100"
-              )}
-            >
-              <Search
-                className={cn(
-                  "h-8 w-8",
-                  selected === "rent" ? "text-brand" : "text-gray-500"
-                )}
-              />
-            </div>
-            <span className="text-center text-sm font-medium">{t("wantToRent")}</span>
-          </button>
+              >
+                <div className="flex w-full flex-col items-center justify-center gap-2 pt-2 sm:gap-4 sm:pt-3">
+                  <Image
+                    src={opt.icon}
+                    alt=""
+                    aria-hidden="true"
+                    width={96}
+                    height={96}
+                    className="h-14 w-14 sm:h-24 sm:w-24"
+                  />
+                  <span className="text-xs font-medium text-foreground sm:text-sm">
+                    {opt.label}
+                  </span>
+                </div>
+              </button>
+            );
+          })}
         </div>
 
         <Button
           onClick={handleContinue}
           disabled={!selected}
-          className="btn-brand-shadow mt-4 h-11 w-full rounded-lg bg-brand text-white hover:bg-brand-dark disabled:opacity-50"
+          className={cn(
+            "mx-auto mt-6 h-11 w-full rounded-lg text-sm font-medium transition-colors cursor-pointer sm:mt-10 sm:w-1/3",
+            selected
+              ? "btn-brand-shadow bg-brand text-white hover:bg-brand-dark"
+              : "bg-brand-light text-brand hover:bg-brand-light",
+          )}
         >
           {t("continue")}
         </Button>

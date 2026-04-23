@@ -15,8 +15,8 @@ import {
   ELECTRIC_OPTIONS,
   HOME_TYPES,
   LOT_SIZE_UNITS,
+  HEATING_FUEL_OPTIONS,
   STYLE_TYPE_OPTIONS,
-  WATER_HEATER_OPTIONS,
   WATER_OPTIONS,
 } from "@/lib/saleListing/saleListingFormConstants";
 
@@ -39,11 +39,12 @@ function mapLotSizeUnitFromApi(raw: string | null | undefined): string {
 // Inverse lookup tables for fields where UI keys intentionally differ from
 // API values (see `buildSaleListingPayload.ts`).
 
-const HEATING_FUEL_REVERSE: Record<string, (typeof WATER_HEATER_OPTIONS)[number]> = {
-  gas: "gas_heater",
-  electric: "electric_heater",
-  solar: "solar_heater",
-  none: "none_heater",
+/** Legacy UI keys from older clients → current API `heatingFuel` enum strings. */
+const LEGACY_HEATING_FUEL_FROM_API: Record<string, string> = {
+  gas_heater: "gas",
+  electric_heater: "electric",
+  solar_heater: "solar",
+  none_heater: "none",
 };
 
 const VIEW_REVERSE: Record<string, (typeof STYLE_TYPE_OPTIONS)[number]> = {
@@ -59,6 +60,7 @@ const ARCHITECTURAL_STYLE_REVERSE: Record<
   string,
   (typeof ARCHITECTURE_TYPE_OPTIONS)[number]
 > = {
+  loft: "loft_arch",
   other: "other_arch",
 };
 
@@ -108,14 +110,14 @@ function mapHomeTypeFromApi(raw: string | null | undefined): string {
 function mapWaterHeaterFromApi(
   heatingFuel: string[] | null | undefined
 ): string[] {
+  const allowed = new Set<string>(HEATING_FUEL_OPTIONS as readonly string[]);
   const out: string[] = [];
   const seen = new Set<string>();
   for (const raw of stringArray(heatingFuel)) {
-    const mapped = HEATING_FUEL_REVERSE[raw] ?? raw;
-    if (!seen.has(mapped)) {
-      seen.add(mapped);
-      out.push(mapped);
-    }
+    const normalized = LEGACY_HEATING_FUEL_FROM_API[raw] ?? raw;
+    if (!allowed.has(normalized) || seen.has(normalized)) continue;
+    seen.add(normalized);
+    out.push(normalized as (typeof HEATING_FUEL_OPTIONS)[number]);
   }
   return out;
 }

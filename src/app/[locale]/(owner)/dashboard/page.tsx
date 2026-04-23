@@ -16,6 +16,7 @@ import {
   useDeleteRentDraftListing,
 } from "@/hooks/listings";
 import { useRouter } from "@/i18n/routing";
+import { useSearchParams } from "next/navigation";
 import { ROUTES } from "@/lib/constants/routes";
 import { useAppSelector } from "@/store";
 import { getUserDisplayName } from "@/lib/auth/getUserDisplayName";
@@ -69,6 +70,57 @@ export default function DashboardPage() {
   const [favSubTab, setFavSubTab] = useState<FavoritesSubTab>("favorites");
   const [draftToDelete, setDraftToDelete] = useState<MyListingItem | null>(null);
   const [listingToArchive, setListingToArchive] = useState<MyListingItem | null>(null);
+
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const hasAppliedDeepLinkRef = useRef(false);
+
+  // Deep-link from rent/sale listing form exits: `?tab=myListings&filter=<x>`.
+  // Apply once on mount so the dashboard opens on the right tab, then strip
+  // the query so refresh/back/share doesn't re-trigger it.
+  useEffect(() => {
+    if (hasAppliedDeepLinkRef.current) return;
+    if (!searchParams) return;
+
+    const tabParam = searchParams.get("tab");
+    const filterParam = searchParams.get("filter");
+    if (!tabParam && !filterParam) {
+      hasAppliedDeepLinkRef.current = true;
+      return;
+    }
+
+    const validMainTabs: MainTab[] = [
+      "overview",
+      "savedHomes",
+      "myListings",
+      "messages",
+      "settings",
+    ];
+    const validMyListingsFilters: MyListingsFilter[] = [
+      "all",
+      "forRent",
+      "forSale",
+      "drafted",
+      "archived",
+      "sold",
+    ];
+
+    if (tabParam && (validMainTabs as string[]).includes(tabParam)) {
+      setActiveTab(tabParam as MainTab);
+    }
+    if (
+      tabParam === "myListings" &&
+      filterParam &&
+      (validMyListingsFilters as string[]).includes(filterParam)
+    ) {
+      setMyListingsFilter(filterParam as MyListingsFilter);
+    }
+
+    hasAppliedDeepLinkRef.current = true;
+    // Strip query so state is the single source of truth going forward.
+    // Use the locale-agnostic path; the i18n router prepends the active locale.
+    router.replace(ROUTES.OWNER.DASHBOARD);
+  }, [searchParams, router]);
 
   const { data: savedHomesData, isLoading: savedHomesLoading } = useSavedHomes(
     { locale },
@@ -173,7 +225,6 @@ export default function DashboardPage() {
     });
   }, [activeTab, myListingsFilter]);
 
-  const router = useRouter();
   const archiveMutation = useArchiveListing();
   const deleteDraftMutation = useDeleteRentDraftListing();
 

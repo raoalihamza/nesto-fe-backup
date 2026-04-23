@@ -479,7 +479,7 @@
       "phoneVerifyErrorTooManyRequests": "Urinishlar juda ko'p. Biroz kutib, qayta urinib ko'ring.",
       "phoneVerifyErrorCaptchaFailed": "Xavfsizlik tekshiruvi muvaffaqiyatsiz tugadi. Qayta urinib ko'ring.",
       "phoneVerifyErrorNetwork": "Tarmoq xatosi. Ulanishni tekshirib, qayta urinib ko'ring.",
-      "phoneVerifyErrorUnexpected": "Telefon raqamini tasdiqlashda xatolik yuz berdi."
+      "phoneVerifyErrorUnexpected": "Tasdiqlash kodini yuborib bo'lmadi. Biroz kuting va qayta urinib ko'ring yoki raqamni o'zgartiring."
     },
     "review": {
       "title": "E'loningizni ko'rib chiqing",
@@ -686,7 +686,7 @@
       "cooling": "Sovutish",
       "electric": "Elektr",
       "water": "Suv",
-      "waterHeater": "Suv isitgich",
+      "waterHeater": "Isitish yoqilg'isi",
       "buildingDetails": "Bino tafsilotlari",
       "buildingAmenities": "Bino qulayliklari",
       "architectureStyle": "Arxitektura uslubi",
@@ -757,6 +757,7 @@
       },
       "basement": {
         "finished": "Tayyor",
+        "partially_finished": "Qisman tayyor",
         "unfinished": "Tayyor emas",
         "none": "Yo'q"
       },
@@ -845,10 +846,15 @@
         "none_water": "Yo'q"
       },
       "waterHeater": {
-        "gas_heater": "Gaz",
-        "electric_heater": "Elektr",
-        "solar_heater": "Quyosh",
-        "none_heater": "Yo'q"
+        "coal": "Ko'mir",
+        "electric": "Elektr",
+        "gas": "Gaz",
+        "oil": "Neft",
+        "propane_butane": "Propan / butan",
+        "solar": "Quyosh",
+        "wood_pellet": "O'tin / pellet",
+        "other": "Boshqa",
+        "none": "Yo'q"
       },
       "buildingAmenities": {
         "assisted_living_community": "Yordam bilan yashash",

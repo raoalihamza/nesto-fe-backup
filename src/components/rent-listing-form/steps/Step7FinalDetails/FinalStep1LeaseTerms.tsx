@@ -23,7 +23,7 @@ const LEASE_DURATION_OPTIONS = [
   "2_years",
 ] as const;
 
-function toDateInputValue(value: string | null | undefined): string {
+export function toDateInputValue(value: string | null | undefined): string {
   if (!value) return "";
   // HTML date inputs require YYYY-MM-DD. Backend usually sends ISO datetime.
   const trimmed = value.trim();

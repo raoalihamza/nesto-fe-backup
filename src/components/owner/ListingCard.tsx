@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { formatListingPrice, formatListingLocation } from "@/lib/utils/listingDisplay";
+import { LISTING_NO_THUMBNAIL_PLACEHOLDER } from "@/lib/constants/listingPlaceholders";
 import type { MyListingItem } from "@/types/listings";
 
 function isDraft(listing: MyListingItem) {
@@ -61,7 +62,7 @@ export function ListingCard({
     <div className="flex gap-3 rounded-xl border border-border bg-card p-3">
       <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-lg">
         <Image
-          src={listing.thumbnailUrl ?? "/images/property.jpg"}
+          src={listing.thumbnailUrl ?? LISTING_NO_THUMBNAIL_PLACEHOLDER}
           alt={listing.title}
           fill
           className="object-cover"
@@ -71,11 +72,16 @@ export function ListingCard({
       <div className="flex min-w-0 flex-1 flex-col justify-between">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <ListingStatusBadge statusLabel={listing.statusLabel} statusTone={listing.statusTone} className="mb-1" />
+            <ListingStatusBadge
+              statusLabel={listing.statusLabel}
+              statusTone={listing.statusTone}
+              statusValue={listing.status}
+              className="mb-1"
+            />
             <h3 className="truncate text-sm font-semibold text-foreground">
               {listing.title}
             </h3>
-            <p className="truncate text-xs text-muted-foreground">
+            <p className="truncate text-xs text-[#0A0A0A]">
               {formatListingLocation(listing.location)}
             </p>
           </div>

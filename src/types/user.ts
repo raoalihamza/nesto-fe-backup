@@ -33,10 +33,25 @@ export interface AuthSuccessResponse {
   tokens: AuthTokens;
 }
 
+/** Optional validation payload on `REQUEST_VALIDATION_FAILED` and similar. */
+export interface ApiValidationIssue {
+  code?: string;
+  path?: unknown;
+  field?: string;
+  message?: string;
+}
+
+export interface ApiErrorDetails {
+  formErrors?: string[];
+  fieldErrors?: Record<string, string[]>;
+  issues?: ApiValidationIssue[];
+}
+
 export interface ApiError {
   code: string;
   message: string;
   requestId: string;
   timestamp: string;
   path: string;
+  details?: ApiErrorDetails;
 }

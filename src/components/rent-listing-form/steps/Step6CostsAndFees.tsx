@@ -168,9 +168,9 @@ export function Step6CostsAndFees() {
   return (
     <div className="w-full space-y-6">
       <div>
-        <p className="text-xs font-medium text-muted-foreground mb-1">
+        {/* <p className="text-xs font-medium text-muted-foreground mb-1">
           {t("title")}
-        </p>
+        </p> */}
         <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
           {t("heading")}
         </h1>
@@ -180,7 +180,7 @@ export function Step6CostsAndFees() {
       </div>
 
       {/* Toggle card */}
-      <div className="rounded-xl border border-brand/20 bg-brand/5 p-4 max-w-md">
+      {/* <div className="rounded-xl border border-brand/20 bg-brand/5 p-4 max-w-md">
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-2">
             <p className="text-sm font-semibold text-foreground">
@@ -203,7 +203,7 @@ export function Step6CostsAndFees() {
             onCheckedChange={setShowTotalMonthlyPrice}
           />
         </div>
-      </div>
+      </div> */}
 
       {/* Fee categories */}
       <div className="divide-y divide-border max-w-md">

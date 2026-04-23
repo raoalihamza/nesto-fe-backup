@@ -7,6 +7,7 @@ import { Heart } from "lucide-react";
 import { toast } from "sonner";
 // import { Link } from "@/i18n/routing";
 import type { PropertyCardItem } from "@/types/listings";
+import { LISTING_NO_THUMBNAIL_PLACEHOLDER } from "@/lib/constants/listingPlaceholders";
 import { cn } from "@/lib/utils";
 import {
   Tooltip,
@@ -112,7 +113,7 @@ export function PropertyCard({ item, className }: PropertyCardProps) {
         {/* Image */}
         <div className="relative aspect-4/3 overflow-hidden rounded-t-2xl bg-gray-200">
           <Image
-            src={item.thumbnailUrl ?? "/images/property.jpg"}
+            src={item.thumbnailUrl ?? LISTING_NO_THUMBNAIL_PLACEHOLDER}
             alt={item.title}
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-105"

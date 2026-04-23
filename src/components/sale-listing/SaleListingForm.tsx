@@ -38,7 +38,7 @@ import {
   mapSaleEditResponseToFormData,
 } from "@/lib/saleListing/mapSaleEditResponseToForm";
 import { Loader2 } from "lucide-react";
-import type { ApiError } from "@/types/user";
+import { getApiErrorDisplayMessage } from "@/lib/api/getApiErrorDisplayMessage";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { ROUTES } from "@/lib/constants/routes";
@@ -504,24 +504,21 @@ export function SaleListingForm({ listingId }: SaleListingFormProps = {}) {
         const body = buildUpdateSaleListingBody(validatedAddress, data);
         await saleListingService.updateListing(listingId, body);
         toast.success(t("editSaveSuccess"));
-        router.push(ROUTES.OWNER.DASHBOARD);
+        router.push(ROUTES.OWNER.DASHBOARD_MY_LISTINGS_FOR_SALE);
         dispatch(resetSaleForm());
       } else {
         const body = buildCreateSaleListingBody(validatedAddress, data);
         await saleListingService.createListing(body);
-        router.push(ROUTES.OWNER.DASHBOARD);
+        router.push(ROUTES.OWNER.DASHBOARD_MY_LISTINGS_FOR_SALE);
         dispatch(resetSaleForm());
         reset(createEmptySaleFormData());
       }
     } catch (error) {
-      if (error instanceof Error) {
+      const apiMsg = getApiErrorDisplayMessage(error);
+      if (apiMsg) {
+        toast.error(apiMsg);
+      } else if (error instanceof Error) {
         toast.error(error.message);
-      } else if (
-        error &&
-        typeof error === "object" &&
-        "message" in error
-      ) {
-        toast.error((error as ApiError).message || t("submitError"));
       } else {
         toast.error(t("submitError"));
       }
@@ -580,8 +577,8 @@ export function SaleListingForm({ listingId }: SaleListingFormProps = {}) {
           {isEditMode ? t("editTitle") : t("title")}
         </h1>
         <p className="mt-1 text-base font-medium text-foreground">{displayAddress}</p>
-        <p className="mt-1 text-sm text-muted-foreground">{t("addressLockedHint")}</p>
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+        <p className="mt-1 text-sm text-[#0A0A0A]">{t("addressLockedHint")}</p>
+        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[#0A0A0A]">
           {t("subtitle")}
         </p>
       </div>
@@ -626,7 +623,7 @@ export function SaleListingForm({ listingId }: SaleListingFormProps = {}) {
 
       <div className="mb-8 border-b border-border pb-8">
         <SectionHeading>{t("home3D")}</SectionHeading>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-[#0A0A0A]">
           {t("home3DDescription")}{" "}
           <button
             type="button"

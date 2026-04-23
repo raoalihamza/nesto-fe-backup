@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { useSaveStep } from "@/hooks/rentDraft";
 import { useUpdateRentListing } from "@/hooks/rentEdit";
 import { useRentStepperUiOptional } from "@/components/rent-listing-form/RentStepperUiContext";
+import { ROUTES } from "@/lib/constants/routes";
 
 /**
  * Dual-purpose action in the stepper sub-header.
@@ -40,7 +41,7 @@ export function SaveExitButton() {
 
     // Draft mode: Review (7) and Pay & Publish (8) don't need save — just navigate
     if (currentStep >= 7) {
-      router.push("/dashboard");
+      router.push(ROUTES.OWNER.DASHBOARD_MY_LISTINGS_DRAFTS);
       return;
     }
 
@@ -53,7 +54,7 @@ export function SaveExitButton() {
     try {
       success = await saveStep(currentStep);
       if (success) {
-        router.push("/dashboard");
+        router.push(ROUTES.OWNER.DASHBOARD_MY_LISTINGS_DRAFTS);
         toast.success("Draft saved!");
       }
     } finally {

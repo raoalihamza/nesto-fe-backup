@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useAppSelector, useAppDispatch } from "@/store";
 import { goToSubStep } from "@/store/slices/listingFormSlice";
+import { toDateInputValue } from "./FinalStep1LeaseTerms";
 
 export function FinalStep6ConfirmDetails() {
   const t = useTranslations("listing.finalDetails");
@@ -16,28 +17,39 @@ export function FinalStep6ConfirmDetails() {
     {
       label: t("hidePropertyAddress"),
       value: finalDetails.hidePropertyAddress ? t("yes") : t("no"),
-      learnMore: true,
+      // learnMore: true,
+      learnMore: false,
       editSubStep: 0,
+      showEdit: false,
     },
     {
       label: t("dateAvailable"),
-      value: finalDetails.dateAvailable || "03/06/2026",
+      value: finalDetails.dateAvailable
+        ? toDateInputValue(finalDetails.dateAvailable) || "—"
+        : "03/06/2026",
       editSubStep: 0,
     },
     {
       label: t("leaseDuration"),
-      value: finalDetails.leaseDuration || "1 year",
+      value: finalDetails.leaseDuration
+        ? t(
+            `leaseDurationOptions.${finalDetails.leaseDuration}` as never,
+          )
+        : "1 year",
       editSubStep: 0,
     },
     {
       label: t("allowPhoneContact"),
       value: finalDetails.allowRentersToContactByPhone ? t("yes") : t("no"),
-      learnMore: true,
+      // learnMore: true,
+      learnMore: false,
+      showEdit: false,
       editSubStep: 2,
     },
     {
       label: t("acceptOnlineApplications"),
       value: finalDetails.acceptOnlineApplications ? t("yes") : t("no"),
+      showEdit: false,
       editSubStep: 0,
     },
   ];
@@ -68,13 +80,15 @@ export function FinalStep6ConfirmDetails() {
               </p>
               <p className="text-sm text-muted-foreground">{row.value}</p>
             </div>
-            <button
-              type="button"
-              onClick={() => dispatch(goToSubStep(row.editSubStep))}
-              className="hidden shrink-0 text-sm font-medium text-foreground sm:block"
-            >
-              {tCommon("edit")}
-            </button>
+            {(row.showEdit ?? true) && (
+              <button
+                type="button"
+                onClick={() => dispatch(goToSubStep(row.editSubStep))}
+                className="hidden shrink-0 text-sm font-medium text-foreground sm:block"
+              >
+                {tCommon("edit")}
+              </button>
+            )}
           </div>
         ))}
       </div>

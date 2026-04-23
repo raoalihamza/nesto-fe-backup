@@ -17,6 +17,7 @@ import type {
 import { toast } from "sonner";
 import { useRouter } from "@/i18n/routing";
 import { clearAllDraftData } from "@/lib/utils/clearDraft";
+import { ROUTES } from "@/lib/constants/routes";
 
 // ── Helpers ────────────────────────────────────────────────
 
@@ -201,7 +202,7 @@ export function usePublishDraft() {
     try {
       await rentDraftService.publish(draftId);
       clearAllDraftData();
-      router.push("/dashboard");
+      router.push(ROUTES.OWNER.DASHBOARD_MY_LISTINGS_FOR_RENT);
       toast.success("Listing published successfully!");
     } catch (err) {
       const message =

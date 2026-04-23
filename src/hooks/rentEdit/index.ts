@@ -10,6 +10,7 @@ import { rentListingEditService } from "@/lib/api/rentListingEdit.service";
 import { buildRentEditUpdateBody } from "@/lib/rentListing/buildRentEditPayload";
 import { clearAllDraftData } from "@/lib/utils/clearDraft";
 import { useRouter } from "@/i18n/routing";
+import { ROUTES } from "@/lib/constants/routes";
 import { toast } from "sonner";
 
 /**
@@ -71,7 +72,7 @@ export function useUpdateRentListing() {
       await rentListingEditService.updateListing(draftId, body);
       clearAllDraftData();
       dispatch(resetListingForm());
-      router.push("/dashboard");
+      router.push(ROUTES.OWNER.DASHBOARD_MY_LISTINGS_FOR_RENT);
       toast.success("Listing updated successfully!");
       return true;
     } catch (err) {

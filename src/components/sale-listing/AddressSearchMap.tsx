@@ -15,7 +15,7 @@ import {
   setSaleAddressFromConfirm,
 } from "@/store/slices/saleListingSlice";
 import { saleListingService } from "@/lib/api/saleListing.service";
-import type { ApiError } from "@/types/user";
+import { getApiErrorDisplayMessage } from "@/lib/api/getApiErrorDisplayMessage";
 import { reverseGeocodeToAddressFieldsGoogle } from "@/lib/googleMaps/reverseGeocodeAddress";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -64,15 +64,7 @@ function hasRequiredAddressFields(
 }
 
 function apiErrorMessage(error: unknown, fallback: string): string {
-  if (
-    error &&
-    typeof error === "object" &&
-    "message" in error &&
-    typeof (error as ApiError).message === "string"
-  ) {
-    return (error as ApiError).message;
-  }
-  return fallback;
+  return getApiErrorDisplayMessage(error) ?? fallback;
 }
 
 export function AddressSearchMap() {

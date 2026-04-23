@@ -479,7 +479,7 @@
       "phoneVerifyErrorTooManyRequests": "Слишком много попыток. Подождите и попробуйте снова.",
       "phoneVerifyErrorCaptchaFailed": "Проверка безопасности не пройдена. Повторите попытку.",
       "phoneVerifyErrorNetwork": "Ошибка сети. Проверьте подключение и повторите попытку.",
-      "phoneVerifyErrorUnexpected": "Не удалось подтвердить номер телефона. Попробуйте снова."
+      "phoneVerifyErrorUnexpected": "Не удалось отправить код подтверждения. Немного подождите и попробуйте снова или измените номер."
     },
     "review": {
       "title": "Просмотрите объявление",
@@ -686,7 +686,7 @@
       "cooling": "Охлаждение",
       "electric": "Электричество",
       "water": "Вода",
-      "waterHeater": "Водонагреватель",
+      "waterHeater": "Топливо отопления",
       "buildingDetails": "Детали здания",
       "buildingAmenities": "Удобства здания",
       "architectureStyle": "Архитектурный стиль",
@@ -757,6 +757,7 @@
       },
       "basement": {
         "finished": "С отделкой",
+        "partially_finished": "Частично с отделкой",
         "unfinished": "Без отделки",
         "none": "Нет"
       },
@@ -845,10 +846,15 @@
         "none_water": "Нет"
       },
       "waterHeater": {
-        "gas_heater": "Газовый",
-        "electric_heater": "Электрический",
-        "solar_heater": "Солнечный",
-        "none_heater": "Нет"
+        "coal": "Уголь",
+        "electric": "Электричество",
+        "gas": "Газ",
+        "oil": "Мазут / нефть",
+        "propane_butane": "Пропан / бутан",
+        "solar": "Солнечное",
+        "wood_pellet": "Дрова / пеллеты",
+        "other": "Другое",
+        "none": "Нет"
       },
       "buildingAmenities": {
         "assisted_living_community": "Дом с обслуживанием",

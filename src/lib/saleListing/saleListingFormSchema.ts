@@ -504,7 +504,7 @@ export function createSaleListingFormSchema(params: SaleListingFormSchemaParams)
         }
       };
       noneExclusive(data.cooling, "none", "cooling");
-      noneExclusive(data.waterHeater, "none_heater", "waterHeater");
+      noneExclusive(data.waterHeater, "none", "waterHeater");
       noneExclusive(data.water, "none_water", "water");
       noneExclusive(data.parking, "none", "parking");
 

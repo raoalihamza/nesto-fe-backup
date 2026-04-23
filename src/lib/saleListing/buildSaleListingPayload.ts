@@ -8,6 +8,7 @@ import {
   COOLING_OPTIONS,
   EXTERIOR_MATERIAL_OPTIONS,
   FLOORING_OPTIONS,
+  HEATING_FUEL_OPTIONS,
   HEATING_OPTIONS,
   INDOOR_FEATURES,
   LOT_SIZE_UNITS,
@@ -63,14 +64,6 @@ function filterToAllowlist<T extends string>(
   return out;
 }
 
-// Water heater UI key → heatingFuel API enum.
-const HEATING_FUEL: Record<string, string> = {
-  gas_heater: "gas",
-  electric_heater: "electric",
-  solar_heater: "solar",
-  none_heater: "none",
-};
-
 // Style UI key → view API enum (`buildingDetails.view`).
 const VIEW: Record<string, string> = {
   city: "city",
@@ -83,6 +76,7 @@ const VIEW: Record<string, string> = {
 
 // Architecture UI key → architecturalStyle API enum.
 const ARCHITECTURAL_STYLE: Record<string, string> = {
+  loft_arch: "loft",
   other_arch: "other",
 };
 
@@ -251,7 +245,10 @@ export function buildCreateSaleListingBody(
   const utilityDetails: Record<string, unknown> = {
     coolingType: filterToAllowlist(formData.cooling, COOLING_OPTIONS),
     heatingType: filterToAllowlist(formData.heating, HEATING_OPTIONS),
-    heatingFuel: mapArray(formData.waterHeater, HEATING_FUEL),
+    heatingFuel: filterToAllowlist(
+      formData.waterHeater,
+      HEATING_FUEL_OPTIONS
+    ),
     electricType: mapArray(formData.electric, ELECTRIC_TYPE),
     waterType: mapArray(formData.water, WATER_TYPE),
   };
@@ -423,7 +420,10 @@ export function buildUpdateSaleListingBody(
   const utilityDetails: Record<string, unknown> = {
     coolingType: filterToAllowlist(formData.cooling, COOLING_OPTIONS),
     heatingType: filterToAllowlist(formData.heating, HEATING_OPTIONS),
-    heatingFuel: mapArray(formData.waterHeater, HEATING_FUEL),
+    heatingFuel: filterToAllowlist(
+      formData.waterHeater,
+      HEATING_FUEL_OPTIONS
+    ),
     electricType: mapArray(formData.electric, ELECTRIC_TYPE),
     waterType: mapArray(formData.water, WATER_TYPE),
   };

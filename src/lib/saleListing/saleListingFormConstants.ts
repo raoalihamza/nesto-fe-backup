@@ -58,7 +58,26 @@ export const ROOM_OPTIONS = [
   "walk_in_closet", "workshop",
 ] as const;
 
-export const BASEMENT_OPTIONS = ["finished", "unfinished", "none"] as const;
+/** API `roomDetails.basement` — max one value in payload. */
+export const BASEMENT_OPTIONS = [
+  "finished",
+  "partially_finished",
+  "unfinished",
+  "none",
+] as const;
+
+/** API `utilityDetails.heatingFuel` (UI still uses form field `waterHeater`). */
+export const HEATING_FUEL_OPTIONS = [
+  "coal",
+  "electric",
+  "gas",
+  "oil",
+  "propane_butane",
+  "solar",
+  "wood_pellet",
+  "other",
+  "none",
+] as const;
 
 /** API-aligned. See SALE_LISTING_FRONTEND_GUIDE / roomDetails.indoorFeatures enum. */
 export const INDOOR_FEATURES = [
@@ -93,9 +112,8 @@ export const ELECTRIC_OPTIONS = [
 
 export const WATER_OPTIONS = ["city_water", "well", "none_water"] as const;
 
-export const WATER_HEATER_OPTIONS = [
-  "gas_heater", "electric_heater", "solar_heater", "none_heater",
-] as const;
+/** @deprecated Use `HEATING_FUEL_OPTIONS` — alias for imports. */
+export const WATER_HEATER_OPTIONS = HEATING_FUEL_OPTIONS;
 
 /** API-aligned. buildingDetails.buildingAmenities enum. */
 export const BUILDING_AMENITY_OPTIONS = [

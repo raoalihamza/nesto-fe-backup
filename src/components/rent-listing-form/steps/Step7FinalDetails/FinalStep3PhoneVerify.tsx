@@ -10,7 +10,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, ChevronDown } from "lucide-react";
 import { useRentPhoneVerification } from "@/hooks/useRentPhoneVerification";
 import { parsePhoneNumberFromString, type CountryCode } from "libphonenumber-js";
 
@@ -239,7 +239,7 @@ export function FinalStep3PhoneVerify() {
         {!isOtpPhase && phase !== "verified" && (
           <div className="space-y-3">
             <div className="flex items-center gap-3">
-              <div className="w-[200px]">
+              <div className="relative w-[120px] shrink-0">
                 <label className="sr-only" htmlFor="rent-phone-country">
                   {t("phoneCountryLabel")}
                 </label>
@@ -251,7 +251,7 @@ export function FinalStep3PhoneVerify() {
                     setLocalPhoneError(null);
                   }}
                   disabled={isBusy}
-                  className="h-12 w-full rounded-md border border-input bg-transparent px-3 text-sm text-foreground shadow-xs outline-none transition-[color,box-shadow] disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+                  className="h-12 w-full appearance-none rounded-md border border-input bg-transparent pl-3 pr-8 text-sm text-foreground shadow-xs outline-none transition-[color,box-shadow] disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
                 >
                   {PHONE_COUNTRIES.map((country) => (
                     <option key={country.code} value={country.code} className="cursor-pointer">
@@ -259,6 +259,10 @@ export function FinalStep3PhoneVerify() {
                     </option>
                   ))}
                 </select>
+                <ChevronDown
+                  className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                  aria-hidden="true"
+                />
               </div>
               <Input
                 type="tel"

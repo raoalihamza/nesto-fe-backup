@@ -479,7 +479,7 @@
       "phoneVerifyErrorTooManyRequests": "Too many attempts. Please wait a bit and try again.",
       "phoneVerifyErrorCaptchaFailed": "Security verification failed. Please try again.",
       "phoneVerifyErrorNetwork": "Network error. Check your connection and try again.",
-      "phoneVerifyErrorUnexpected": "Something went wrong while verifying your phone."
+      "phoneVerifyErrorUnexpected": "We couldn't send the verification code. Please wait a moment, then try again or change the number."
     },
     "review": {
       "title": "Review your listing",
@@ -686,7 +686,7 @@
       "cooling": "Cooling",
       "electric": "Electric",
       "water": "Water",
-      "waterHeater": "Water heater",
+      "waterHeater": "Heating fuel",
       "buildingDetails": "Building Details",
       "buildingAmenities": "Building amenities",
       "architectureStyle": "Architecture style",
@@ -757,6 +757,7 @@
       },
       "basement": {
         "finished": "Finished",
+        "partially_finished": "Partially finished",
         "unfinished": "Unfinished",
         "none": "None"
       },
@@ -845,10 +846,15 @@
         "none_water": "None"
       },
       "waterHeater": {
-        "gas_heater": "Gas",
-        "electric_heater": "Electric",
-        "solar_heater": "Solar",
-        "none_heater": "None"
+        "coal": "Coal",
+        "electric": "Electric",
+        "gas": "Gas",
+        "oil": "Oil",
+        "propane_butane": "Propane / butane",
+        "solar": "Solar",
+        "wood_pellet": "Wood / pellet",
+        "other": "Other",
+        "none": "None"
       },
       "buildingAmenities": {
         "assisted_living_community": "Assisted living community",

@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/tooltip";
 import { ListingStatusBadge } from "@/components/owner/ListingStatusBadge";
 import { formatListingPrice, formatListingLocation } from "@/lib/utils/listingDisplay";
+import { LISTING_NO_THUMBNAIL_PLACEHOLDER } from "@/lib/constants/listingPlaceholders";
 import type { MyListingItem } from "@/types/listings";
 
 function isDraft(listing: MyListingItem) {
@@ -99,7 +100,10 @@ export function ListingTable({
                 <div className="flex min-w-0 items-center gap-3">
                   <div className="relative h-12 w-16 shrink-0 overflow-hidden rounded-lg">
                     <Image
-                      src={listing.thumbnailUrl ?? "/images/property.jpg"}
+                      src={
+                        listing.thumbnailUrl ??
+                        LISTING_NO_THUMBNAIL_PLACEHOLDER
+                      }
                       alt={listing.title}
                       fill
                       className="object-cover"
@@ -110,7 +114,7 @@ export function ListingTable({
                       <p className="truncate text-sm font-semibold text-foreground">
                         {listing.title}
                       </p>
-                      <p className="truncate text-xs text-muted-foreground">
+                      <p className="truncate text-xs text-[#0A0A0A]">
                         {addressLine}
                       </p>
                     </TooltipTrigger>
@@ -122,7 +126,11 @@ export function ListingTable({
                 </div>
               </td>
               <td className="px-2 py-4 align-middle">
-                <ListingStatusBadge statusLabel={listing.statusLabel} statusTone={listing.statusTone} />
+                <ListingStatusBadge
+                  statusLabel={listing.statusLabel}
+                  statusTone={listing.statusTone}
+                  statusValue={listing.status}
+                />
               </td>
               <td className="whitespace-nowrap px-2 py-4 align-middle">
                 <p className="text-sm text-foreground">

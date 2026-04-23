@@ -24,7 +24,7 @@ import {
   HEATING_OPTIONS,
   ELECTRIC_OPTIONS,
   WATER_OPTIONS,
-  WATER_HEATER_OPTIONS,
+  HEATING_FUEL_OPTIONS,
   BUILDING_AMENITY_OPTIONS,
   ARCHITECTURE_TYPE_OPTIONS,
   EXTERIOR_MATERIAL_OPTIONS,
@@ -93,7 +93,7 @@ export const SaleListingPhotosBlock = memo(function SaleListingPhotosBlock({
   return (
     <>
       <SectionHeading>{t("photos")}</SectionHeading>
-      <p className="mb-3 text-sm text-muted-foreground">{t("photosDescription")}</p>
+      <p className="mb-3 text-sm text-[#0A0A0A]">{t("photosDescription")}</p>
       <div
         {...getRootProps()}
         className={`flex min-h-40 max-w-lg cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-brand/40 bg-brand/5 transition-colors ${
@@ -533,7 +533,7 @@ export const SaleListingOpenHouseBlock = memo(function SaleListingOpenHouseBlock
   return (
     <>
       <SectionHeading>{t("openHouse")}</SectionHeading>
-      <p className="mb-4 max-w-2xl text-sm text-muted-foreground">
+      <p className="mb-4 max-w-2xl text-sm text-[#0A0A0A]">
         {t("openHouseDescription")}
       </p>
       {openHouseDates.map((entry, i) => (
@@ -660,7 +660,7 @@ export const SaleListingAdditionalInfoBlock = memo(
               {additionalInfo.length}/{SALE_LISTING_ADDITIONAL_INFO_MAX_CHARS}
             </span>
           </div>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="mt-1 text-xs text-[#0A0A0A]">
             {t("whatYouLoveHelper")}
           </p>
         </div>
@@ -817,7 +817,7 @@ export const SaleListingRoomUtilityBlock = memo(function SaleListingRoomUtilityB
           <SubHeading>{t("waterHeater")}</SubHeading>
           <CheckboxGroup
             groupId="waterHeater"
-            options={WATER_HEATER_OPTIONS}
+            options={HEATING_FUEL_OPTIONS}
             selected={waterHeater}
             onChange={(v) => patch({ waterHeater: v })}
             t={(k) => tOpt(`waterHeater.${k}`)}
@@ -1005,7 +1005,7 @@ export const SaleListingContactFooterBlock = memo(
       <>
         <div className="mt-8 border-t border-border">
           <SectionHeading>{t("contactInformation")}</SectionHeading>
-          <p className="mb-3 max-w-2xl text-sm text-muted-foreground">
+          <p className="mb-3 max-w-2xl text-sm text-[#0A0A0A]">
             {t("contactDescription")}
           </p>
           <div className="max-w-md">
@@ -1026,7 +1026,7 @@ export const SaleListingContactFooterBlock = memo(
 
         <div className="mt-10 border-t border-border pt-8">
           {!isEditMode && (
-            <label className="flex max-w-2xl cursor-pointer items-start gap-3 text-sm leading-relaxed text-muted-foreground">
+            <label className="flex max-w-2xl cursor-pointer items-start gap-3 text-sm leading-relaxed text-[#0A0A0A]">
               <Checkbox
                 checked={agreedToTerms}
                 onCheckedChange={(checked) =>

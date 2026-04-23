@@ -57,6 +57,10 @@ function isValidE164Phone(phone: string): boolean {
 function mapFirebaseError(error: unknown): PhoneVerificationErrorKey {
   const code = (error as AuthError | undefined)?.code;
 
+  if (process.env.NODE_ENV !== "production") {
+    console.warn("[useRentPhoneVerification] firebase error:", code, error);
+  }
+
   switch (code) {
     case "auth/invalid-phone-number":
     case "auth/missing-phone-number":
@@ -66,8 +70,11 @@ function mapFirebaseError(error: unknown): PhoneVerificationErrorKey {
     case "auth/code-expired":
       return "otp_expired";
     case "auth/too-many-requests":
+    case "auth/quota-exceeded":
       return "too_many_requests";
     case "auth/captcha-check-failed":
+    case "auth/invalid-app-credential":
+    case "auth/internal-error":
       return "captcha_failed";
     case "auth/network-request-failed":
       return "network_error";
@@ -93,23 +100,59 @@ export function useRentPhoneVerification({
   );
   const confirmationRef = useRef<ConfirmationResult | null>(null);
   const recaptchaRef = useRef<RecaptchaVerifier | null>(null);
+  const recaptchaWidgetIdRef = useRef<number | null>(null);
   const lastSubmittedPhoneRef = useRef<string>(initialPhone ?? "");
 
   const clearRecaptcha = useCallback(() => {
     if (recaptchaRef.current) {
-      recaptchaRef.current.clear();
+      try {
+        recaptchaRef.current.clear();
+      } catch {
+        // Ignore — verifier may already be torn down.
+      }
       recaptchaRef.current = null;
     }
-  }, []);
+    recaptchaWidgetIdRef.current = null;
+    if (typeof document !== "undefined") {
+      const container = document.getElementById(recaptchaContainerId);
+      if (container) container.innerHTML = "";
+    }
+  }, [recaptchaContainerId]);
 
-  const ensureRecaptcha = useCallback(async () => {
-    if (recaptchaRef.current) return recaptchaRef.current;
-    recaptchaRef.current = new RecaptchaVerifier(auth, recaptchaContainerId, {
-      size: "invisible",
-    });
-    await recaptchaRef.current.render();
-    return recaptchaRef.current;
-  }, [auth, recaptchaContainerId]);
+  // Firebase's invisible reCAPTCHA token is single-use: once consumed by
+  // signInWithPhoneNumber (success OR failure), the next attempt needs a
+  // fresh token. Destroying and re-creating the verifier on the same
+  // container is unreliable (leftover iframes / widget-id collisions), so
+  // we keep ONE verifier alive and reset the widget between attempts.
+  const ensureFreshRecaptcha = useCallback(async () => {
+    if (!recaptchaRef.current) {
+      recaptchaRef.current = new RecaptchaVerifier(auth, recaptchaContainerId, {
+        size: "invisible",
+      });
+      recaptchaWidgetIdRef.current = await recaptchaRef.current.render();
+      return recaptchaRef.current;
+    }
+
+    try {
+      const widgetId = await recaptchaRef.current.render();
+      recaptchaWidgetIdRef.current = widgetId;
+      const grecaptcha = (
+        globalThis as typeof globalThis & {
+          grecaptcha?: { reset?: (id?: number) => void };
+        }
+      ).grecaptcha;
+      grecaptcha?.reset?.(widgetId);
+      return recaptchaRef.current;
+    } catch {
+      // Render failed (e.g. DOM was torn down). Rebuild from scratch.
+      clearRecaptcha();
+      recaptchaRef.current = new RecaptchaVerifier(auth, recaptchaContainerId, {
+        size: "invisible",
+      });
+      recaptchaWidgetIdRef.current = await recaptchaRef.current.render();
+      return recaptchaRef.current;
+    }
+  }, [auth, clearRecaptcha, recaptchaContainerId]);
 
   const resetToInput = useCallback(
     (nextPhone?: string) => {
@@ -144,8 +187,12 @@ export function useRentPhoneVerification({
       setPhase("sendingOtp");
 
       try {
-        clearRecaptcha();
-        const verifier = await ensureRecaptcha();
+        // Drop any stale Firebase auth session before requesting a new OTP;
+        // a leftover anonymous session is what makes the second attempt
+        // fail with an opaque internal error.
+        await signOut(auth).catch(() => undefined);
+
+        const verifier = await ensureFreshRecaptcha();
         confirmationRef.current = await signInWithPhoneNumber(
           auth,
           normalizedPhone,
@@ -157,10 +204,13 @@ export function useRentPhoneVerification({
       } catch (error) {
         setErrorKey(mapFirebaseError(error));
         setPhase("error");
+        confirmationRef.current = null;
+        // Do not destroy the verifier here — the next sendCode will call
+        // ensureFreshRecaptcha() which resets the widget in place.
         return false;
       }
     },
-    [auth, clearRecaptcha, draftId, ensureRecaptcha]
+    [auth, draftId, ensureFreshRecaptcha]
   );
 
   const resendCode = useCallback(async () => {
@@ -233,11 +283,16 @@ export function useRentPhoneVerification({
   );
 
   const changePhoneNumber = useCallback(() => {
-    clearRecaptcha();
+    // Deliberately do NOT clear the reCAPTCHA verifier here — keeping the
+    // same verifier alive (and resetting its widget on the next sendCode)
+    // is far more reliable than destroying and re-creating it on the same
+    // DOM container, which was the source of the "Something went wrong"
+    // loop after clicking Change number.
     confirmationRef.current = null;
     setErrorKey(null);
     setPhase("phoneInput");
-  }, [clearRecaptcha]);
+    signOut(auth).catch(() => undefined);
+  }, [auth]);
 
   const isBusy =
     phase === "sendingOtp" ||
