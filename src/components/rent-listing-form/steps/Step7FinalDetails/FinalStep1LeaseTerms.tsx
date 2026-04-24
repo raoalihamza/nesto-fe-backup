@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useAppSelector, useAppDispatch } from "@/store";
 import { setFinalDetails } from "@/store/slices/listingFormSlice";
@@ -37,12 +38,42 @@ export function toDateInputValue(value: string | null | undefined): string {
   return `${year}-${month}-${day}`;
 }
 
+function getTodayDateInputValue(): string {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 export function FinalStep1LeaseTerms() {
   const t = useTranslations("listing.finalDetails");
   const dispatch = useAppDispatch();
   const finalDetails = useAppSelector(
     (s) => s.listingForm.formData.finalDetails
   );
+
+  // Seed sensible defaults on first visit so the date picker opens on today's
+  // date (instead of 1970) and "Do you require renters insurance?" defaults
+  // to the first option ("Yes"). Existing values (edit flow / resumed draft)
+  // are preserved.
+  useEffect(() => {
+    const patch: {
+      dateAvailable?: string;
+      requiresRentersInsurance?: boolean;
+    } = {};
+    if (!finalDetails.dateAvailable) {
+      patch.dateAvailable = getTodayDateInputValue();
+    }
+    if (finalDetails.requiresRentersInsurance === null) {
+      patch.requiresRentersInsurance = true;
+    }
+    if (Object.keys(patch).length > 0) {
+      dispatch(setFinalDetails(patch));
+    }
+    // Run once on mount; we intentionally don't react to store changes here.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="w-full space-y-6">

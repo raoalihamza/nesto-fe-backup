@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import type { DraftValidationIssue } from "@/store/slices/listingFormSlice";
 import type { FeeCategory, PropertyFee } from "@/types/property";
+import { toDateInputValue } from "@/components/rent-listing-form/steps/Step7FinalDetails/FinalStep1LeaseTerms";
 
 // ── Helpers ────────────────────────────────────────────────
 
@@ -412,14 +413,20 @@ export function Step8Review() {
             ) : validationIssues.length > 0 ? (
               <>
                 {t("issuesBlockingPublish", { count: validationIssues.length })}{" "}
-                <button type="button" className="text-brand font-medium hover:underline">
+                {/* <button
+                  type="button"
+                  className="text-brand font-medium hover:underline"
+                >
                   {tCommon("learnMore")}
-                </button>
+                </button> */}
               </>
             ) : (
               <>
                 {t("publishNotReadyGeneric")}{" "}
-                <button type="button" className="text-brand font-medium hover:underline">
+                <button
+                  type="button"
+                  className="text-brand font-medium hover:underline"
+                >
                   {tCommon("learnMore")}
                 </button>
               </>
@@ -436,7 +443,15 @@ export function Step8Review() {
       </div>
 
       {/* Section 1 — Property Information */}
-      <ReviewSection title={t("propertyInformation")} issues={[...(issuesBySection["propertyInfo"] ?? []), ...(findIssue("finalDetails", "propertyDescription") ? [findIssue("finalDetails", "propertyDescription")!] : [])]}>
+      <ReviewSection
+        title={t("propertyInformation")}
+        issues={[
+          ...(issuesBySection["propertyInfo"] ?? []),
+          ...(findIssue("finalDetails", "propertyDescription")
+            ? [findIssue("finalDetails", "propertyDescription")!]
+            : []),
+        ]}
+      >
         <FieldRow
           label={t("address")}
           value={address}
@@ -446,7 +461,9 @@ export function Step8Review() {
         />
         <FieldRow
           label={t("hidePropertyAddress")}
-          value={finalDetails.hidePropertyAddress ? tFinal("yes") : tFinal("no")}
+          value={
+            finalDetails.hidePropertyAddress ? tFinal("yes") : tFinal("no")
+          }
           onEdit={() => editStep(6, 5)}
           editLabel={editLabel}
         />
@@ -484,7 +501,7 @@ export function Step8Review() {
                     | "propertyTypes.house"
                     | "propertyTypes.townhome"
                     | "propertyTypes.condo_apartment_unit"
-                    | "propertyTypes.entire_apartment_community"
+                    | "propertyTypes.entire_apartment_community",
                 )
               : null
           }
@@ -502,7 +519,10 @@ export function Step8Review() {
       </ReviewSection>
 
       {/* Section 2 — Rent details */}
-      <ReviewSection title={tRent("title")} issues={issuesBySection["rentDetails"]}>
+      <ReviewSection
+        title={tRent("title")}
+        issues={issuesBySection["rentDetails"]}
+      >
         <FieldRow
           label={tRent("monthlyRent")}
           value={
@@ -537,10 +557,14 @@ export function Step8Review() {
             <div className="space-y-2">
               <p className="flex items-center gap-1.5 text-sm font-medium text-foreground">
                 {t("photos")}
-                {findIssue("media", "photos") && <AlertCircle className="h-3.5 w-3.5 text-red-500" />}
+                {findIssue("media", "photos") && (
+                  <AlertCircle className="h-3.5 w-3.5 text-red-500" />
+                )}
               </p>
               {findIssue("media", "photos") ? (
-                <p className="text-xs text-red-500">{findIssue("media", "photos")!.message}</p>
+                <p className="text-xs text-red-500">
+                  {findIssue("media", "photos")!.message}
+                </p>
               ) : media.photos.length > 0 ? (
                 <div className="flex gap-2">
                   {media.photos.slice(0, 3).map((photo) => (
@@ -580,7 +604,9 @@ export function Step8Review() {
           label={tMedia("tourHeading")}
           value={
             tourDisplay ? (
-              <span className="whitespace-pre-line break-all">{tourDisplay}</span>
+              <span className="whitespace-pre-line break-all">
+                {tourDisplay}
+              </span>
             ) : null
           }
           onEdit={() => editStep(2)}
@@ -590,11 +616,16 @@ export function Step8Review() {
       </ReviewSection>
 
       {/* Section 4 — Amenities */}
-      <ReviewSection title={tAmen("title")} issues={issuesBySection["amenities"]}>
+      <ReviewSection
+        title={tAmen("title")}
+        issues={issuesBySection["amenities"]}
+      >
         <div className="py-3 border-b border-border">
           <div className="flex items-start justify-between">
             <div className="space-y-0.5">
-              <p className="text-sm font-medium text-foreground">{t("interiorAmenities")}</p>
+              <p className="text-sm font-medium text-foreground">
+                {t("interiorAmenities")}
+              </p>
               {interiorDisplay ? (
                 <p className="text-sm text-muted-foreground whitespace-pre-line">
                   {interiorDisplay}
@@ -622,7 +653,9 @@ export function Step8Review() {
           label={t("additionalAmenities")}
           value={
             amenities.otherAmenities.length > 0
-              ? joinLabels(amenities.otherAmenities, (k) => tAmen(`otherOptions.${k}`))
+              ? joinLabels(amenities.otherAmenities, (k) =>
+                  tAmen(`otherOptions.${k}`),
+                )
               : null
           }
           onEdit={() => editStep(3)}
@@ -631,11 +664,16 @@ export function Step8Review() {
       </ReviewSection>
 
       {/* Section 5 — Screening criteria */}
-      <ReviewSection title={tScreen("title")} issues={issuesBySection["screeningCriteria"]}>
+      <ReviewSection
+        title={tScreen("title")}
+        issues={issuesBySection["screeningCriteria"]}
+      >
         <div className="py-3 border-b border-border">
           <div className="flex items-start justify-between">
             <div className="space-y-0.5">
-              <p className="text-sm font-medium text-foreground">{t("financialExpectations")}</p>
+              <p className="text-sm font-medium text-foreground">
+                {t("financialExpectations")}
+              </p>
               <p className="text-sm text-muted-foreground whitespace-pre-line">
                 {financialDisplay}
               </p>
@@ -658,9 +696,12 @@ export function Step8Review() {
       </ReviewSection>
 
       {/* Section 6 — Cost and fees (partially interactive) */}
-      <ReviewSection title={t("costAndFees")} issues={issuesBySection["costsAndFees"]}>
-        {/* Toggle card */}
-        <div className="rounded-xl border border-brand/20 bg-brand/5 p-4 mb-4">
+      <ReviewSection
+        title={t("costAndFees")}
+        issues={issuesBySection["costsAndFees"]}
+      >
+        {/* Toggle card - hidden as currnet it is not implemented in the module */}
+        {/* <div className="rounded-xl border border-brand/20 bg-brand/5 p-4 mb-4">
           <div className="flex items-start justify-between gap-4">
             <div className="space-y-2">
               <p className="text-sm font-semibold text-foreground">
@@ -683,7 +724,7 @@ export function Step8Review() {
               onCheckedChange={setShowTotalMonthlyPrice}
             />
           </div>
-        </div>
+        </div> */}
 
         {/* Fee categories */}
         <div className="divide-y divide-border">
@@ -707,12 +748,19 @@ export function Step8Review() {
                   </button>
                 </div>
                 {fees.map((fee) => (
-                  <div key={fee.feeId} className="border-t border-border py-3 pl-8">
+                  <div
+                    key={fee.feeId}
+                    className="border-t border-border py-3 pl-8"
+                  >
                     <div className="flex items-start justify-between">
                       <div className="space-y-0.5">
-                        <p className="text-sm font-medium text-foreground">{fee.feeName}</p>
+                        <p className="text-sm font-medium text-foreground">
+                          {fee.feeName}
+                        </p>
                         {fee.description && (
-                          <p className="text-xs text-muted-foreground">{fee.description}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {fee.description}
+                          </p>
                         )}
                         <p className="text-xs text-muted-foreground">
                           <span className="font-semibold text-foreground">
@@ -721,7 +769,9 @@ export function Step8Review() {
                           {tCosts("each")},{" "}
                           {tCosts(FREQUENCY_LABEL[fee.paymentFrequency])} |{" "}
                           {tCosts(REQUIREMENT_LABEL[fee.feeRequiredType])} |{" "}
-                          {fee.refundability === "refundable" ? tCosts("refundable") : tCosts("nonRefundable")}
+                          {fee.refundability === "refundable"
+                            ? tCosts("refundable")
+                            : tCosts("nonRefundable")}
                         </p>
                       </div>
                       <DropdownMenu>
@@ -732,7 +782,9 @@ export function Step8Review() {
                           <DropdownMenuItem onClick={() => handleEditFee(fee)}>
                             {tCommon("edit")}
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleDeleteFee(fee.feeId)}>
+                          <DropdownMenuItem
+                            onClick={() => handleDeleteFee(fee.feeId)}
+                          >
                             {tCommon("delete")}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -747,10 +799,18 @@ export function Step8Review() {
       </ReviewSection>
 
       {/* Section 7 — Final details */}
-      <ReviewSection title={tFinal("title")} issues={issuesBySection["finalDetails"]}>
+      <ReviewSection
+        title={tFinal("title")}
+        issues={issuesBySection["finalDetails"]}
+      >
         <FieldRow
           label={tFinal("dateAvailable")}
-          value={finalDetails.dateAvailable}
+          value={
+            finalDetails.dateAvailable
+              ? toDateInputValue(finalDetails.dateAvailable) ||
+                finalDetails.dateAvailable
+              : null
+          }
           onEdit={() => editStep(6, 0)}
           editLabel={editLabel}
           issue={findIssue("finalDetails", "dateAvailable")}
@@ -764,13 +824,23 @@ export function Step8Review() {
         />
         <FieldRow
           label={t("renterInsurance")}
-          value={finalDetails.requiresRentersInsurance === true ? tFinal("yes") : tFinal("no")}
+          value={
+            finalDetails.requiresRentersInsurance === true
+              ? tFinal("yes")
+              : tFinal("no")
+          }
           onEdit={() => editStep(6, 0)}
           editLabel={editLabel}
         />
         <FieldRow
           label={tFinal("leaseDuration")}
-          value={finalDetails.leaseDuration}
+          value={
+            finalDetails.leaseDuration
+              ? tFinal(
+                  `leaseDurationOptions.${finalDetails.leaseDuration}` as never,
+                )
+              : null
+          }
           onEdit={() => editStep(6, 0)}
           editLabel={editLabel}
           issue={findIssue("finalDetails", "leaseDuration")}
@@ -785,14 +855,16 @@ export function Step8Review() {
         <FieldRow
           label={tFinal("nameLabel")}
           value={finalDetails.name}
-          onEdit={() => editStep(6, 1)}
+          // onEdit={() => editStep(6, 1)}
+          onEdit={undefined}
           editLabel={editLabel}
           issue={findIssue("finalDetails", "name")}
         />
         <FieldRow
           label={tFinal("emailLabel")}
           value={finalDetails.email}
-          onEdit={() => editStep(6, 1)}
+          // onEdit={() => editStep(6, 1)}
+          onEdit={undefined}
           editLabel={editLabel}
           issue={findIssue("finalDetails", "email")}
         />
@@ -805,8 +877,13 @@ export function Step8Review() {
         />
         <FieldRow
           label={tFinal("allowPhoneContact")}
-          value={finalDetails.allowRentersToContactByPhone ? tFinal("yes") : tFinal("no")}
-          onEdit={() => editStep(6, 2)}
+          value={
+            finalDetails.allowRentersToContactByPhone
+              ? tFinal("yes")
+              : tFinal("no")
+          }
+          // onEdit={() => editStep(6, 2)}
+          onEdit={undefined}
           editLabel={editLabel}
         />
         <FieldRow
@@ -817,8 +894,11 @@ export function Step8Review() {
         />
         <FieldRow
           label={tFinal("acceptOnlineApplications")}
-          value={finalDetails.acceptOnlineApplications ? tFinal("yes") : tFinal("no")}
-          onEdit={() => editStep(6, 5)}
+          value={
+            finalDetails.acceptOnlineApplications ? tFinal("yes") : tFinal("no")
+          }
+          // onEdit={() => editStep(6, 5)}
+          onEdit={undefined}
           editLabel={editLabel}
         />
       </ReviewSection>
