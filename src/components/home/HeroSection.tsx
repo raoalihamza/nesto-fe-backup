@@ -42,7 +42,8 @@ export function HeroSection() {
           />
 
           {/* ── Featured property promo card ── */}
-          {featured && (
+          {/* {featured && ( */}
+          {false && featured && (
             <div className="absolute bottom-12 left-5 md:bottom-22 md:left-8">
               {/* Card wrapper — fixed aspect ratio matching Figma (445 × 348) */}
               <div className="relative w-[210px] h-[160px] md:w-[340px] md:h-[270px]">
@@ -106,16 +107,16 @@ export function HeroSection() {
                 {/* Layer 5: Price badge — inside card, bottom-right */}
                 <div className="absolute bottom-[5%] right-[6%] z-10 rounded-lg bg-brand px-2 py-1 shadow-[0px_10px_15px_-3px_rgba(192,33,33,0.2),0px_4px_6px_-4px_rgba(192,33,33,0.2)]">
                   <p className="text-[12px] font-medium text-white md:text-xs">
-                    {featured.leaseDuration
+                    {featured?.leaseDuration
                       ? t("featuredRentBadge", {
                           duration: tLease(
-                            `leaseDurationOptions.${featured.leaseDuration}` as never,
+                            `leaseDurationOptions.${featured?.leaseDuration}` as never,
                           ),
                         })
                       : null}
                   </p>
                   <p className="text-sm font-semibold text-white">
-                    £{featured.monthlyRent?.toLocaleString()}
+                    £{featured?.monthlyRent?.toLocaleString()}
                   </p>
                 </div>
               </div>
