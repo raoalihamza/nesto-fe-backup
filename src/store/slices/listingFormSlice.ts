@@ -71,6 +71,7 @@ export interface PropertyInfoData {
   squareFootage: number | null;
   totalBedrooms: string | null;
   totalBathrooms: string | null;
+  totalHalfBathrooms: string | null;
 }
 
 export interface SpecialOfferData {
@@ -272,7 +273,8 @@ const initialPropertyInfo: PropertyInfoData = {
   listingEntry: { ...initialListingEntryForm },
   squareFootage: null,
   totalBedrooms: null,
-  totalBathrooms: null,
+  totalBathrooms: "0",
+  totalHalfBathrooms: "0",
 };
 
 /** Coerce draft/API bedroom value (legacy number or string) into select value. */
@@ -298,7 +300,8 @@ export function normalizePropertyInfo(
       listingEntry: { ...initialListingEntryForm },
       squareFootage: null,
       totalBedrooms: null,
-      totalBathrooms: null,
+      totalBathrooms: "0",
+      totalHalfBathrooms: "0",
     };
   }
   const address = pi.address
@@ -312,7 +315,8 @@ export function normalizePropertyInfo(
     listingEntry,
     squareFootage: pi.squareFootage ?? null,
     totalBedrooms: normalizeTotalBedroomsField(pi.totalBedrooms),
-    totalBathrooms: pi.totalBathrooms ?? null,
+    totalBathrooms: pi.totalBathrooms ?? "0",
+    totalHalfBathrooms: pi.totalHalfBathrooms ?? "0",
   };
 }
 

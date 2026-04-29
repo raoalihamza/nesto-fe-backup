@@ -82,6 +82,8 @@ function buildPropertyInfoBody(
       p.totalBedrooms !== null ? parseFloat(p.totalBedrooms) : null,
     totalBathrooms:
       p.totalBathrooms !== null ? parseFloat(p.totalBathrooms) : null,
+    totalHalfBathrooms:
+      p.totalHalfBathrooms !== null ? parseFloat(p.totalHalfBathrooms) : null,
   };
 }
 

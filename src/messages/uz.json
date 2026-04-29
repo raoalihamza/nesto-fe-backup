@@ -193,7 +193,8 @@
       "squareFootage": "Mulk hajmi",
       "sqFt": "kv. m",
       "bedrooms": "Jami yotoq xonalar",
-      "bathrooms": "Jami hammomlar"
+      "bathrooms": "Jami hammomlar",
+      "halfBathrooms": "Yarim hammomlar"
     },
     "rentDetails": {
       "title": "Ijara tafsilotlari",
@@ -339,6 +340,7 @@
       "rentSetAt": "Ijara {amount}/oy qilib belgilangan",
       "incomeRatioNegotiable": "Daromad-ijara nisbati muzokaraga ochiq",
       "minMonthlyPreTaxIncome": "Minimal oylik soliqdan oldingi daromad",
+      "setRentFirstHelper": "Bu qiymatni hisoblash uchun avval oylik ijara summasini belgilang.",
       "minCreditScore": "Minimal kredit reytingi",
       "creditScoreNegotiable": "Kredit reytingi muzokaraga ochiq",
       "creditFair": "O'rtacha (580-669)",

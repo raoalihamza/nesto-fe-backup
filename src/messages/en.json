@@ -193,7 +193,8 @@
       "squareFootage": "Property size",
       "sqFt": "sq. m",
       "bedrooms": "Total bedrooms",
-      "bathrooms": "Total bathrooms"
+      "bathrooms": "Total bathrooms",
+      "halfBathrooms": "Half bathrooms"
     },
     "rentDetails": {
       "title": "Rent details",
@@ -339,6 +340,7 @@
       "rentSetAt": "Rent is set at {amount}/month",
       "incomeRatioNegotiable": "Income-to-rent ratio is negotiable",
       "minMonthlyPreTaxIncome": "Minimum monthly pre-tax income",
+      "setRentFirstHelper": "Set monthly rent first to calculate this value.",
       "minCreditScore": "Minimum credit score",
       "creditScoreNegotiable": "Credit score is negotiable",
       "creditFair": "Fair (580-669)",

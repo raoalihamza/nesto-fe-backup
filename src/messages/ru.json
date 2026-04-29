@@ -193,7 +193,8 @@
       "squareFootage": "Площадь",
       "sqFt": "кв. м",
       "bedrooms": "Всего спален",
-      "bathrooms": "Всего ванных"
+      "bathrooms": "Всего ванных",
+      "halfBathrooms": "Полуванные"
     },
     "rentDetails": {
       "title": "Детали аренды",
@@ -339,6 +340,7 @@
       "rentSetAt": "Аренда установлена на {amount}/месяц",
       "incomeRatioNegotiable": "Соотношение дохода к аренде обсуждаемо",
       "minMonthlyPreTaxIncome": "Минимальный ежемесячный доход до налогов",
+      "setRentFirstHelper": "Сначала укажите ежемесячную аренду, чтобы рассчитать это значение.",
       "minCreditScore": "Минимальный кредитный рейтинг",
       "creditScoreNegotiable": "Кредитный рейтинг обсуждаем",
       "creditFair": "Удовлетворительный (580-669)",

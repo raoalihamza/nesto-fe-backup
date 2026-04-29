@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { useAppSelector, useAppDispatch } from "@/store";
 import { setScreeningCriteria } from "@/store/slices/listingFormSlice";
@@ -12,6 +13,9 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
+import { formatReduxMoneyForInput } from "@/lib/rentListing/optionalMoneyField";
 
 const INCOME_RATIO_OPTIONS = ["2x", "2.5x", "3x", "3.5x", "4x"];
 const CREDIT_SCORE_OPTIONS = [
@@ -25,6 +29,16 @@ function formatMonthlyRentLabel(amount: number) {
   return `$${amount.toLocaleString("en-US")}`;
 }
 
+/** Parse a stored ratio value (UI: "2.5x", legacy/API: number) into a number. */
+function parseRatioValue(raw: string | number | null | undefined): number | null {
+  if (raw == null) return null;
+  if (typeof raw === "number") return Number.isFinite(raw) ? raw : null;
+  const cleaned = String(raw).replace(/x/i, "").trim();
+  if (!cleaned) return null;
+  const n = Number.parseFloat(cleaned);
+  return Number.isFinite(n) ? n : null;
+}
+
 export function ScreeningStep2() {
   const t = useTranslations("listing.screening");
   const dispatch = useAppDispatch();
@@ -34,6 +48,58 @@ export function ScreeningStep2() {
     monthlyRent !== null && Number.isFinite(monthlyRent) && monthlyRent > 0
       ? formatMonthlyRentLabel(monthlyRent)
       : null;
+
+  const ratioNum = useMemo(
+    () =>
+      parseRatioValue(
+        screeningCriteria.minimumIncomeToRentRatio as
+          | string
+          | number
+          | null
+          | undefined,
+      ),
+    [screeningCriteria.minimumIncomeToRentRatio],
+  );
+
+  // Derived from rent x ratio: this field is never user-editable here. It is
+  // recomputed on every change to either input and persisted to Redux so it
+  // flows to the backend on save.
+  const derivedMinIncome = useMemo(() => {
+    if (ratioNum === null) return null;
+    if (
+      monthlyRent === null ||
+      !Number.isFinite(monthlyRent) ||
+      monthlyRent <= 0
+    ) {
+      return null;
+    }
+    return Math.round(monthlyRent * ratioNum * 100) / 100;
+  }, [ratioNum, monthlyRent]);
+
+  useEffect(() => {
+    const next =
+      derivedMinIncome === null ? null : String(derivedMinIncome);
+    if (screeningCriteria.minimumMonthlyPreTaxIncome !== next) {
+      dispatch(
+        setScreeningCriteria({ minimumMonthlyPreTaxIncome: next }),
+      );
+    }
+  }, [
+    derivedMinIncome,
+    dispatch,
+    screeningCriteria.minimumMonthlyPreTaxIncome,
+  ]);
+
+  const incomeNegotiable =
+    screeningCriteria.incomeToRentRatioNegotiable === true;
+  const ratioSelected =
+    screeningCriteria.minimumIncomeToRentRatio !== null &&
+    screeningCriteria.minimumIncomeToRentRatio !== undefined;
+  const showSetRentHint = ratioSelected && monthlyRent === null;
+  const minIncomeDisplay =
+    derivedMinIncome !== null
+      ? formatReduxMoneyForInput(derivedMinIncome)
+      : "";
 
   return (
     <div className="w-full space-y-6">
@@ -102,12 +168,41 @@ export function ScreeningStep2() {
         </div>
       </div>
 
-      {/* Minimum monthly pre-tax income */}
+      {/* Minimum monthly pre-tax income (derived from rent x ratio, readonly) */}
       <div className="space-y-2 max-w-md">
-        <p className="text-sm font-semibold text-foreground">
+        <p
+          className={cn(
+            "text-sm font-semibold text-foreground",
+            incomeNegotiable && "opacity-60",
+          )}
+        >
           {t("minMonthlyPreTaxIncome")}
         </p>
-        <p className="text-sm text-muted-foreground">--</p>
+        <div className="relative w-full sm:w-80">
+          <span
+            className={cn(
+              "pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-base text-muted-foreground",
+              incomeNegotiable && "opacity-60",
+            )}
+          >
+            $
+          </span>
+          <Input
+            type="text"
+            readOnly
+            tabIndex={-1}
+            aria-readonly="true"
+            disabled={incomeNegotiable}
+            value={minIncomeDisplay}
+            placeholder=""
+            className="h-12! w-full cursor-default pl-8 text-base"
+          />
+        </div>
+        {showSetRentHint ? (
+          <p className="text-xs text-muted-foreground">
+            {t("setRentFirstHelper")}
+          </p>
+        ) : null}
       </div>
 
       {/* Minimum credit score */}

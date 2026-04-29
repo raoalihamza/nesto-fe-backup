@@ -26,6 +26,7 @@ export interface PropertyCardPricing {
 export interface PropertyCardBasicFacts {
   bedrooms?: number | null;
   bathrooms?: string | null; // backend returns as decimal string
+  totalHalfBathrooms?: number | null;
   squareFootage?: number | null;
 }
 
@@ -69,6 +70,7 @@ export interface SavedHomesResponse {
 export interface PublicListingFeedBasicFacts {
   bedrooms?: number | null;
   bathrooms?: string | null;
+  totalHalfBathrooms?: number | null;
   areaSqft?: number | null;
 }
 

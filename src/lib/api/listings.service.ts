@@ -28,6 +28,7 @@ export function mapPublicFeedItemToPropertyCard(
     ? {
         bedrooms: item.basicFacts.bedrooms ?? undefined,
         bathrooms: item.basicFacts.bathrooms ?? undefined,
+        totalHalfBathrooms: item.basicFacts.totalHalfBathrooms ?? undefined,
         squareFootage: item.basicFacts.areaSqft ?? undefined,
       }
     : undefined;

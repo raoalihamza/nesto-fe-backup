@@ -493,6 +493,13 @@ export function Step8Review() {
           issue={findIssue("propertyInfo", "totalBathrooms")}
         />
         <FieldRow
+          label={tProp("halfBathrooms")}
+          value={propertyInfo.totalHalfBathrooms}
+          onEdit={() => editStep(0)}
+          editLabel={editLabel}
+          issue={findIssue("propertyInfo", "totalHalfBathrooms")}
+        />
+        <FieldRow
           label={t("propertyType")}
           value={
             propertyInfo.listingEntry.propertyType

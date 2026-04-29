@@ -15,7 +15,8 @@ import {
 } from "@/components/ui/select";
 
 const BEDROOM_OPTIONS = ["1", "2", "3", "4", "5", "6", "7", "8+"];
-const BATHROOM_OPTIONS = ["1", "1.5", "2", "2.5", "3", "3.5", "4+"];
+const BATHROOM_OPTIONS = ["0", "1", "1.5", "2", "2.5", "3", "3.5", "4+"];
+const HALF_BATHROOM_OPTIONS = ["0", "1", "2", "3", "4+"];
 
 export function Step1PropertyInfo() {
   const t = useTranslations("listing.propertyInfo");
@@ -88,28 +89,53 @@ export function Step1PropertyInfo() {
           </Select>
         </div>
 
-        {/* Total bathrooms */}
-        <div>
-          <label className="mb-2 block text-sm font-medium text-foreground">
-            {t("bathrooms")}
-          </label>
-          <Select
-            value={data.totalBathrooms ?? ""}
-            onValueChange={(val) =>
-              dispatch(setPropertyInfo({ totalBathrooms: val }))
-            }
-          >
-            <SelectTrigger className="h-12! w-full text-base">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {BATHROOM_OPTIONS.map((opt) => (
-                <SelectItem key={opt} value={opt}>
-                  {opt}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        {/* Total bathrooms + Half bathrooms */}
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          <div>
+            <label className="mb-2 block text-sm font-medium text-foreground">
+              {t("bathrooms")}
+            </label>
+            <Select
+              value={data.totalBathrooms ?? ""}
+              onValueChange={(val) =>
+                dispatch(setPropertyInfo({ totalBathrooms: val }))
+              }
+            >
+              <SelectTrigger className="h-12! w-full text-base">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {BATHROOM_OPTIONS.map((opt) => (
+                  <SelectItem key={opt} value={opt}>
+                    {opt}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-foreground">
+              {t("halfBathrooms")}
+            </label>
+            <Select
+              value={data.totalHalfBathrooms ?? ""}
+              onValueChange={(val) =>
+                dispatch(setPropertyInfo({ totalHalfBathrooms: val }))
+              }
+            >
+              <SelectTrigger className="h-12! w-full text-base">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {HALF_BATHROOM_OPTIONS.map((opt) => (
+                  <SelectItem key={opt} value={opt}>
+                    {opt}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
     </div>

@@ -104,6 +104,7 @@ function buildPropertyInfo(
     squareFootage: numberOrNull(current.squareFootage),
     totalBedrooms: parseNumericStringOrNull(current.totalBedrooms),
     totalBathrooms: parseNumericStringOrNull(current.totalBathrooms),
+    totalHalfBathrooms: parseNumericStringOrNull(current.totalHalfBathrooms),
   };
 }
 

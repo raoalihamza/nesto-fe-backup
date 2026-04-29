@@ -42,6 +42,7 @@ export interface RentEditPropertyInfoBody {
   squareFootage: number | null;
   totalBedrooms: number | null;
   totalBathrooms: number | null;
+  totalHalfBathrooms: number | null;
 }
 
 export interface RentEditSpecialOfferBody {

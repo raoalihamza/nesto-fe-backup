@@ -97,6 +97,7 @@ export interface RentPropertyInfoBody {
   squareFootage: number | null;
   totalBedrooms: number | null;
   totalBathrooms: number | null;
+  totalHalfBathrooms: number | null;
 }
 
 export const rentDraftService = {

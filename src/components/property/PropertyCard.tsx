@@ -90,7 +90,11 @@ export function PropertyCard({ item, className }: PropertyCardProps) {
       ? String(item.basicFacts.bedrooms)
       : FALLBACK_BEDS;
 
-  const bathsDisplay = formatBathDisplay(item.basicFacts?.bathrooms);
+  const bathsDisplay = item.basicFacts?.bathrooms
+    ? formatBathDisplay(item.basicFacts.bathrooms)
+    : item.basicFacts?.totalHalfBathrooms != null
+      ? String(item.basicFacts.totalHalfBathrooms)
+      : FALLBACK_BATHS;
 
   const sqftDisplay =
     item.basicFacts?.squareFootage != null
