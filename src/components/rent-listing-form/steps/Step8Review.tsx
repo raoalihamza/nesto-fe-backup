@@ -678,12 +678,24 @@ export function Step8Review() {
         <div className="py-3 border-b border-border">
           <div className="flex items-start justify-between">
             <div className="space-y-0.5">
-              <p className="text-sm font-medium text-foreground">
+              <p className="flex items-center gap-1.5 text-sm font-medium text-foreground">
                 {t("financialExpectations")}
+                {(findIssue("screeningCriteria", "minimumIncomeToRentRatio") ||
+                  findIssue("screeningCriteria", "minimumCreditScore")) && (
+                  <AlertCircle className="h-3.5 w-3.5 text-red-500" />
+                )}
               </p>
-              <p className="text-sm text-muted-foreground whitespace-pre-line">
-                {financialDisplay}
-              </p>
+              {findIssue("screeningCriteria", "minimumIncomeToRentRatio") ||
+              findIssue("screeningCriteria", "minimumCreditScore") ? (
+                <p className="text-xs text-red-500">
+                  {findIssue("screeningCriteria", "minimumIncomeToRentRatio")?.message ??
+                    findIssue("screeningCriteria", "minimumCreditScore")?.message}
+                </p>
+              ) : (
+                <p className="text-sm text-muted-foreground whitespace-pre-line">
+                  {financialDisplay}
+                </p>
+              )}
             </div>
             <button
               type="button"
@@ -699,6 +711,7 @@ export function Step8Review() {
           value={petDisplay}
           onEdit={() => editStep(4)}
           editLabel={editLabel}
+          issue={findIssue("screeningCriteria", "arePetsAllowed")}
         />
       </ReviewSection>
 

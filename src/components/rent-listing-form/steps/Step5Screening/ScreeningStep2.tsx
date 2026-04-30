@@ -114,10 +114,16 @@ export function ScreeningStep2() {
 
       {/* Minimum income-to-rent ratio */}
       <div className="space-y-2 max-w-md">
-        <p className="text-sm font-semibold text-foreground">
+        <p
+          className={cn(
+            "text-sm font-semibold text-foreground",
+            incomeNegotiable && "opacity-60",
+          )}
+        >
           {t("minIncomeToRentRatio")}
         </p>
         <Select
+          disabled={incomeNegotiable}
           value={screeningCriteria.minimumIncomeToRentRatio || "not_set"}
           onValueChange={(value) =>
             dispatch(
@@ -127,7 +133,10 @@ export function ScreeningStep2() {
             )
           }
         >
-          <SelectTrigger className="h-12! w-full text-base sm:w-80">
+          <SelectTrigger
+            disabled={incomeNegotiable}
+            className="h-12! w-full text-base sm:w-80"
+          >
             <SelectValue placeholder={t("notSet")}>
               {(value: string) =>
                 value === "not_set" ? t("notSet") : value || null
