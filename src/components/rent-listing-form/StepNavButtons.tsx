@@ -10,8 +10,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { useSaveStep, usePublishDraft } from "@/hooks/rentDraft";
 import { useUpdateRentListing } from "@/hooks/rentEdit";
-import { useRentStepperUiOptional } from "@/components/rent-listing-form/RentStepperUiContext";
-
 const TOTAL_STEPS = 9;
 
 const SUB_STEP_COUNTS: Record<number, number> = {
@@ -22,7 +20,6 @@ const SUB_STEP_COUNTS: Record<number, number> = {
 
 export function StepNavButtons() {
   const t = useTranslations("listing");
-  const tRent = useTranslations("listing.rentDetails");
   const dispatch = useAppDispatch();
   const currentStep = useAppSelector((s) => s.listingForm.currentStep);
   const currentSubStep = useAppSelector((s) => s.listingForm.currentSubStep);
@@ -40,8 +37,6 @@ export function StepNavButtons() {
   const { saveStep } = useSaveStep();
   const { publish } = usePublishDraft();
   const { updateAndExit } = useUpdateRentListing();
-  const stepperUi = useRentStepperUiOptional();
-
   const isEditMode = mode === "edit";
   const isFirstStep = currentStep === 0;
   const isLastStep = currentStep === TOTAL_STEPS - 1;
@@ -49,16 +44,11 @@ export function StepNavButtons() {
   // Review (step 7): block Pay & publish until server marks listing ready (same as Step8Review banner).
   const reviewBlocksNext =
     currentStep === 7 && draftProgress?.publishReady !== true;
-  // Address lookup only gates Next in create mode (edit mode has readonly address).
-  const rentDetailsBlocksNext =
-    currentStep === 1 && (stepperUi?.rentDetailsNextBlocked ?? false);
-
   const nextDisabled =
     isSaving ||
     mediaUploadBusy ||
     (isFirstStep && !isEditMode && addressLookupBusy) ||
-    reviewBlocksNext ||
-    rentDetailsBlocksNext;
+    reviewBlocksNext;
 
   function handleBack() {
     if (currentSubStep > 0) {
@@ -152,9 +142,7 @@ export function StepNavButtons() {
               ? t("uploadingMedia")
               : reviewBlocksNext && !isSaving && !mediaUploadBusy
                 ? t("review.publishNotReadyGeneric")
-                : rentDetailsBlocksNext && !isSaving && !mediaUploadBusy
-                  ? tRent("errors.fixMoneyFieldsToContinue")
-                  : undefined
+                : undefined
         }
         className="h-10 rounded-lg bg-brand px-6 text-sm font-medium text-white btn-brand-shadow hover:bg-brand-dark"
       >

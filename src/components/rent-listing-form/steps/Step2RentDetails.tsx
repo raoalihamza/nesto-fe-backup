@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { useAppSelector, useAppDispatch } from "@/store";
 import { setRentDetails } from "@/store/slices/listingFormSlice";
@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useRentStepperUiOptional } from "@/components/rent-listing-form/RentStepperUiContext";
 import {
   sanitizeOptionalMoneyInput,
   formatSanitizedMoneyForDisplay,
@@ -58,7 +57,6 @@ export function Step2RentDetails() {
   const tCommon = useTranslations("common");
   const dispatch = useAppDispatch();
   const data = useAppSelector((s) => s.listingForm.formData.rentDetails);
-  const stepperUi = useRentStepperUiOptional();
   const [modalOpen, setModalOpen] = useState(false);
   const [editingOffer, setEditingOffer] = useState<SpecialOfferData | null>(
     null
@@ -74,17 +72,6 @@ export function Step2RentDetails() {
   const rentResult = validateOptionalMoneyField(monthlyRentText);
   const depositResult = validateOptionalMoneyField(securityDepositText);
 
-  useEffect(() => {
-    const rent = validateOptionalMoneyField(monthlyRentText);
-    const dep = validateOptionalMoneyField(securityDepositText);
-    const blocked =
-      (!rent.isEmpty && !rent.isValid) || (!dep.isEmpty && !dep.isValid);
-    stepperUi?.setRentDetailsNextBlocked(blocked);
-  }, [monthlyRentText, securityDepositText, stepperUi]);
-
-  useEffect(() => {
-    return () => stepperUi?.setRentDetailsNextBlocked(false);
-  }, [stepperUi]);
 
   const monthlyRentError = moneyFieldErrorMessage(
     t,
