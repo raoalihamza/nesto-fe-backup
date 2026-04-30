@@ -11,7 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { formatListingPrice, formatListingLocation } from "@/lib/utils/listingDisplay";
+import { formatListingPrice, formatMyListingSubtitle } from "@/lib/utils/listingDisplay";
 import { LISTING_NO_THUMBNAIL_PLACEHOLDER } from "@/lib/constants/listingPlaceholders";
 import type { MyListingItem } from "@/types/listings";
 
@@ -82,7 +82,7 @@ export function ListingCard({
               {listing.title}
             </h3>
             <p className="truncate text-xs text-[#0A0A0A]">
-              {formatListingLocation(listing.location)}
+              {formatMyListingSubtitle(listing.display, listing.location)}
             </p>
           </div>
           <div className="flex shrink-0 gap-1.5">

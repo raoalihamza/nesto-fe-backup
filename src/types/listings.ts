@@ -122,6 +122,13 @@ export interface MyListingsCounts {
   sold: number;
 }
 
+/** Owner `/listings/me` display labels — optional on older payloads. */
+export interface MyListingDisplay {
+  propertyTypeLabel?: string | null;
+  listingTypeLabel?: string | null;
+  cardTitleLabel?: string | null;
+}
+
 export interface MyListingItem {
   id: string;
   listingType: "rent" | "sale";
@@ -129,6 +136,7 @@ export interface MyListingItem {
   statusLabel: string;
   statusTone: string;
   title: string;
+  display?: MyListingDisplay | null;
   thumbnailUrl: string | null;
   actionFlags: MyListingActionFlags;
   location: PropertyCardLocation;

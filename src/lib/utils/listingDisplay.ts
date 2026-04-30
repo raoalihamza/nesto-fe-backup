@@ -44,3 +44,37 @@ export function formatListingLocation(location: PropertyCardLocation): string {
   ].filter(Boolean);
   return parts.length > 0 ? parts.join(", ") : "—";
 }
+
+/** Title-case each word for dashboard subtitle fragments. */
+function capitalizeDashboardLabel(raw: string | null | undefined): string | null {
+  const t = raw?.trim();
+  if (!t) return null;
+  return t
+    .split(/\s+/)
+    .map((word) => {
+      if (!word) return word;
+      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    })
+    .join(" ");
+}
+
+/**
+ * Owner dashboard line under address `title`:
+ * `{PropertyType} {ListingType} in {formatListingLocation}` — labels space-separated (no comma), then lowercase "in".
+ */
+export function formatMyListingSubtitle(
+  display:
+    | { propertyTypeLabel?: string | null; listingTypeLabel?: string | null }
+    | null
+    | undefined,
+  location: PropertyCardLocation,
+): string {
+  const loc = formatListingLocation(location);
+  const parts = [
+    capitalizeDashboardLabel(display?.propertyTypeLabel),
+    capitalizeDashboardLabel(display?.listingTypeLabel),
+  ].filter(Boolean) as string[];
+  const labelPart = parts.join(" ");
+  if (!labelPart) return loc;
+  return `${labelPart} in ${loc}`;
+}

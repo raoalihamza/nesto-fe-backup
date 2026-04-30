@@ -10,7 +10,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { ListingStatusBadge } from "@/components/owner/ListingStatusBadge";
-import { formatListingPrice, formatListingLocation } from "@/lib/utils/listingDisplay";
+import { formatListingPrice, formatMyListingSubtitle } from "@/lib/utils/listingDisplay";
 import { LISTING_NO_THUMBNAIL_PLACEHOLDER } from "@/lib/constants/listingPlaceholders";
 import type { MyListingItem } from "@/types/listings";
 
@@ -93,7 +93,7 @@ export function ListingTable({
             </tr>
           )}
           {listings.map((listing) => {
-            const addressLine = formatListingLocation(listing.location);
+            const subtitle = formatMyListingSubtitle(listing.display, listing.location);
             return (
             <tr key={listing.id} className="group">
               <td className="min-w-0 w-[24%] max-w-[280px] overflow-hidden px-4 py-4 align-middle">
@@ -115,12 +115,12 @@ export function ListingTable({
                         {listing.title}
                       </p>
                       <p className="truncate text-xs text-[#0A0A0A]">
-                        {addressLine}
+                        {subtitle}
                       </p>
                     </TooltipTrigger>
                     <TooltipContent side="bottom" className="max-w-sm whitespace-normal text-xs">
                       <p className="font-semibold text-background">{listing.title}</p>
-                      <p className="mt-1 text-background/90">{addressLine}</p>
+                      <p className="mt-1 text-background/90">{subtitle}</p>
                     </TooltipContent>
                   </Tooltip>
                 </div>
